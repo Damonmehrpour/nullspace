@@ -15,6 +15,7 @@ export function GameLoop() {
     s.setTourTarget(nextTarget(WORLD.tourOrder, s.worldVisited))
     sim.input = createKeyboardInput(window)
     if (import.meta.env.VITE_TEST_HOOKS === 'true') installTestHooks()
+    if (import.meta.env.DEV) (window as unknown as { __sim: typeof sim }).__sim = sim
     return () => {
       sim.input?.dispose()
       sim.input = null
