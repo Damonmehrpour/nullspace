@@ -88,6 +88,63 @@ describe('Panel', () => {
     expect(document.getElementById('app-background')).not.toHaveAttribute('inert')
   })
 
+  it('returns focus to the original opener after a panel was replaced by a nested one', async () => {
+    function Nested() {
+      const [view, setView] = useState<'none' | 'section' | 'project'>('none')
+      return (
+        <>
+          <div id="app-background">
+            <button
+              onClick={(e) => {
+                rememberOpener(e.currentTarget)
+                setView('section')
+              }}
+            >
+              Projects
+            </button>
+          </div>
+          {view === 'section' && (
+            <Panel key="section" title="Projects" onClose={() => setView('none')}>
+              <button
+                onClick={(e) => {
+                  rememberOpener(e.currentTarget)
+                  setView('project')
+                }}
+              >
+                Open project
+              </button>
+            </Panel>
+          )}
+          {view === 'project' && (
+            <Panel key="project" title="Project" onClose={() => setView('none')}>
+              detail
+            </Panel>
+          )}
+        </>
+      )
+    }
+    render(<Nested />)
+    await userEvent.click(screen.getByText('Projects'))
+    await userEvent.click(screen.getByText('Open project'))
+    expect(screen.getByRole('heading', { name: 'Project' })).toHaveFocus()
+    await userEvent.keyboard('{Escape}')
+    await act(async () => {})
+    expect(screen.getByText('Projects')).toHaveFocus()
+  })
+
+  it('keeps the background inert while any dialog remains open', () => {
+    const bg = document.createElement('div')
+    bg.id = 'app-background'
+    document.body.appendChild(bg)
+    const a = render(<Panel title="Settings" onClose={() => {}}>a</Panel>)
+    const b = render(<Panel title="Skills" onClose={() => {}}>b</Panel>)
+    b.unmount()
+    expect(bg).toHaveAttribute('inert')
+    a.unmount()
+    expect(bg).not.toHaveAttribute('inert')
+    bg.remove()
+  })
+
   it('keeps focus inside after a viewport resize across 768px', async () => {
     render(<Harness />)
     await userEvent.click(screen.getByText('Open'))

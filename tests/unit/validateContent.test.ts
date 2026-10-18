@@ -120,6 +120,18 @@ describe('validateContent', () => {
     expect(rules(cv2)).toContain('corrected-claim')
   })
 
+  it.each(['7+ shipped projects', 'shipped more than 7 games', 'shipped 7+ games', 'seven shipped titles'])('flags the corrected Medrick claim: %s', (text) => {
+    const cv = validCV()
+    cv.projects.projects[0].summary = confirmed(text)
+    expect(rules(cv)).toContain('corrected-claim')
+  })
+
+  it('accepts the accurate Medrick wording', () => {
+    const cv = validCV()
+    cv.projects.projects[0].summary = confirmed('Worked on 7+ mobile game projects, four of which reached release.')
+    expect(rules(cv)).not.toContain('corrected-claim')
+  })
+
   it('flags a confirmed non-https url anywhere, e.g. a thesis link', () => {
     const cv = validCV()
     cv.education.status = 'partial'

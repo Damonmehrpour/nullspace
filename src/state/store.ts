@@ -31,6 +31,8 @@ type Data = {
   subtitle: { text: string; id: number } | null
   /** Index of the project artifact the player stands next to (drives the "E to open" prompt). */
   nearArtifact: number | null
+  /** A non-section dialog (Settings) is open; pauses the world like a panel. */
+  overlay: 'settings' | null
   /** Where the most recent panel was opened from (drives the skipTour line). */
   lastOpenSource: OpenSource | null
   settings: Settings
@@ -56,6 +58,9 @@ type Actions = {
   clearTeleport(): void
   say(text: string): void
   setNearArtifact(i: number | null): void
+  setOverlay(o: 'settings' | null): void
+  /** Clears in-flight world state (reveal, teleport) when the world is left. */
+  leaveWorld(): void
   clearSubtitle(id: number): void
   updateSettings(p: Partial<Settings>): void
   setModePreference(m: ModePreference): void
@@ -77,6 +82,7 @@ export function initialState(): Data {
     teleportRequest: null,
     subtitle: null,
     lastOpenSource: null,
+    overlay: null,
     nearArtifact: null,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
@@ -98,7 +104,19 @@ function cancelReveal(s: Data): Partial<Data> {
 
 export const useStore = create<StoreState>()((set, get) => ({
   ...loadInitialState(),
-  setPhase: (phase) => set({ phase }),
+  setPhase: (phase) => {
+    if (phase !== 'world' && phase !== 'loading3d') get().leaveWorld()
+    set({ phase })
+  },
+  setOverlay: (overlay) => set({ overlay }),
+  leaveWorld: () =>
+    set((s) => ({
+      revealing: null,
+      revealElapsed: 0,
+      teleportRequest: null,
+      nearArtifact: null,
+      ...(s.revealing ? { revealPlayed: withAdded(s.revealPlayed, s.revealing) } : {}),
+    })),
   openSection: (id, o) => set((s) => ({ ...cancelReveal(s), panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id), lastOpenSource: o.source })),
   openProject: (id, o) => set((s) => ({ ...cancelReveal(s), panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects'), lastOpenSource: o.source })),
   closePanel: () =>
@@ -112,14 +130,14 @@ export const useStore = create<StoreState>()((set, get) => ({
   setRevealing: (revealing) => set({ revealing, revealElapsed: 0 }),
   arrive: (id) => {
     const s = get()
-    if (s.panel || s.revealing) return
+    if (s.panel || s.overlay || s.revealing) return
     s.markWorldVisited(id)
     if (s.revealPlayed.has(id)) s.openSection(id, { source: 'arrival' })
     else s.setRevealing(id)
   },
   tickReveal: (dt) => {
     const s = get()
-    if (!s.revealing) return
+    if (!s.revealing || s.overlay) return
     const id = s.revealing
     const elapsed = s.revealElapsed + dt
     if (elapsed * 1000 < revealDurationMs(id, s.revealPlayed, isReducedMotion(s.settings))) {
@@ -157,4 +175,4 @@ export const useStore = create<StoreState>()((set, get) => ({
   },
 }))
 
-export const isGameplayPaused = (s: Pick<StoreState, 'panel'>) => s.panel !== null
+export const isGameplayPaused = (s: Pick<StoreState, 'panel' | 'overlay'>) => s.panel !== null || s.overlay !== null

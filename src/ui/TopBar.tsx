@@ -12,7 +12,8 @@ const linkClass = 'px-2 py-1 font-semibold hover:underline underline-offset-4'
 
 export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: (id: SectionId) => void }) {
   const [navOpen, setNavOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsOpen = useStore((s) => s.overlay === 'settings')
+  const setOverlay = useStore((s) => s.setOverlay)
   const openSection = useStore((s) => s.openSection)
   const setPhase = useStore((s) => s.setPhase)
   const setModePreference = useStore((s) => s.setModePreference)
@@ -66,7 +67,7 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
           onClick={(e) => {
             rememberOpener(e.currentTarget)
             setNavOpen(false)
-            setSettingsOpen(true)
+            setOverlay('settings')
           }}
         >
           Settings
@@ -88,7 +89,7 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
             Enter 3D
           </button>
         )}
-        {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+        {settingsOpen && <Settings onClose={() => setOverlay(null)} />}
         {navOpen && <QuickNav world={mode === 'world'} onGuideMeThere={onGuideMeThere} onDone={() => setNavOpen(false)} />}
       </div>
     </nav>

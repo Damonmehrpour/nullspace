@@ -4,13 +4,22 @@ import { restoreFocus } from '../focusReturn'
 
 const TABBABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])'
 
-/** Marks the app background inert (skipped by Tab, hidden from assistive tech) while mounted. */
+let inertHolders = 0
+
+/**
+ * Marks the app background inert (skipped by Tab, hidden from assistive tech) while mounted.
+ * Reference-counted, so closing one dialog never re-enables the background under another.
+ */
 export function useBackgroundInert(active = true): void {
   useEffect(() => {
     if (!active) return
     const bg = document.getElementById('app-background')
+    inertHolders++
     bg?.setAttribute('inert', '')
-    return () => bg?.removeAttribute('inert')
+    return () => {
+      inertHolders--
+      if (inertHolders === 0) bg?.removeAttribute('inert')
+    }
   }, [active])
 }
 

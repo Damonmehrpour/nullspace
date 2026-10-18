@@ -20,7 +20,7 @@ const ADDRESS_KEYS = new Set(['url', 'src'])
 
 /** Claims the author has explicitly corrected; they must never reappear in confirmed text. */
 const CORRECTED_CLAIMS: { pattern: RegExp; why: string }[] = [
-  { pattern: /shipped (more than seven|7+|seven)|(7+|seven) shipped/i, why: 'Medrick: 7+ projects worked on, four released (not 7+ shipped)' },
+  { pattern: /shipped (more than )?(seven|7\+?)|(7\+?|seven) (\w+ )?shipped/i, why: 'Medrick: 7+ projects worked on, four released (not 7+ shipped)' },
   { pattern: /neural network/i, why: 'WasteGo: use of neural networks is unconfirmed' },
 ]
 

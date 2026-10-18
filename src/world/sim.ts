@@ -102,7 +102,10 @@ function autopilotInput(): { input: InputState; yaw: number } | null {
 export function simulate(dt: number): void {
   const store = useStore.getState()
   if (store.teleportRequest) {
-    teleportPlayer(store.teleportRequest)
+    const to = store.teleportRequest
+    teleportPlayer(to)
+    // Touch travel: bring the guide along so it waits at the island instead of beckoning from afar.
+    if (store.tourTarget) sim.guide = { ...sim.guide, name: 'present', pos: to, target: store.tourTarget, path: [to], pathIndex: 1, timer: 0, met: true }
     store.clearTeleport()
   }
   const paused = isGameplayPaused(store)
