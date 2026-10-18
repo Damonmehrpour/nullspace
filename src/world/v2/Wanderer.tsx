@@ -12,7 +12,7 @@ import {
   SphereGeometry,
   TorusGeometry,
   Vector2,
-  type BufferGeometry,
+  BufferGeometry,
   type Group,
   type Mesh,
 } from 'three'
@@ -26,7 +26,6 @@ import { radialShadowTexture } from './textures'
 // Palette: slate-indigo cloak, bone trim, near-black face, one warm ochre scarf, charcoal legs.
 const CLOAK = new Color('#353b55')
 const TRIM = new Color('#e4ddcc')
-const FACE = new Color('#07080c')
 const MANTLE = new Color('#454c69')
 const HIP_Y = 0.36
 const NECK_Y = 0.84
@@ -102,12 +101,15 @@ function mantleGeometry(): BufferGeometry {
   return g
 }
 
-/** Hood: a rounded shape with a backward point and a deep, dark face cavity. */
-function hoodGeometry(): BufferGeometry {
-  const g = new SphereGeometry(0.16, 40, 28)
+/**
+ * Hood: a rounded shape with a backward point and a deep face cavity. Returns the cloth shell and the
+ * cavity as separate geometries, so the cavity can use an unlit black material: no light ever shows a face.
+ */
+function hoodGeometry(): { shell: BufferGeometry; face: BufferGeometry } {
+  const g = new SphereGeometry(0.16, 64, 44)
   const p = g.getAttribute('position')
   const front = [0.96, -0.28, 0]
-  const colours: Color[] = []
+  const inFace: boolean[] = []
   for (let i = 0; i < p.count; i++) {
     let x = p.getX(i)
     let y = p.getY(i)
@@ -130,13 +132,24 @@ function hoodGeometry(): BufferGeometry {
     // A slight brim over the face opening keeps the face in shadow.
     if (f > OPEN - 0.2 && f <= OPEN && y > 0.02) x += 0.025 * (1 - Math.abs(f - (OPEN - 0.1)) / 0.1)
     p.setXYZ(i, x, y * 1.08, z * 0.94)
-    colours.push(f > OPEN + 0.02 ? FACE : CLOAK)
+    inFace.push(f > OPEN)
   }
-  g.computeVertexNormals()
-  return paint(g, (() => {
-    let i = 0
-    return () => colours[i++]
-  })())
+  // Split triangles by majority, so the seam hugs the opening circle; the bone rim sits on it.
+  const idx = g.getIndex()!
+  const shell: number[] = []
+  const face: number[] = []
+  for (let t = 0; t < idx.count; t += 3) {
+    const tri = [idx.getX(t), idx.getX(t + 1), idx.getX(t + 2)]
+    const out = tri.filter((v) => inFace[v]).length >= 2 ? face : shell
+    for (const v of tri) out.push(p.getX(v), p.getY(v), p.getZ(v))
+  }
+  const build = (arr: number[]) => {
+    const b = new BufferGeometry()
+    b.setAttribute('position', new BufferAttribute(new Float32Array(arr), 3))
+    b.computeVertexNormals()
+    return b
+  }
+  return { shell: paint(build(shell), () => CLOAK), face: build(face) }
 }
 
 /** One leg with its foot (pivot at the hip, foot pointing forward). */
@@ -161,25 +174,16 @@ function scarfGeometry() {
 /** Crisp bone outline around the face opening (a separate thin ring reads cleaner than painted vertices). */
 function rimGeometry(): BufferGeometry {
   // The opening edge sits where the face direction meets the sphere at cos = OPEN.
-  const ring = new TorusGeometry(0.16 * Math.sqrt(1 - OPEN * OPEN) * 0.95, 0.007, 6, 40)
+  // Centred on the seam and thick enough to cover the triangle steps on both sides of it.
+  const ring = new TorusGeometry(0.16 * Math.sqrt(1 - OPEN * OPEN), 0.0105, 6, 56)
   ring.rotateY(Math.PI / 2) // ring plane faces +x
-  ring.translate(0.16 * OPEN - 0.006, 0, 0)
+  ring.translate(0.16 * OPEN, 0, 0)
   ring.rotateZ(-Math.atan2(0.28, 0.96)) // tilt with the face direction
   ring.scale(1, 1.08, 0.94) // match the hood's own scaling
   return ring
 }
 
-function eyesGeometry(): BufferGeometry {
-  const a = new SphereGeometry(0.014, 8, 6)
-  a.scale(0.7, 1.25, 1)
-  a.translate(0, 0, 0.042)
-  const b = a.clone().translate(0, 0, -0.084)
-  return mergeGeometries([a, b])!
-}
-
-const EYE = new Color('#dff4ff')
-
-/** v2 player: the hooded wanderer. Consumes sim.player and sim.guidePose only (drop-in for the shard). */
+/** v2 player: the hooded wanderer; its face stays hidden in shadow. Consumes sim.player and sim.guidePose only (drop-in for the shard). */
 export function Wanderer() {
   const root = useRef<Group>(null)
   const body = useRef<Group>(null)
@@ -187,23 +191,23 @@ export function Wanderer() {
   const legR = useRef<Group>(null)
   const cloak = useRef<Group>(null)
   const head = useRef<Group>(null)
-  const eyes = useRef<Mesh>(null)
   const tail = useRef<Group>(null)
   const shadow = useRef<Mesh>(null)
   const { playerLight } = useRenderBudget()
-  const geo = useMemo(() => ({ cloak: cloakGeometry(), mantle: mantleGeometry(), hood: hoodGeometry(), leg: legGeometry(), scarf: scarfGeometry(), eyes: eyesGeometry(), rim: rimGeometry() }), [])
+  const geo = useMemo(() => ({ cloak: cloakGeometry(), mantle: mantleGeometry(), hood: hoodGeometry(), leg: legGeometry(), scarf: scarfGeometry(), rim: rimGeometry() }), [])
   const mats = useMemo(
     () => ({
       cloth: new MeshLambertMaterial({ vertexColors: true, side: DoubleSide }),
       legs: new MeshLambertMaterial({ color: '#25272e' }),
       scarf: new MeshLambertMaterial({ color: '#b5823f' }),
       rim: new MeshLambertMaterial({ color: TRIM }),
-      eyes: new MeshBasicMaterial({ color: EYE.clone(), toneMapped: false }),
+      // The face is unlit pure black: no light, the player's lamp included, can reveal features.
+      face: new MeshBasicMaterial({ color: '#000000' }),
     }),
     [],
   )
   const tex = useMemo(() => radialShadowTexture(), [])
-  const st = useRef({ phase: 0, last: null as null | { x: number; z: number }, gait: 0, headYaw: 0, nod: 0, blink: 0, nextBlink: 2.5, glance: 0 })
+  const st = useRef({ phase: 0, last: null as null | { x: number; z: number }, gait: 0, headYaw: 0, nod: 0 })
 
   useFrame(({ clock }, rawDt) => {
     const r = root.current
@@ -255,17 +259,6 @@ export function Wanderer() {
     s.nod += ((gp.state === 'greet' ? 1 : 0) - s.nod) * (1 - Math.exp(-dt * 6))
     head.current.rotation.z = (near ? 0.12 : 0) * calm - s.nod * Math.max(0, Math.sin(t * 9)) * 0.18 * calm
 
-    // Eyes: blink every few seconds; brighten while the kokedama speaks.
-    if (eyes.current) {
-      if (t > s.nextBlink) {
-        s.blink = 0.14
-        s.nextBlink = t + 2.5 + ((t * 7.31) % 3)
-      }
-      s.blink = Math.max(0, s.blink - dt)
-      eyes.current.scale.y = s.blink > 0 ? 0.15 : 1
-      mats.eyes.color.copy(EYE).multiplyScalar(0.75 + gp.speakPulse * 0.6)
-    }
-
     if (shadow.current) shadow.current.position.set(pos.x, 0.02, pos.z)
   })
 
@@ -287,9 +280,9 @@ export function Wanderer() {
             <mesh geometry={geo.scarf.tail} material={mats.scarf} />
           </group>
           <group ref={head} position={[0, NECK_Y + 0.11, 0]}>
-            <mesh geometry={geo.hood} material={mats.cloth} />
+            <mesh geometry={geo.hood.shell} material={mats.cloth} />
+            <mesh name="v2-wanderer-face" geometry={geo.hood.face} material={mats.face} />
             <mesh geometry={geo.rim} material={mats.rim} />
-            <mesh ref={eyes} geometry={geo.eyes} material={mats.eyes} position={[0.075, -0.035, 0]} />
           </group>
         </group>
         {/* Always mounted: removing a light changes the light count and recompiles every lit shader. */}

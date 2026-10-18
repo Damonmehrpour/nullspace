@@ -83,3 +83,22 @@ test('v2: the first drawn frame already has every shader compiled', async ({ pag
   const steady = Math.max(...frames.map((f) => f.programs))
   expect(frames[0].programs).toBeGreaterThanOrEqual(steady - 1)
 })
+
+// The wanderer's face stays hidden in shadow: no eyes or glowing dots, and the face cavity is unlit black
+// (so no light, the player's own lamp included, can reveal features).
+test('v2: the wanderer has no visible facial features', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  type Mat = { mesh: string; type: string; color: string; emissive: string | null }
+  await page.waitForFunction(() => (window as unknown as { __nullspace: { materialsUnder(n: string): unknown[] } }).__nullspace.materialsUnder('v2-wanderer').length > 0)
+  const mats = (await page.evaluate(() => (window as unknown as { __nullspace: { materialsUnder(n: string): unknown } }).__nullspace.materialsUnder('v2-wanderer'))) as Mat[]
+  expect(mats.length).toBeGreaterThan(0)
+  // Nothing on the figure glows.
+  expect(mats.filter((m) => m.emissive !== null && m.emissive !== '000000')).toEqual([])
+  // The only unlit material is the black face cavity.
+  const unlit = mats.filter((m) => m.type === 'MeshBasicMaterial')
+  expect(unlit).toEqual([{ mesh: 'v2-wanderer-face', type: 'MeshBasicMaterial', color: '000000', emissive: null }])
+})

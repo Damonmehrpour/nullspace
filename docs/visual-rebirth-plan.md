@@ -16,18 +16,18 @@ Three directions were considered (none of them decorates the capsule):
 
 | Direction | Silhouette and personality | Movement | Cost |
 |---|---|---|---|
-| **A. Hooded wanderer (chosen by the author)** | A small hooded traveller: big hood, short sculpted cloak with a pointed hem, slim legs. Dark face cavity with two faint eye glints. Mysterious, curious, a little lonely; the kokedama brings the warmth | Readable stride: legs swing under the cloak, the hem sways and lags, the body bobs and leans with speed. The hood turns toward the kokedama | Procedural, about 2–3k triangles, 6–7 draw calls, no textures |
+| **A. Hooded wanderer (chosen by the author)** | A small hooded traveller: big hood, short sculpted cloak with a pointed hem, slim legs. A face completely hidden in shadow. Mysterious, curious, a little lonely; the kokedama brings the warmth | Readable stride: legs swing under the cloak, the hem sways and lags, the body bobs and leans with speed. The hood turns toward the kokedama | Procedural, about 2–3k triangles, 6–7 draw calls, no textures |
 | B. Stone pilgrim | A faceted, carved figure made of the same concrete as the world, as if a statue walked off its plinth | Heavy, deliberate steps, with stone dust at each footfall | Similar |
 | C. Lantern sprite | A floating cloth lantern with a soft inner light | Drifts and sways; no legs | Cheapest, but weakest as a "traveller" |
 
 **Confirmed direction: A, the mysterious stylised humanoid wanderer.**
 - **Silhouette:** recognisably humanoid at gameplay distance, carried by the hood point, the cloak's pointed hem and the leg gap.
 - **Palette:** deep slate-indigo cloak (`#353b55`), near-black face cavity, bone-white trim along the hem and hood edge, a muted ochre scarf as the single warm accent, charcoal legs. Dark-on-white keeps the player from disappearing into the architecture. The trim and scarf separate it from the void.
-- **Face:** no features except two small, soft eye glints that blink.
+- **Face:** completely hidden in shadow. No eyes, dots or features of any kind; the cavity is unlit black, so no light (the player's own lamp included) reveals anything. Author's correction after the first prototype.
 - **Motion:**
   - **Walk:** stride phase advances with the distance actually walked, so the feet don't slide; legs swing; the hem lags and sways.
   - **Idle:** breathing, an occasional look around.
-- **Reactions to the kokedama:** the hood turns toward it when it's near, the eyes brighten while it speaks, and the hood tilts in a small nod when it greets.
+- **Reactions to the kokedama:** the hood turns toward it when it's near and tilts in a small nod when it greets.
 - **Reduced motion:** amplitudes drop to a calm minimum.
 
 ### Kokedama upgrade

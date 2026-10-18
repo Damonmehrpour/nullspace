@@ -12,15 +12,15 @@ A small traveller exploring an impossible world:
 | Aspect | Prototype |
 |---|---|
 | Silhouette | Recognisably humanoid: a rounded hood drooping into a soft point at the back, a layered **shoulder mantle** over a short **cloak**, both cut into points (the cloak's longest point trails at the back), slim legs with rounded boots |
-| Face | A dark recessed opening, crisply rimmed in bone, with **two soft eye glints** that blink every few seconds. Nothing else |
+| Face | **Completely hidden in shadow:** a deep recessed opening, crisply rimmed in bone, rendered unlit pure black. No eyes, dots or features from any angle, and no light (the player's own lamp included) can reveal anything. *Corrected after your first review: the eye glints were removed* |
 | Palette | Slate-indigo cloak with a lighter mantle and bone trim (reads dark against the white architecture), a muted ochre scarf as the single warm accent, charcoal legs. The kokedama stays the only green |
 | Walk | The stride follows the distance actually walked (no foot sliding), with legs swinging under the cloak, a double bob per stride and a forward lean with speed. The cloak lags and sways; the scarf tail trails |
 | Idle | Breathing, slow glances around |
-| Reactions to the kokedama | The head turns toward it when it's within 5 m, the eyes brighten while it speaks, and the hood dips in a small nod when it greets |
+| Reactions to the kokedama | The head turns toward it when it's within 5 m, and the hood dips in a small nod when it greets |
 | Reduced motion | All amplitudes drop to about a third |
 | Size | About 1.1 m tall, so the kokedama hovers just above head height: a small figure in a monumental world |
 
-Built procedurally (no downloads): about 4.5k triangles, 10 draw calls (the shard used 3), Lambert materials (the cheap lighting model from the performance pass).
+Built procedurally (no downloads): about 7.5k triangles, 10 draw calls (the shard used 3), Lambert materials (the cheap lighting model from the performance pass).
 
 ## The kokedama upgrade
 
@@ -41,6 +41,7 @@ One idea was tried and rejected during prototyping: separate moss tufts. As cone
 | View | File |
 |---|---|
 | Wanderer close-up / walking | `wanderer-closeup.webp`, `wanderer-walking.webp` |
+| Face check: front, three-quarter, side | `face-front.webp`, `face-three-quarter.webp`, `face-side.webp` |
 | Kokedama close-up | `kokedama-closeup.webp` |
 | Front three-quarter, side, back | `front-three-quarter.webp`, `side.webp`, `back.webp` |
 | Mid-stride | `walking.webp` |
@@ -63,6 +64,8 @@ The agreed budget for this upgrade: at most +10% frame time at spawn on the pixe
 | Experience close | 16 → 23 | 6.8k → 11.1k | 66.7 → 71.1 (+7%) | 0.4 → 0.5 |
 | Contact close | 16 → 23 | 5.6k → 9.9k | 62.0 → 65.2 (+5%) | 0.4 → 0.5 |
 
+After the face correction (an unlit face cavity and a smoother hood): spawn 108.0 ms, 61 draw calls, 37.5k triangles. That's the same within noise; the extra hood triangles are about 3k.
+
 Isolated costs at the Education close-up (pixel-bound): the whole kokedama is 7.8 ms, of which the fuzz shells are 4.9 ms (unchanged from Phase 0); the wanderer's body is 3.0 ms; the buds are about 0.2 ms. A fourth fuzz shell was tried and cost about 2.5 ms for little visible gain, so it was dropped.
 
 **30 s walk from Enter with adaptive quality on:**
@@ -77,4 +80,4 @@ Isolated costs at the Education close-up (pixel-bound): the whole kokedama is 7.
 ## Tests
 
 - Unit and component: 258/258.
-- End-to-end: 41/41. This includes the v2 checks: no shader errors, arrivals and panels working, draw-call and triangle budget at spawn, no recompiles when switching to Low, and every shader compiled before the first frame.
+- End-to-end: 42/42, including a new check that the wanderer has no visible facial features (nothing glows, and the only unlit material is the black face cavity). This includes the v2 checks: no shader errors, arrivals and panels working, draw-call and triangle budget at spawn, no recompiles when switching to Low, and every shader compiled before the first frame.

@@ -48,6 +48,7 @@ test('character close-ups', async ({ page }, info) => {
     await page.waitForTimeout(900)
     await page.screenshot({ path: `${dir}/${name}.png` })
   }
+  await shoot('front', facing, 2.0, 1.0, 0.75)
   await shoot('front-three-quarter', facing + 0.6, 2.2, 1.0, 0.6)
   await shoot('side', facing + Math.PI / 2, 2.6, 0.9, 0.55)
   await shoot('back', facing + Math.PI, 2.6, 1.2, 0.55)

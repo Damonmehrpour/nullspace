@@ -8,7 +8,7 @@ import { arrivalNodeId, nearestNode, shortestPath } from '../core/routeGraph'
 import { isTourComplete } from '../core/tour'
 import { useStore } from '../state/store'
 import { graph, sim, simulate, teleportPlayer } from './sim'
-import { Mesh, MeshLambertMaterial, MeshStandardMaterial, type Material } from 'three'
+import { type Color, Mesh, MeshLambertMaterial, MeshStandardMaterial, type Material } from 'three'
 import { CONCRETE_DETAIL } from './v2/concrete'
 
 const concreteOriginals = new Map<Mesh, Material>()
@@ -36,6 +36,7 @@ export type NullspaceHooks = {
   placeGuide(pos: Vec2, facing?: number): void
   getPlayer(): { pos: Vec2; facing: number }
   setPlayerFacing(facing: number): void
+  materialsUnder(name: string): { mesh: string; type: string; color: string; emissive: string | null }[]
   lockQuality(): void
   startTimeline(): void
   /** Ablation: hide/show every object whose name starts with prefix; returns how many matched. */
@@ -132,6 +133,19 @@ export function installTestHooks(): void {
       sim.qualityLocked = true
     },
     getPlayer: () => ({ pos: sim.player.pos, facing: sim.player.facing }),
+    materialsUnder: (name) => {
+      const out: { mesh: string; type: string; color: string; emissive: string | null }[] = []
+      sim.scene?.getObjectByName(name)?.traverse((o) => {
+        if (!(o instanceof Mesh)) return
+        for (const m of [o.material].flat()) {
+          const c = (m as { color?: Color }).color
+          const e = (m as { emissive?: Color; emissiveIntensity?: number }).emissive
+          const ei = (m as { emissiveIntensity?: number }).emissiveIntensity ?? 0
+          out.push({ mesh: o.name, type: m.type, color: c ? c.getHexString() : '', emissive: e && ei > 0 ? e.getHexString() : null })
+        }
+      })
+      return out
+    },
     setPlayerFacing: (facing) => {
       sim.player = { ...sim.player, facing }
     },
