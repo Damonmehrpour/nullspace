@@ -31,6 +31,8 @@ export function createKeyboardInput(target: Window): { state: InputState; clear(
     const key = KEYMAP[e.code]
     if (!key) return
     if (down && (isTypingTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey)) return
+    // Enter/E on a focused control belongs to that control, not to the world.
+    if (down && key === 'interact' && e.target instanceof Element && e.target.closest('button, a, [role="button"]')) return
     state[key] = down
   }
   const onDown = (e: KeyboardEvent) => set(e, true)

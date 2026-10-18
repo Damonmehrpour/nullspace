@@ -107,6 +107,18 @@ describe('keyboard input', () => {
     input.dispose()
   })
 
+  it('does not treat Enter on a focused button as an interaction', () => {
+    const input = createKeyboardInput(window)
+    const button = document.createElement('button')
+    document.body.appendChild(button)
+    button.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', bubbles: true }))
+    expect(input.state.interact).toBe(false)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
+    expect(input.state.interact).toBe(true)
+    button.remove()
+    input.dispose()
+  })
+
   it('clears held keys when the window loses focus', () => {
     const input = createKeyboardInput(window)
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }))

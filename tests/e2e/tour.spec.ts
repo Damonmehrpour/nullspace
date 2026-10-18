@@ -94,6 +94,23 @@ test.describe('guided tour (deterministic clock)', () => {
     expect(await ns(page, 'isRevealing')).toBe(true)
   })
 
+  test('each artifact opens its own project details', async ({ page }) => {
+    await gotoEntry(page)
+    await enterWorld(page)
+    await ns(page, 'advance', 0.6)
+    await ns(page, 'teleportPlayer', 'projects')
+    await ns(page, 'advance', 2.2)
+    await expect(page.getByRole('dialog', { name: 'Projects' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await ns(page, 'interactArtifact', 0)
+    const featured = page.getByRole('dialog', { name: 'XR Meditation System' })
+    await expect(featured).toBeVisible()
+    await expect(featured.getByText('IN DOCUMENTATION')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await ns(page, 'interactArtifact', 2)
+    await expect(page.getByRole('dialog').getByText('PLACEHOLDER')).toBeVisible()
+  })
+
   test('quick-nav Open inside the world never counts as a visit', async ({ page }) => {
     await gotoEntry(page)
     await enterWorld(page)

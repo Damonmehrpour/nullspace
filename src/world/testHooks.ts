@@ -22,6 +22,7 @@ export type NullspaceHooks = {
   isTourComplete(): boolean
   isRevealing(): boolean
   say(text: string): void
+  interactArtifact(i: 0 | 1 | 2): void
 }
 
 const STEP = 1 / 60
@@ -54,6 +55,17 @@ export function installTestHooks(): void {
     isTourComplete: () => isTourComplete(WORLD.tourOrder, useStore.getState().worldVisited),
     isRevealing: () => useStore.getState().revealing !== null,
     say: (text) => useStore.getState().say(text),
+    interactArtifact: (i) => {
+      const slot = WORLD.islands.find((x) => x.id === 'projects')!.artifactSlots[i]
+      teleportPlayer({ x: slot.x + 0.4, z: slot.z })
+      const input = sim.input
+      if (!input) return
+      input.state.interact = false
+      simulate(STEP)
+      input.state.interact = true
+      simulate(STEP)
+      input.state.interact = false
+    },
   }
   ;(window as unknown as { __nullspace: NullspaceHooks }).__nullspace = hooks
 }

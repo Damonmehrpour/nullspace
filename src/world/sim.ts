@@ -2,6 +2,8 @@
 // One step function means tests can freeze the clock and advance it deterministically.
 import type { SectionId } from '../content/schema'
 import { WORLD } from '../content/world'
+import { cv } from '../content/cv'
+import { artifactInRange } from '../core/arrival'
 import { createCameraRig, stepCameraRig, type CameraRigState } from '../core/cameraRig'
 import { v, type Vec2 } from '../core/geometry'
 import { createGuide, stepGuide, type GuidePose, type GuideState } from '../core/guideBrain'
@@ -30,6 +32,8 @@ export type Sim = {
   frozen: boolean
   /** Test autopilot: remaining waypoints the player walks along, overriding keyboard input. */
   autopilot: Vec2[] | null
+  /** Interact key state from the previous step, so a held key triggers once. */
+  interactHeld: boolean
 }
 
 function freshGuide() {
@@ -50,8 +54,10 @@ export const sim: Sim = {
   listeners: new Set(),
   frozen: false,
   autopilot: null,
+  interactHeld: false,
 }
 
+const PROJECTS = WORLD.islands.find((i) => i.id === 'projects')!
 const NO_INPUT: InputState = { up: false, down: false, left: false, right: false, interact: false }
 const FORWARD: InputState = { ...NO_INPUT, up: true }
 
@@ -63,6 +69,7 @@ export function resetSim(): void {
   sim.guidePose = g.pose
   sim.zones = createZoneTracker(WORLD.tourOrder)
   sim.autopilot = null
+  sim.interactHeld = false
 }
 
 export const reducedMotion = () => isReducedMotion(useStore.getState().settings)
@@ -100,8 +107,15 @@ export function simulate(dt: number): void {
   sim.player = p.state
   events.push(...p.events)
 
+  const interact = !paused && (sim.input?.state.interact ?? false)
+  if (interact && !sim.interactHeld) {
+    const slot = artifactInRange(sim.player.pos, PROJECTS.artifactSlots)
+    if (slot !== null) store.openProject(cv.projects.projects[slot].id, { source: 'artifact' })
+  }
+  sim.interactHeld = interact
+
   let entered: SectionId | null = null
-  if (!paused) {
+  if (!paused && !isGameplayPaused(useStore.getState())) {
     const z = updateZones(sim.zones, sim.player.pos, WORLD.islands)
     sim.zones = z.tracker
     entered = z.entered

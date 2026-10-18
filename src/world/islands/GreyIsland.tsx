@@ -1,5 +1,6 @@
 import type { IslandDef } from '../../content/world'
 import { at } from '../space'
+import { Artifacts } from '../artifacts/Artifacts'
 import { SharedReveal } from '../reveals/SharedReveal'
 import { IslandTitle } from './IslandTitle'
 
@@ -16,6 +17,7 @@ export function GreyIsland({ island }: { island: IslandDef }) {
         <meshBasicMaterial color="#6fae3c" fog={false} transparent opacity={0.6} />
       </mesh>
       <SharedReveal island={island} />
+      {island.id === 'projects' && <Artifacts island={island} />}
       <IslandTitle island={island} />
     </group>
   )
