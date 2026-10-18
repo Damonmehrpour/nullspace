@@ -44,7 +44,8 @@ export function Scene() {
       <GameLoop />
       <DialogueBridge />
       {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
-      {DEBUG_STATS && <StatsGl className="!top-16" />}
+      {/* Drei strips stats-gl's inline position/z-index, so positioning must come from these classes. */}
+      {DEBUG_STATS && <StatsGl id="debug-stats" className="pointer-events-none fixed top-16 left-2 z-50" />}
     </>
   )
 }
