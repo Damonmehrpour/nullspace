@@ -21,6 +21,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { GUIDE } from '../../core/config'
 import { useRenderBudget } from '../quality'
 import { reducedMotion, sim } from '../sim'
+import { guideCue } from './cues'
 import { NOISE_GLSL } from './glsl'
 import { leafShape } from './shapes'
 import { radialShadowTexture } from './textures'
@@ -194,7 +195,7 @@ export function GuideBodyV2() {
   const budGeo = useMemo(() => new SphereGeometry(0.014, 8, 6), [])
   const shadowTex = useMemo(() => radialShadowTexture(), [])
   const leafObj = useMemo(() => new Object3D(), [])
-  const motion = useRef({ last: new Vector3(), vel: new Vector3(), swing: new Vector3(), waitT: 0, ruffle: 0, hopT: 9, lastState: '', tiltX: 0, tiltZ: 0 })
+  const motion = useRef({ last: new Vector3(), vel: new Vector3(), swing: new Vector3(), waitT: 0, ruffle: 0, hopT: 9, lastState: '', tiltX: 0, tiltZ: 0, cue: guideCue.seq, delight: 0 })
 
   const placeLeaves = (sway: number, lean: number, t: number) => {
     const m = leaves.current
@@ -255,6 +256,13 @@ export function GuideBodyV2() {
 
     // Greeting hop: a short arc each time it enters the greet state.
     if (pose.state === 'greet' && mo.lastState !== 'greet') mo.hopT = 0
+    // A discovery in the world (e.g. the player walks through an Experience portal): hop, glow, perk up.
+    if (guideCue.seq !== mo.cue) {
+      mo.cue = guideCue.seq
+      mo.hopT = 0
+      mo.delight = 1
+    }
+    mo.delight = Math.max(0, mo.delight - dt * 0.7)
     mo.lastState = pose.state
     mo.hopT += dt
     const hop = mo.hopT < 0.5 ? Math.sin((mo.hopT / 0.5) * Math.PI) * 0.16 * calm : 0
@@ -290,11 +298,11 @@ export function GuideBodyV2() {
     // Lean into travel; a slow curious tilt while waiting; a quick wiggle when speaking.
     b.rotation.x = speed * 0.05 * calm + mo.tiltX
     b.rotation.z = pose.beckon * Math.sin(t * 1.3) * 0.22 * calm + Math.sin(t * 18) * speak * 0.06 + mo.tiltZ
-    coreMat.emissiveIntensity = 0.3 + pose.glow * 0.5
+    coreMat.emissiveIntensity = 0.3 + pose.glow * 0.5 + mo.delight * 0.35
 
     // Leaves perk up when it speaks or greets and droop slowly the longer it's kept waiting.
     const droop = Math.min(mo.waitT / 8, 1) * 0.5
-    const perk = speak * 0.3 + (pose.state === 'greet' ? 0.25 : 0)
+    const perk = speak * 0.3 + (pose.state === 'greet' ? 0.25 : 0) + mo.delight * 0.3
     const sway = (0.06 + 0.1 * Math.min(speed, 1) + 0.25 * speak + 0.3 * mo.ruffle) * calm
     placeLeaves(sway, 0.55 + droop - perk, t)
     if (frond.current) frond.current.rotation.z = Math.sin(t * 1.1) * 0.08 * calm - perk * 0.3 + droop * 0.4

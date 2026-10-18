@@ -102,3 +102,56 @@ test('v2: the wanderer has no visible facial features', async ({ page }, info) =
   const unlit = mats.filter((m) => m.type === 'MeshBasicMaterial')
   expect(unlit).toEqual([{ mesh: 'v2-wanderer-face', type: 'MeshBasicMaterial', color: '000000', emissive: null }])
 })
+
+// Experience portals: walking the corridor discovers each career chapter once per visit, and each
+// discovery cues the kokedama (walking back through adds nothing).
+test('v2: walking the Experience corridor discovers each portal once', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  const ns = (fn: string, ...args: unknown[]) =>
+    page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
+  await ns('freezeClock')
+  const a = ((90 - 72) * Math.PI) / 180
+  const at = (lx: number) => ({ x: (22 + lx) * Math.cos(a), z: (22 + lx) * Math.sin(a) })
+  const walk = async (from: number, to: number) => {
+    const step = from < to ? 0.35 : -0.35
+    for (let lx = from; step > 0 ? lx <= to : lx >= to; lx += step) {
+      await ns('setView', at(lx), a)
+      await page.waitForTimeout(40)
+    }
+  }
+  await walk(-1.6, -1.5)
+  const before = (await ns('getGuideCue')) as number
+  const programs = ((await ns('listPrograms')) as string[]).length
+  await walk(-1.5, 5.6)
+  expect((await ns('getGuideCue')) as number).toBe(before + 4)
+  await walk(5.6, -1.5)
+  expect((await ns('getGuideCue')) as number).toBe(before + 4)
+  // Portals fading for the camera along the way switch to an already-compiled variant.
+  expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
+})
+
+// Everything compiles behind the loading screen: bringing each island into view later must not
+// compile a new shader (a late compile is a visible hitch on slower machines).
+test('v2: visiting every island compiles no new shader programs', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  const ns = (fn: string, ...args: unknown[]) =>
+    page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
+  await ns('freezeClock')
+  await page.waitForTimeout(500)
+  const before = ((await ns('listPrograms')) as string[]).length
+  for (let i = 0; i < 5; i++) {
+    const a = ((90 - i * 72) * Math.PI) / 180
+    // Stand just outside each island's arrival zone, facing it, so it fills the view.
+    await ns('setView', { x: 15.5 * Math.cos(a), z: 15.5 * Math.sin(a) }, a)
+    await page.waitForTimeout(400)
+  }
+  expect(((await ns('listPrograms')) as string[]).length).toBe(before)
+})

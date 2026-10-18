@@ -10,6 +10,7 @@ import { useStore } from '../state/store'
 import { graph, sim, simulate, teleportPlayer } from './sim'
 import { type Color, Mesh, MeshLambertMaterial, MeshStandardMaterial, type Material } from 'three'
 import { CONCRETE_DETAIL } from './v2/concrete'
+import { guideCue } from './v2/cues'
 
 const concreteOriginals = new Map<Mesh, Material>()
 
@@ -36,6 +37,7 @@ export type NullspaceHooks = {
   placeGuide(pos: Vec2, facing?: number): void
   getPlayer(): { pos: Vec2; facing: number }
   setPlayerFacing(facing: number): void
+  getGuideCue(): number
   materialsUnder(name: string): { mesh: string; type: string; color: string; emissive: string | null }[]
   lockQuality(): void
   startTimeline(): void
@@ -146,6 +148,7 @@ export function installTestHooks(): void {
       })
       return out
     },
+    getGuideCue: () => guideCue.seq,
     setPlayerFacing: (facing) => {
       sim.player = { ...sim.player, facing }
     },

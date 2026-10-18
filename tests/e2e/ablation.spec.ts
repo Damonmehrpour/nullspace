@@ -31,10 +31,17 @@ test('ablation', async ({ page }, info) => {
   await page.waitForTimeout(3000)
   await ns('freezeClock')
   await ns('markAllRevealed')
-  await ns('setView', { x: 0, z: 17 }, Math.PI / 2)
-  await ns('placeGuide', { x: 0.8, z: 16.4 }, 0)
-  await ns('advance', 0.05)
-  await ns('setCamera', [0, 4.2, 9.5], [0, 1.8, 22.5])
+  if (process.env.ABLATION_VIEW === 'experience') {
+    // Gameplay camera in front of the Experience island (same as the profile's "experience close").
+    const a = ((90 - 72) * Math.PI) / 180
+    await ns('setView', { x: 18.5 * Math.cos(a), z: 18.5 * Math.sin(a) }, a)
+    await ns('advance', 0.05)
+  } else {
+    await ns('setView', { x: 0, z: 17 }, Math.PI / 2)
+    await ns('placeGuide', { x: 0.8, z: 16.4 }, 0)
+    await ns('advance', 0.05)
+    await ns('setCamera', [0, 4.2, 9.5], [0, 1.8, 22.5])
+  }
   await page.waitForTimeout(800)
 
   const measure = () =>
@@ -58,7 +65,7 @@ test('ablation', async ({ page }, info) => {
   const rows: string[] = []
   const base = await measure()
   rows.push(`| (everything on) | ${base.p50.toFixed(2)} | ${base.p90.toFixed(2)} | |`)
-  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow', 'v2-wanderer', 'v2-kokedama', 'v2-buds'] : []
+  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow', 'v2-wanderer', 'v2-kokedama', 'v2-buds', 'v2-portal', 'v2-portal-lights', 'v2-engraving', 'v2-moss', 'v2-stele'] : []
   for (const p of parts) {
     const n = (await ns('setVisibleByName', p, false)) as number
     await page.waitForTimeout(200)

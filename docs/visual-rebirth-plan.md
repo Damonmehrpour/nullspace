@@ -1,6 +1,6 @@
 # Visual Rebirth: audit and plan
 
-Status: **Phase 0 accepted. Phase 1 delivered (see `docs/visual-phase1/`). Plan revised after the author's expanded creative feedback (revision 2, below). The character prototype (Phase 2A) is behind `?visual=v2`, awaiting visual approval.** Nothing after Phase 2A has started.
+Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture) started with one proof of concept, the Experience island (`docs/visual-phase2b/`), awaiting review.** The other islands and later phases haven't started.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 
@@ -79,11 +79,11 @@ Add the public number **+358 45 8629910**, linked as `tel:+358458629910`, in the
 |---|---|---|
 | 0. Proof of concept | Material, lighting, void, Education, first kokedama, camera | Accepted |
 | 1. Global look | Walkways, bridge, chamfers, contact shadows across the world | Delivered |
-| **2A. Character prototype** | Hooded wanderer plus the upgraded kokedama, behind `?visual=v2`, with screenshots and measured cost. **Stop for visual approval** | **This step** |
-| 2B. Character finish | Polish from your feedback; the kokedama's environmental reactions across the world; Low-quality variants; reduced-motion review | After 2A approval |
+| 2A. Character prototype | Hooded wanderer plus the upgraded kokedama | **Approved** (faceless wanderer and kokedama are the character baseline) |
+| **2B. Island architecture** | Per your direction, after 2A approval: one island at a time, each stopping for review. **Experience (Monumental Corridor of Portals) prototype delivered** (`docs/visual-phase2b/`). Then Projects, Skills and Contact | **Experience: awaiting review** |
+| 2C. Character finish | Polish from feedback; the kokedama's environmental reactions across the world; Low-quality variants; reduced-motion review | Later |
 | 3. Story and contact | XR Meditation dialogue moment; contact number in the panel, the 2D portfolio and mobile | After 2B |
-| 4. Island architecture | Experience colonnade, Projects atrium, Skills data city, Contact signal tower, each with environmental detail and its reveal, one island per commit | After 3 |
-| 5. UI/UX | Prompts, navigation, panels, typography and spacing, transitions, mobile and keyboard | After 4 (can run alongside 4 if you prefer) |
+| 5. UI/UX | Prompts, navigation, panels, typography and spacing, transitions, mobile and keyboard | After the islands (can run alongside them if you prefer) |
 | 6. Atmosphere and final pass | Light shafts, fog and camera polish, final performance pass, full screenshot set, final review | Last |
 
 Every phase keeps the original guarantees:

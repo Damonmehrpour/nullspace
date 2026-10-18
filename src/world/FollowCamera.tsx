@@ -41,16 +41,19 @@ export function FollowCamera() {
     scene.traverse((o) => {
       if (o.userData.blocksCamera) blockers.push(o)
     })
-    const hit = tmp.ray.intersectObjects(blockers, false)[0]
-    // v2: blockers marked fadeOnBlock turn translucent instead of pulling the camera into a cramped close-up.
+    const hits = tmp.ray.intersectObjects(blockers, false)
+    // v2: blockers marked fadeOnBlock turn translucent instead of pulling the camera into a cramped
+    // close-up; every one in the way fades (a corridor of portals can have several).
+    const fading = new Set(hits.filter((h) => h.object.userData.fadeOnBlock).map((h) => h.object))
+    const hit = hits.find((h) => !h.object.userData.fadeOnBlock)
     for (const b of blockers) {
       if (!b.userData.fadeOnBlock) continue
       const mat = (b as Mesh).material as Material
-      const target = hit?.object === b ? 0.04 : 1
+      const target = fading.has(b) ? 0.04 : 1
       mat.opacity += (target - mat.opacity) * (1 - Math.exp(-dt * 8))
       mat.depthWrite = mat.opacity > 0.95
     }
-    if (hit && !hit.object.userData.fadeOnBlock) tmp.desired.copy(tmp.look).addScaledVector(tmp.dir, Math.max(MIN_DISTANCE, hit.distance - 0.3))
+    if (hit) tmp.desired.copy(tmp.look).addScaledVector(tmp.dir, Math.max(MIN_DISTANCE, hit.distance - 0.3))
 
     const k = 1 - Math.exp(-dt * 8)
     camera.position.lerp(tmp.desired, k)

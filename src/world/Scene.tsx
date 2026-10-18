@@ -16,13 +16,14 @@ import { Walkways } from './islands/Walkways'
 import { Player } from './Player'
 import { LightingV2, VoidV2 } from './v2/EnvironmentV2'
 import { EducationV2 } from './v2/EducationV2'
+import { ExperienceV2 } from './v2/ExperienceV2'
 import { GuideBodyV2 } from './v2/GuideBodyV2'
 import { MonolithV2 } from './v2/MonolithV2'
 import { Wanderer } from './v2/Wanderer'
 import { WalkwaysV2 } from './v2/WalkwaysV2'
 import { V2 } from './visual'
 
-const ISLANDS = { education: V2 ? EducationV2 : Education, experience: Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
+const ISLANDS = { education: V2 ? EducationV2 : Education, experience: V2 ? ExperienceV2 : Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
 
 /** ?debug shows an fps/GPU overlay, so the author can profile the live build on their own hardware. */
 const DEBUG_STATS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug')
