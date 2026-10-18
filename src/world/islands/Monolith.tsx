@@ -10,7 +10,7 @@ export function Monolith({ layout }: { layout: WorldLayout }) {
         <cylinderGeometry args={[plinthRadius, plinthRadius * 0.92, 1.5, 48]} />
         <meshStandardMaterial color="#d9d8d2" roughness={0.95} />
       </mesh>
-      <mesh position={[0, 5, 0]} rotation={[0, Math.PI / 5, 0]}>
+      <mesh position={[0, 5, 0]} rotation={[0, Math.PI / 5, 0]} userData={{ blocksCamera: true }}>
         <boxGeometry args={[3, 9, 1]} />
         <meshStandardMaterial color="#ecebe6" roughness={0.9} />
       </mesh>

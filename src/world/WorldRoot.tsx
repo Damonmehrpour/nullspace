@@ -18,7 +18,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
     <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
         dpr={[1, 1.5]}
-        camera={{ fov: 50, near: 0.1, far: 200, position: [0, 40, 45] }}
+        camera={{ fov: 50, near: 0.1, far: 200, position: [0, 4, -6] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
           canvas.addEventListener('webglcontextlost', (e) => {

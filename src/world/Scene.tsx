@@ -1,5 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { WORLD } from '../content/world'
+import { FollowCamera } from './FollowCamera'
 import { GameLoop } from './GameLoop'
 import { GreyIsland } from './islands/GreyIsland'
 import { Monolith } from './islands/Monolith'
@@ -22,7 +23,7 @@ export function Scene() {
       ))}
       <Player />
       <GameLoop />
-      {DEV_ORBIT && <OrbitControls />}
+      {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
     </>
   )
 }
