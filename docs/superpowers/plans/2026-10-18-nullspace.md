@@ -67,7 +67,7 @@ src/ui/focusReturn.ts
 src/ui/StatusBadge.tsx, FieldText.tsx
 src/ui/Panel/Panel.tsx, sections/*.tsx, ProjectDetail.tsx, MediaItem.tsx
 src/ui/TopBar.tsx, QuickNav.tsx, ResumeLink.tsx, useGlobalShortcuts.ts
-src/ui/Boot.tsx, Entry.tsx, Loading3D.tsx, ErrorFallback.tsx
+src/ui/Boot.tsx, Entry.tsx, Loading3D.tsx, ErrorFallback.tsx, worldLoader.ts
 src/ui/Subtitles.tsx, A11yStatus.tsx, Settings.tsx, ControlsHint.tsx
 src/portfolio/Portfolio.tsx
 src/world/WorldRoot.tsx, GameLoop.tsx, Player.tsx, FollowCamera.tsx, testHooks.ts
@@ -480,14 +480,21 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
 
 **Interfaces:**
 - Consumes: Tasks 13, 14.
-- Produces: `export type Walkable = { shapes: Shape[]; contains(p: Vec2): boolean; clamp(prev: Vec2, next: Vec2): Vec2 }` and `export function createWalkable(layout: WorldLayout): Walkable`. The shapes are the plinth circle, the island circles, the walkway strips and the bridge strip.
-- **Algorithm for `clamp`:** if `contains(next)`, return `next`. Otherwise, compute `closestPointInShape(s, next)` for every shape, keep those within 0.001 of being contained by the union, and return the one nearest to `next`. If none qualifies, return `prev`. This gives edge sliding.
+- Produces: `export type Walkable = { shapes: Shape[]; contains(p: Vec2): boolean; clamp(prev: Vec2, next: Vec2): Vec2; sweep(from: Vec2, to: Vec2): Vec2 }` and `export function createWalkable(layout: WorldLayout): Walkable`. The shapes are the plinth circle, the island circles, the walkway strips and the bridge strip. `WALK.maxSubstep = 0.2` m lives in config. It must be smaller than the narrowest void gap and the narrowest strip half-width, and `validateWorld` asserts this in Task 17.
+- **Algorithm for `clamp`** (a single local correction): if `contains(next)`, return `next`. Otherwise, compute `closestPointInShape(s, next)` only for the shapes that contain `prev` (or, if none do, for all shapes). Keep those within 0.001 of being inside the union and return the one nearest to `next`. If none qualifies, return `prev`. Restricting the candidates to shapes containing `prev` stops a correction from jumping to a different shape across a void.
+- **Algorithm for `sweep`** (the only movement entry point): split `from → to` into `n = ceil(|to − from| / maxSubstep)` equal substeps. For each substep, `p = clamp(p, p + step)`. A walkable destination therefore can't be reached across an unwalkable gap: every intermediate point must be walkable and connected to the previous one. Return the final `p`.
 - [ ] **Step 1: Write failing tests:**
   - Island centre, walkway midpoint and bridge midpoint are contained; a point 3 m outside the ring is not.
   - Clamp leaves interior points unchanged.
   - Moving diagonally out of a walkway side keeps the along-walkway component (sliding): `clamp(mid, mid + (side 2 m, along 0.5 m))` stays inside, moves about 0.5 m along, and is within 0.01 of the edge.
   - A walkway–island join corner is never outside.
   - **Review Focus 2:** clamp from the plinth centre to a point 50 m away returns a point inside.
+  - **No gap crossing (sweep):**
+    - From the bridge midpoint to a point on the Contact island whose straight line crosses the void beside the bridge → the result stays on the bridge strip (`distToSegment(result, bridge.a, bridge.b) ≤ bridge.halfWidth + 0.001`) and is not on Contact.
+    - From the plinth edge straight toward the Education island (crossing the void, not via the bridge) → the result stays on the plinth or bridge, never on Education.
+    - Between two adjacent island centres with the walkway removed (`buildLayout` override) → the result stays on the start island.
+    - The same three cases with a single 10 m delta give identical results (large deltas are substepped, not teleported).
+    - A legitimate move along a walkway (`sweep(walkway.a, walkway.b)`) reaches `b` within 0.01.
 - [ ] **Step 2:** Run. Expected: FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Run. Expected: PASS.
@@ -536,6 +543,7 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   - `arrivalZoneRadius: 7` → `zone-outside`
   - Projects with 2 slots → `artifact-slots`
   - missing `skills` island → `section-missing`
+  - `WALK.maxSubstep` ≥ the narrowest strip half-width, or ≥ the smallest void gap between non-connected shapes → rule `substep-too-large`. Add it to the `WorldIssue` rule union.
 - [ ] **Step 2:** Run. Expected: FAIL.
 - [ ] **Step 3:** Implement. Update `scripts/validate.ts` to run both validators, with the world's section ids feeding `validateContent`.
 - [ ] **Step 4:** Run `npm test` and `npm run build`. Expected: PASS.
@@ -544,19 +552,32 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
 ### Task 18: Lazy world chunk, loading and failure states
 
 **Files:**
-- Create: `src/world/WorldRoot.tsx`, `src/ui/Loading3D.tsx`, `src/ui/ErrorFallback.tsx`
+- Create: `src/world/WorldRoot.tsx`, `src/ui/worldLoader.ts`, `src/ui/Loading3D.tsx`, `src/ui/ErrorFallback.tsx`
 - Modify: `src/App.tsx`, `vite.config.ts`, `src/core/config.ts` (`WORLD_AVAILABLE = true`)
 - Test: `tests/component/Loading3D.test.tsx`; extend `tests/e2e/portfolio.spec.ts`; create `tests/e2e/world.spec.ts`
 
 **Interfaces:**
 - Produces:
-  - `const WorldRoot = lazy(() => import('./world/WorldRoot'))`, mounted when phase is `loading3d` or `world`.
+  - **Recoverable loader** in `src/ui/worldLoader.ts`:
+    ```ts
+    export type WorldModule = { default: ComponentType };
+    export function createWorldLoader(importer?: () => Promise<WorldModule>): {
+      Component: LazyExoticComponent<ComponentType>;  // a NEW React.lazy built from a NEW importer() call each time
+      attempt: number;
+    };
+    ```
+    The default importer is `() => import('../world/WorldRoot')`. `App` keeps the loader in state, and **Retry replaces it with `createWorldLoader()`** (with `attempt + 1`) and remounts under a new `key`. A `React.lazy` that has rejected is never rendered again, and every retry issues a fresh `import()`.
+    - If the in-page retry fails again (some browsers cache a failed module fetch), the fallback offers **Reload and retry**. That writes `sessionStorage['nullspace.enter3d'] = '1'` (through `safeStorage`) and calls `location.reload()`. On startup, `App` consumes the flag once: boot is skipped and phase is set to `loading3d`, then the flag is cleared. This is the only path that enters 3D automatically, and only because the visitor asked to retry.
+    - Every fallback state (loading, `load`, `crash`, `context`, reload-retry) always shows **View Portfolio**, and the top bar stays usable.
+  - The world chunk is mounted when phase is `loading3d` or `world`.
   - `vite.config.ts` `build.rollupOptions.output.manualChunks`: `three` and `@react-three/*` → `three`; `src/world/**` → `world`.
   - `<Loading3D />` shows `> materializing void... N%` (from Drei `useProgress` inside the chunk; before the chunk resolves it shows `> materializing void...` with no number) and a `View Portfolio instead` link.
   - `<ErrorFallback reason={'load' | 'crash' | 'context'} onRetry />`: crash copy `The simulation collapsed. Typical.`, buttons `Retry` and `View Portfolio`. A lazy import rejection → `load`.
   - `WorldRoot` renders `<Canvas dpr={[1, 1.5]}>` wrapped in an error boundary. It listens for `webglcontextlost` and `webglcontextrestored`, and shows `context` if the context isn't restored within 3 s. It calls `setPhase('world')` once the first frame renders.
 - [ ] **Step 1: Write failing tests:**
   - Component: ErrorFallback copy and buttons; `Retry` calls `onRetry`; `View Portfolio` sets the phase.
+  - Unit (`tests/unit/worldLoader.test.ts`): with an importer mock that rejects once and then resolves, the first loader's component throws the rejection. `createWorldLoader(mock)` called again invokes the importer a second time (`toHaveBeenCalledTimes(2)`) and renders the resolved component (Testing Library + `Suspense`).
+  - Component: after the second failure, `Reload and retry` is shown alongside `View Portfolio`. Clicking it sets the session flag and calls a mocked `location.reload`. On a fresh App mount with the flag set, the phase is `loading3d` and the flag is cleared.
   - E2E `world.spec`: Enter shows the loading text, then a `canvas` is visible within 15 s.
   - E2E `portfolio.spec`: still zero 3D requests (now meaningful).
   - **Review Focus 5:** in `world.spec`, after a 1280 → 700 px viewport resize, the canvas width matches the viewport.
@@ -603,7 +624,7 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   export type PlayerState = { pos: Vec2; vel: Vec2; facing: number; edgePushTime: number };
   export function stepPlayer(s: PlayerState, input: InputState, cameraYaw: number, dt: number, walk: Walkable, paused: boolean): { state: PlayerState; events: Array<'boundary'> };
   ```
-  Values: `PLAYER.speed = 4`, `PLAYER.accelTime = 0.15`, `PLAYER.boundaryPushS = 0.6`. `dt` is clamped to `MAX_DT`. When `paused`, velocity is set to 0 and the state is returned unchanged.
+  Values: `PLAYER.speed = 4`, `PLAYER.accelTime = 0.15`, `PLAYER.boundaryPushS = 0.6`. `dt` is clamped to `MAX_DT`. When `paused`, velocity is set to 0 and the state is returned unchanged. **The position is always advanced with `walk.sweep(pos, pos + vel·dt)`, never by assigning a candidate position.** Teleports (Task 25) set the position directly, but only to arrival points, which `validateWorld` guarantees are walkable.
   - `GameLoop` is the single `useFrame` that calls the core steps in order: input → player → guide (Task 23) → zones (Task 25) → camera (Task 21). It writes positions to refs, not to the store, each frame. It calls `input.clear()` when `panel` becomes non-null.
   - `Player` renders a 0.5 m capsule with a rim-light material at the ref position.
 - [ ] **Step 1: Write failing tests:**
@@ -614,6 +635,7 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   - `paused` freezes movement.
   - **Review Focus 1:** after a `blur` event, `state.up` is false; with `up` held, `clear()` then stepping 0.5 s gives speed ≈ 0.
   - **Review Focus 2:** one step with `dt = 5` from the edge of a walkway stays `walk.contains`.
+  - **Bridge boundaries:** walking sideways off the bridge for 3 s keeps the player on the bridge, sliding along its edge, and emits `boundary` once. Walking diagonally toward the Contact island from the bridge's ring end only arrives via `ringEntry` (every frame's position is `walk.contains`, and none lies in the void between the bridge and Contact).
 - [ ] **Step 2:** Run. Expected: FAIL.
 - [ ] **Step 3:** Implement. The accel/decel easing is exponential approach to the target velocity with time constant `accelTime / 3`.
 - [ ] **Step 4:** Run. Expected: PASS. Manually walk the ring in `npm run dev`; there should be no void falls.
@@ -752,18 +774,39 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   arrive(id: SectionId): void;     // markWorldVisited + (revealPlayed ? openSection : start reveal via setRevealing(id)); then setTourTarget(nextTarget(...)) on closePanel
   guideMeThere(id: SectionId, touch: boolean): void;  // setTourTarget(id); if touch → request teleport (store.teleportRequest = arrivalPoint)
   teleportRequest: Vec2 | null;
+  revealElapsed: number;           // seconds since the current reveal started
+  tickReveal(dt: number): void;    // advances revealElapsed; completes the reveal at revealDurationMs
   ```
   - `GameLoop` consumes `teleportRequest` (sets the player position, clears it) and feeds `updateZones` → `entered` → `store.arrive(entered)` and into `stepGuide` as `playerEnteredZone`.
   - On `closePanel`, if the phase is `world`, the store sets `tourTarget = nextTarget(order, worldVisited)`, or `null` with a `tourComplete` signal when complete.
-  - `testHooks.ts` (only when `import.meta.env.VITE_TEST_HOOKS === 'true'`) defines `window.__nullspace = { teleportPlayer(id: SectionId | 'spawn'): void; getGuideState(): GuideStateName; getWorldVisited(): SectionId[]; getViewed(): SectionId[]; isTourComplete(): boolean; isRevealing(): boolean }`.
-  - Until Task 28, the reveal is a timer: after `revealDurationMs` it calls `setRevealing(null)`, `markRevealPlayed(id)` and `openSection(id, {source: 'arrival'})`.
+  - **Deterministic simulation clock.** `GameLoop` runs the core pipeline through `simulate(dt)`, a pure-ish function over the refs. Normally `useFrame` calls it with the real delta. In test builds, `freezeClock()` stops `useFrame` from calling `simulate`, and `advance(seconds)` runs `simulate(1/60)` synchronously `round(seconds × 60)` times (input → player → guide → zones → camera → store side effects), so results don't depend on frame rate or wall-clock time. Reveal timers use the same simulated clock (`REVEAL` progress advances inside `simulate`, not via `setTimeout`).
+  - `testHooks.ts` (only when `import.meta.env.VITE_TEST_HOOKS === 'true'`) defines:
+    ```ts
+    window.__nullspace = {
+      freezeClock(): void; advance(seconds: number): void;
+      teleportPlayer(to: SectionId | 'spawn' | { x: number; z: number }): void;
+      walkPlayerTo(id: SectionId): void;   // replaces player input with the route path, then you advance()
+      placeGuideAtTarget(): void;          // moves the guide to its target's arrival point; next simulate step → 'present'
+      getGuideState(): GuideStateName; getTourTarget(): SectionId | null;
+      getWorldVisited(): SectionId[]; getViewed(): SectionId[]; isTourComplete(): boolean; isRevealing(): boolean;
+    }
+    ```
+  - The reveal runs on the simulated clock: the store's `tickReveal(dt: number)` (called from `simulate`) accumulates time while `revealing !== null`. When `revealDurationMs` is reached it calls `setRevealing(null)`, `markRevealPlayed(id)` and `openSection(id, {source: 'arrival'})`. There is no `setTimeout`.
 - [ ] **Step 1: Write failing unit tests:**
   - `revealDurationMs` cases.
   - A store test: `arrive('education')` adds it to `worldVisited` and, after the reveal, to `viewed`.
   - `openSection('skills', { source: 'quicknav' })` does not change `worldVisited` or `tourTarget`.
   - After closing a panel with worldVisited = {education}, the target is `experience`.
 - [ ] **Step 2: Write the e2e `tour.spec.ts`** (spec 11.3 items 6–8):
-  - Teleport to each zone in order; assert `getGuideState() === 'present'` before each teleport (navigate the guide by first teleporting the player next to it; acceptable via a polling `expect.poll` with a 20 s timeout).
+  - Every test starts with `freezeClock()`. No assertion relies on wall-clock waiting; Playwright's default `expect` timeout is only used for DOM visibility after an `advance`.
+  - **Guide integration (deterministic):** after entering 3D, `advance(0.6)` → `getGuideState() === 'lead'` and `getTourTarget() === 'education'`. Then for each island in tour order:
+    - `placeGuideAtTarget(); advance(1/60)` → `'present'`.
+    - `advance(10)` with the player away → still `'present'` and no panel.
+    - `teleportPlayer(id); advance(1/60)` → `isRevealing()` and the guide is `'arrive'`.
+    - `advance(2.1)` → the panel is visible and `getWorldVisited()` length has grown by one.
+    - Esc, then `advance(0.1)` → the target is the next island.
+    - After the 5th island, `isTourComplete()` becomes true (and not before).
+  - **Lead and wait (deterministic, short):** `walkPlayerTo('education'); advance(3)` → the guide is `'lead'`. Stop the player (`teleportPlayer` to its current position, no input), `advance(4)` → `'wait'`.
   - The panel appears after the reveal; Esc; `getWorldVisited().length` increments; `isTourComplete()` only after the 5th.
   - Out-of-order teleport to `skills` opens Skills and adds it to `worldVisited`.
   - Read-first: View Portfolio, scroll through all sections, Enter 3D → `getViewed().length === 5`, `getWorldVisited()` is empty, the tour isn't complete, and the first teleport to education has `isRevealing() === true`.
@@ -771,8 +814,15 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   - Touch project: quick-nav `Guide me there` for contact → `getWorldVisited()` contains `contact`.
 - [ ] **Step 3:** Run both. Expected: FAIL.
 - [ ] **Step 4:** Implement.
-- [ ] **Step 5:** Run `npm test` and `npm run test:e2e`. Expected: PASS. Manually play the full tour by following the guide (spec acceptance 5–6).
-- [ ] **Step 6:** Commit `feat: player-driven arrivals, guide me there, tour e2e`. Deploy. **Checkpoint B reached.** If it's past hour 13, apply cut-order items 1–4 now (spec 12).
+- [ ] **Step 5:** Run `npm test` and `npm run test:e2e` **three times in a row**. Expected: PASS every time (a flakiness check).
+- [ ] **Step 6: Manual full-tour playthrough** (separate from automation, recorded in `docs/manual-checklist.md`). With real keyboard input and no hooks, on `npm run preview`:
+  - Follow the guide from spawn through all 5 islands.
+  - Deliberately fall behind on the bridge and on one walkway (expect wait and beckon, then greet).
+  - Stand outside one arrival zone for 30 s (expect `present`, no panel).
+  - Visit one island out of order.
+  - Revisit one island (expect an instant panel).
+  - Note anything that feels off (lead distance, beckon readability, camera).
+- [ ] **Step 7:** Commit `feat: player-driven arrivals, guide me there, tour e2e`. Deploy. **Checkpoint B reached.** If it's past hour 13, apply cut-order items 1–4 now (spec 12).
 
 ---
 
@@ -857,11 +907,11 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
     - Repeated `openSection` calls for the same id are idempotent.
     - Reveal completion always opens the arrival panel exactly once.
 - [ ] **Step 1: Write failing tests (Review Focus 3):**
-  - `arrive('education')`, then quick-nav `openSection('contact')` at 500 ms → the panel is contact; at 2000 ms the panel is still contact; `revealPlayed` has education.
+  - `arrive('education')`, `tickReveal(0.5)`, then quick-nav `openSection('contact')` → the panel is contact. `tickReveal(2)` → the panel is still contact, and `revealPlayed` has education.
   - Five rapid `openSection('skills')` calls → one panel, and `viewed` has skills once.
   - `arrive` during an open panel is ignored (gameplay is paused, so `GameLoop` doesn't call it; also guarded in the store).
 - [ ] **Step 2:** Run. Expected: FAIL.
-- [ ] **Step 3:** Implement. Replace the Task 25 timer with the store-driven reveal.
+- [ ] **Step 3:** Implement. Island visuals read reveal progress from `revealElapsed / revealDurationMs` in the store, which is driven by `tickReveal`.
 - [ ] **Step 4:** Run `npm test` and `npm run test:e2e`. Expected: PASS.
 - [ ] **Step 5:** Commit `feat(world): shared first-visit reveal with safe cancellation`.
 
@@ -933,7 +983,7 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
   - Reduced motion: scripted reveal camera moves are skipped (`REVEAL.reducedMs = 300`).
 - [ ] **Step 1: Write failing tests:**
   - Component: the toggles persist through the store and survive a reload (via `safeStorage`).
-  - E2E with `page.emulateMedia({ reducedMotion: 'reduce' })`: a subtitle appears complete at once (trigger it via `teleportPlayer` to a boundary-adjacent point, or a test hook `say('test')`), and the education reveal takes ≤ 400 ms (`isRevealing()` is false at 400 ms).
+  - E2E with `page.emulateMedia({ reducedMotion: 'reduce' })`: a subtitle appears complete at once (trigger it via `teleportPlayer` to a boundary-adjacent point, or a test hook `say('test')`), and the education reveal takes ≤ 400 ms (`freezeClock(); teleportPlayer('education'); advance(0.4)` → `isRevealing()` is false and the panel is visible).
 - [ ] **Step 2:** Run. Expected: FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Run. Expected: PASS.
@@ -944,7 +994,9 @@ Visual styling for Tasks 5–10: before writing UI markup, load the `frontend-de
 **Files:**
 - Create: `tests/e2e/errors.spec.ts`, `tests/e2e/smoke.deployed.spec.ts`
 
-- [ ] **Step 1:** `errors.spec`: `page.route('**/world-*.js', r => r.abort())` → Enter → `Retry` and `View Portfolio` are visible; View Portfolio works; the top bar Contact still opens. Context loss via `WEBGL_lose_context` in `page.evaluate` → after 3 s the `context` fallback is visible.
+- [ ] **Step 1:** `errors.spec`:
+  - **Recoverable retry:** abort only the **first** request for `**/world-*.js` (a route handler with a counter), then let it through → Enter → `Retry` is visible → click → the canvas is visible.
+  - **Persistent failure:** abort every request → Enter → Retry → `Reload and retry` and `View Portfolio` are visible. View Portfolio works, and the top bar Contact still opens. Context loss via `WEBGL_lose_context` in `page.evaluate` → after 3 s the `context` fallback is visible.
 - [ ] **Step 2:** `smoke.deployed.spec`: re-exports the boot, recruiter, portfolio, world-loads and touchEntry checks, run with `BASE_URL` and skipping hook-based tests (`test.skip(!hooks)`).
 - [ ] **Step 3:** Run `npm test` and `npm run test:e2e`. Expected: all green. Fix app bugs.
 - [ ] **Step 4:** Commit `test(e2e): error paths and deployed smoke suite`. Deploy.
