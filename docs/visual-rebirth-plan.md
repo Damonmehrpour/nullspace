@@ -1,10 +1,97 @@
 # Visual Rebirth: audit and plan
 
-Status: **Phase 0 accepted; Phase 1 delivered for review** (see `docs/visual-phase0/`, `docs/visual-phase1/`). Phases 2–4 not started.
+Status: **Phase 0 accepted. Phase 1 delivered (see `docs/visual-phase1/`). Plan revised after the author's expanded creative feedback (revision 2, below). The character prototype (Phase 2A) is behind `?visual=v2`, awaiting visual approval.** Nothing after Phase 2A has started.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 
 Evidence: screenshots from spawn, every walkway and every island (`SHOTS=1 npx playwright test fogShots`), taken at `4f82222`.
+
+## Revision 2: expanded creative feedback (author, after Phase 1)
+
+The author isn't satisfied with the character designs or the overall visual/UX experience yet, and wants it done properly rather than fast. Five areas were added; the rest of this document still holds where this section doesn't override it.
+
+### Player character: concepts
+
+Three directions were considered (none of them decorates the capsule):
+
+| Direction | Silhouette and personality | Movement | Cost |
+|---|---|---|---|
+| **A. Hooded wanderer (chosen by the author)** | A small hooded traveller: big hood, short sculpted cloak with a pointed hem, slim legs. Dark face cavity with two faint eye glints. Mysterious, curious, a little lonely; the kokedama brings the warmth | Readable stride: legs swing under the cloak, the hem sways and lags, the body bobs and leans with speed. The hood turns toward the kokedama | Procedural, about 2–3k triangles, 6–7 draw calls, no textures |
+| B. Stone pilgrim | A faceted, carved figure made of the same concrete as the world, as if a statue walked off its plinth | Heavy, deliberate steps, with stone dust at each footfall | Similar |
+| C. Lantern sprite | A floating cloth lantern with a soft inner light | Drifts and sways; no legs | Cheapest, but weakest as a "traveller" |
+
+**Confirmed direction: A, the mysterious stylised humanoid wanderer.**
+- **Silhouette:** recognisably humanoid at gameplay distance, carried by the hood point, the cloak's pointed hem and the leg gap.
+- **Palette:** deep slate-indigo cloak (`#353b55`), near-black face cavity, bone-white trim along the hem and hood edge, a muted ochre scarf as the single warm accent, charcoal legs. Dark-on-white keeps the player from disappearing into the architecture. The trim and scarf separate it from the void.
+- **Face:** no features except two small, soft eye glints that blink.
+- **Motion:**
+  - **Walk:** stride phase advances with the distance actually walked, so the feet don't slide; legs swing; the hem lags and sways.
+  - **Idle:** breathing, an occasional look around.
+- **Reactions to the kokedama:** the hood turns toward it when it's near, the eyes brighten while it speaks, and the hood tilts in a small nod when it greets.
+- **Reduced motion:** amplitudes drop to a calm minimum.
+
+### Kokedama upgrade
+
+- **Richer moss:** a tuft layer of short moss blades over the core (one instanced draw) for a soft, uneven silhouette, and lichen flecks (pale yellow-green and silver) in the moss shader.
+- **Foliage:** nine leaves in two sizes (was six), a curling sprout frond on top, and a few tiny pale flower buds.
+- **Roots:** five roots (was three), with thinner, longer tips that swing with motion and curl gently at rest.
+- **Expressive motion and reactions:**
+  - leaves perk up when it speaks or greets, and droop slowly the longer it waits
+  - the body tilts toward the player
+  - the leaves ruffle when the player brushes past
+  - a small hop on greeting
+
+**Budget:** the author accepts some extra cost, measured at every step. Target: the kokedama and player together cost at most 10% more frame time at the spawn view on the pixel-bound profile, plus no more than 12 extra draw calls. Low quality drops the tuft layer and the flower buds.
+
+### XR Meditation System story moment
+
+When the player first enters the XR Meditation System artifact's interaction range on a visit, the kokedama says:
+1. "Oh… this is actually where I was first born."
+2. After about 1.5 s: "Well, not exactly me. But the idea that became me started here."
+
+How it fits the existing systems:
+- It's a once-per-visit event in the dialogue director (once, kept in memory for this page visit, not in storage), queued behind any line already showing.
+- It goes through the same subtitle region (polite live region), so screen readers get it without stealing focus.
+- It never opens, blocks or delays the project panel or the interact prompt, and it's skipped if the panel is already open.
+- The kokedama turns toward the artifact while speaking.
+- Copy is the author's own; it isn't reworded.
+
+### Contact information
+
+Add the public number **+358 45 8629910**, linked as `tel:+358458629910`, in the Contact island panel, the accessible 2D portfolio and the mobile layout.
+- This replaces the earlier "don't show my phone number" rule, by the author's explicit request.
+- Discord and the personal YouTube channel stay excluded.
+- Covered by content validation and an e2e check of the link.
+
+### World and UI/UX
+
+- **Islands:** more environmental detail and a distinct identity per island (the architecture of section 2, plus small environmental props that support each section's meaning).
+- **UI:**
+  - interaction prompts that say what will happen
+  - clearer navigation (where am I, where next)
+  - information panels with better typography, spacing and hierarchy
+  - short, purposeful transitions that respect reduced motion
+  - better mobile and keyboard usability: touch targets, focus order, visible focus, one-handed reach
+
+### Revised phases (each one stops for author approval)
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0. Proof of concept | Material, lighting, void, Education, first kokedama, camera | Accepted |
+| 1. Global look | Walkways, bridge, chamfers, contact shadows across the world | Delivered |
+| **2A. Character prototype** | Hooded wanderer plus the upgraded kokedama, behind `?visual=v2`, with screenshots and measured cost. **Stop for visual approval** | **This step** |
+| 2B. Character finish | Polish from your feedback; the kokedama's environmental reactions across the world; Low-quality variants; reduced-motion review | After 2A approval |
+| 3. Story and contact | XR Meditation dialogue moment; contact number in the panel, the 2D portfolio and mobile | After 2B |
+| 4. Island architecture | Experience colonnade, Projects atrium, Skills data city, Contact signal tower, each with environmental detail and its reveal, one island per commit | After 3 |
+| 5. UI/UX | Prompts, navigation, panels, typography and spacing, transitions, mobile and keyboard | After 4 (can run alongside 4 if you prefer) |
+| 6. Atmosphere and final pass | Light shafts, fog and camera polish, final performance pass, full screenshot set, final review | Last |
+
+Every phase keeps the original guarantees:
+- all tests green
+- the optimised startup (shaders precompiled, no recompiles on quality changes)
+- the 2D fallback and accessibility unchanged unless a phase improves them
+- v1 untouched until the v2 look is approved and the flag is retired
+- the **45 fps steady-state baseline** (author-measured, Phase 0 build): no phase may regress it measurably, and any spending goes through the budget above
 
 ## 1. Five biggest reasons it looks like a prototype
 
@@ -58,7 +145,7 @@ One shader is reused everywhere: no image textures to download, and one compile.
 
 **Deliverables:** before/after screenshots and a short note. Then **stop for your verdict** on the direction before touching the other islands.
 
-### Phases 1–4
+### Phases 1–4 (original scoping, superseded by revision 2)
 
 | Phase | Scope |
 |---|---|

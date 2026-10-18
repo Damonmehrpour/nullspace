@@ -18,7 +18,7 @@ import { LightingV2, VoidV2 } from './v2/EnvironmentV2'
 import { EducationV2 } from './v2/EducationV2'
 import { GuideBodyV2 } from './v2/GuideBodyV2'
 import { MonolithV2 } from './v2/MonolithV2'
-import { PlayerV2 } from './v2/PlayerV2'
+import { Wanderer } from './v2/Wanderer'
 import { WalkwaysV2 } from './v2/WalkwaysV2'
 import { V2 } from './visual'
 
@@ -54,7 +54,7 @@ export function Scene() {
         const Island = ISLANDS[i.id]
         return <Island key={i.id} island={i} />
       })}
-      {V2 ? <PlayerV2 /> : <Player />}
+      {V2 ? <Wanderer /> : <Player />}
       {V2 ? <GuideBodyV2 /> : <GuideBody />}
       <Trail />
       <OffscreenArrow />

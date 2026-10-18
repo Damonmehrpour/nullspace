@@ -58,7 +58,7 @@ test('ablation', async ({ page }, info) => {
   const rows: string[] = []
   const base = await measure()
   rows.push(`| (everything on) | ${base.p50.toFixed(2)} | ${base.p90.toFixed(2)} | |`)
-  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow'] : []
+  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow', 'v2-wanderer', 'v2-kokedama', 'v2-buds'] : []
   for (const p of parts) {
     const n = (await ns('setVisibleByName', p, false)) as number
     await page.waitForTimeout(200)

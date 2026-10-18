@@ -34,6 +34,8 @@ export type NullspaceHooks = {
   getQuality(): { chosen: string; effective: string; reducedDpr: boolean }
   setCamera(pos: [number, number, number] | null, look?: [number, number, number]): void
   placeGuide(pos: Vec2, facing?: number): void
+  getPlayer(): { pos: Vec2; facing: number }
+  setPlayerFacing(facing: number): void
   lockQuality(): void
   startTimeline(): void
   /** Ablation: hide/show every object whose name starts with prefix; returns how many matched. */
@@ -128,6 +130,10 @@ export function installTestHooks(): void {
     getTimeline: () => sim.timeline ?? [],
     lockQuality: () => {
       sim.qualityLocked = true
+    },
+    getPlayer: () => ({ pos: sim.player.pos, facing: sim.player.facing }),
+    setPlayerFacing: (facing) => {
+      sim.player = { ...sim.player, facing }
     },
     placeGuide: (pos, facing = 0) => {
       sim.guide = { ...sim.guide, name: 'idle', pos, path: [], pathIndex: 0, target: null, met: true, facing }
