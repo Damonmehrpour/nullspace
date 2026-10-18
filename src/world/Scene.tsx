@@ -14,8 +14,14 @@ import { Skills } from './islands/Skills'
 import { Monolith } from './islands/Monolith'
 import { Walkways } from './islands/Walkways'
 import { Player } from './Player'
+import { LightingV2, VoidV2 } from './v2/EnvironmentV2'
+import { EducationV2 } from './v2/EducationV2'
+import { GuideBodyV2 } from './v2/GuideBodyV2'
+import { MonolithV2 } from './v2/MonolithV2'
+import { PlayerV2 } from './v2/PlayerV2'
+import { V2 } from './visual'
 
-const ISLANDS = { education: Education, experience: Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
+const ISLANDS = { education: V2 ? EducationV2 : Education, experience: Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
 
 /** ?debug shows an fps/GPU overlay, so the author can profile the live build on their own hardware. */
 const DEBUG_STATS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug')
@@ -25,20 +31,30 @@ const DEV_ORBIT = import.meta.env.DEV && typeof location !== 'undefined' && loca
 export function Scene() {
   return (
     <>
-      <color attach="background" args={['#000000']} />
-      <fogExp2 attach="fog" args={['#000000', 0.016]} />
-      {/* Concrete should read white: strong sky fill, a cool key for shape, a faint rim from behind. */}
-      <hemisphereLight args={['#f4f6ff', '#2a2a28', 1.25]} />
-      <directionalLight position={[18, 30, 10]} intensity={1.4} color="#f1f4ff" />
-      <directionalLight position={[-20, 12, -16]} intensity={0.45} color="#dfe8ff" />
-      <Monolith layout={WORLD} />
+      {V2 ? (
+        <>
+          <VoidV2 />
+          <LightingV2 />
+          <MonolithV2 layout={WORLD} />
+        </>
+      ) : (
+        <>
+          <color attach="background" args={['#000000']} />
+          <fogExp2 attach="fog" args={['#000000', 0.016]} />
+          {/* Concrete should read white: strong sky fill, a cool key for shape, a faint rim from behind. */}
+          <hemisphereLight args={['#f4f6ff', '#2a2a28', 1.25]} />
+          <directionalLight position={[18, 30, 10]} intensity={1.4} color="#f1f4ff" />
+          <directionalLight position={[-20, 12, -16]} intensity={0.45} color="#dfe8ff" />
+          <Monolith layout={WORLD} />
+        </>
+      )}
       <Walkways layout={WORLD} />
       {WORLD.islands.map((i) => {
         const Island = ISLANDS[i.id]
         return <Island key={i.id} island={i} />
       })}
-      <Player />
-      <GuideBody />
+      {V2 ? <PlayerV2 /> : <Player />}
+      {V2 ? <GuideBodyV2 /> : <GuideBody />}
       <Trail />
       <OffscreenArrow />
       <GameLoop />

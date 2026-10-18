@@ -5,6 +5,7 @@ import type { IslandDef } from '../../content/world'
 import { useReveal } from '../reveals/useReveal'
 import { Blocks, type Block } from './Blocks'
 import { IslandBase } from './IslandBase'
+import { Concrete } from '../v2/Surface'
 
 const MAST_X = 3.4
 const MAST_H = 7
@@ -41,7 +42,7 @@ export function Contact({ island }: { island: IslandDef }) {
       <Blocks blocks={parts} />
       <mesh position={[MAST_X - 0.6, MAST_H * 0.62, 0]} rotation={[0, 0, Math.PI / 2.6]}>
         <sphereGeometry args={[1.1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 3.2]} />
-        <meshStandardMaterial color="#ecebe6" roughness={0.85} side={2} />
+        <Concrete color="#ecebe6" roughness={0.85} side={2} />
       </mesh>
       <mesh ref={beam} position={[MAST_X, MAST_H, 0]} visible={false}>
         <cylinderGeometry args={[0.08, 0.08, 1, 12]} />

@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useLayoutEffect, useRef, type MutableRefObject } from 'react'
 import { Object3D, type InstancedMesh } from 'three'
+import { Concrete } from '../v2/Surface'
 
 export type Block = { pos: [number, number, number]; size: [number, number, number]; rotY?: number }
 
@@ -47,7 +48,7 @@ export function Blocks({
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, blocks.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={color} roughness={0.92} emissive={emissive ?? '#000000'} emissiveIntensity={emissive ? 1 : 0} />
+      <Concrete color={color} roughness={0.92} emissive={emissive} />
     </instancedMesh>
   )
 }

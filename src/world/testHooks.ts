@@ -28,6 +28,9 @@ export type NullspaceHooks = {
   markAllRevealed(): void
   getRenderInfo(): { calls: number; triangles: number }
   getQuality(): { chosen: string; effective: string; reducedDpr: boolean }
+  setCamera(pos: [number, number, number] | null, look?: [number, number, number]): void
+  placeGuide(pos: Vec2, facing?: number): void
+  lockQuality(): void
 }
 
 const STEP = 1 / 60
@@ -66,6 +69,15 @@ export function installTestHooks(): void {
     },
     getRenderInfo: () => sim.renderInfo,
     getQuality: () => sim.quality,
+    setCamera: (pos, look) => {
+      sim.cameraOverride = pos && look ? { pos, look } : null
+    },
+    lockQuality: () => {
+      sim.qualityLocked = true
+    },
+    placeGuide: (pos, facing = 0) => {
+      sim.guide = { ...sim.guide, name: 'idle', pos, path: [], pathIndex: 0, target: null, met: true, facing }
+    },
     markAllRevealed: () => {
       for (const i of WORLD.islands) useStore.getState().markRevealPlayed(i.id)
     },

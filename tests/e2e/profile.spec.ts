@@ -12,9 +12,15 @@ test('profile world', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   test.setTimeout(120_000)
   await page.setViewportSize({ width: 1920, height: 1080 })
+  const variant = process.env.PROFILE_VARIANT === 'v2' ? 'v2' : 'v1'
   await gotoEntry(page)
+  if (variant === 'v2') await page.goto('/?visual=v2')
+  const t0 = Date.now()
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.waitForFunction(() => '__nullspace' in window)
+  await page.locator('#world-canvas canvas').waitFor()
+  const startupMs = Date.now() - t0
+  await page.evaluate(() => (window as unknown as { __nullspace: { lockQuality(): void } }).__nullspace.lockQuality())
   // Let adaptive quality settle first; its one-time downgrade (shader recompiles) is not steady-state cost.
   await page.waitForTimeout(6000)
   const quality = await page.evaluate(() => (window as unknown as { __nullspace: { getQuality(): unknown } }).__nullspace.getQuality())
@@ -24,6 +30,7 @@ test('profile world', async ({ page }, info) => {
     { name: 'ring overview (projects)', pos: { x: -10, z: -14 }, yaw: -2.2 },
     { name: 'projects close', pos: { x: -14.6, z: -14.9 }, yaw: -2.33 },
     { name: 'skills close', pos: { x: 15.8, z: -11.5 }, yaw: -0.63 },
+    { name: 'education close', pos: { x: 0, z: 17.2 }, yaw: Math.PI / 2 },
   ]
   const rows: string[] = []
   for (const v of views) {
@@ -46,5 +53,5 @@ test('profile world', async ({ page }, info) => {
     rows.push(`| ${v.name} | ${r.fps} | ${r.calls} | ${r.triangles} |`)
   }
   mkdirSync('test-results', { recursive: true })
-  writeFileSync('test-results/profile.md', [`quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | fps | draw calls | triangles |', '|---|---|---|---|', ...rows].join('\n'))
+  writeFileSync(`test-results/profile-${variant}.md`, [`variant: ${variant}`, `startup (Enter click → world ready): ${startupMs} ms`, `quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | fps | draw calls | triangles |', '|---|---|---|---|', ...rows].join('\n'))
 })

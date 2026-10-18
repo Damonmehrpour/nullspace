@@ -7,6 +7,8 @@ import { ARROW_ID } from './guide/OffscreenArrow'
 import { QualityContext } from './quality'
 import { Scene } from './Scene'
 import { sim } from './sim'
+import { CONCRETE_DETAIL } from './v2/concrete'
+import { V2 } from './visual'
 import { markContextLost, registerWorldContext, type WorldProps } from '../ui/worldLoader'
 
 const CONTEXT_RESTORE_MS = 3000
@@ -24,6 +26,8 @@ export default function WorldRoot({ onFailure }: WorldProps) {
   useEffect(() => setQuality(createQuality(chosen)), [chosen])
   useEffect(() => {
     sim.quality = quality
+    // v2: adaptive Low also drops the per-pixel concrete detail, not just the moss fuzz.
+    CONCRETE_DETAIL.value = quality.effective === 'low' ? 0 : 1
   }, [quality])
 
   useEffect(() => () => {
@@ -35,7 +39,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
       <Canvas
         dpr={budget.dpr}
         frameloop={contextLost ? 'never' : 'always'}
-        camera={{ fov: 50, near: 0.1, far: 200, position: [0, 4, -6] }}
+        camera={{ fov: V2 ? 42 : 50, near: 0.1, far: V2 ? 900 : 200, position: [0, 4, -6] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
           registerWorldContext(gl.getContext())
@@ -53,7 +57,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
           useStore.getState().setPhase('world')
         }}
       >
-        <PerformanceMonitor onDecline={() => setQuality(onDecline)} onIncline={() => setQuality(onIncline)}>
+        <PerformanceMonitor onDecline={() => !sim.qualityLocked && setQuality(onDecline)} onIncline={() => !sim.qualityLocked && setQuality(onIncline)}>
           <QualityContext.Provider value={budget}>
             <Scene />
           </QualityContext.Provider>

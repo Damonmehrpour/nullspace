@@ -37,6 +37,10 @@ export type Sim = {
   interactHeld: boolean
   /** Last frame's renderer stats, for profiling. */
   renderInfo: { calls: number; triangles: number }
+  /** Test-only fixed camera (position, look-at) for matched screenshots; null in normal play. */
+  cameraOverride: { pos: [number, number, number]; look: [number, number, number] } | null
+  /** Test-only: keep adaptive quality at the chosen level (slow headless renderers would otherwise drop to Low). */
+  qualityLocked: boolean
   /** Current adaptive quality, mirrored here for tests and the debug overlay. */
   quality: QualityState
 }
@@ -62,6 +66,8 @@ export const sim: Sim = {
   interactHeld: false,
   renderInfo: { calls: 0, triangles: 0 },
   quality: createQuality('high'),
+  cameraOverride: null,
+  qualityLocked: false,
 }
 
 const PROJECTS = WORLD.islands.find((i) => i.id === 'projects')!

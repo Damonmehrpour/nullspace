@@ -1,6 +1,7 @@
 import type { WorldLayout } from '../../content/world'
 import { v, type Vec2 } from '../../core/geometry'
 import { at, yawFor } from '../space'
+import { Concrete } from '../v2/Surface'
 
 const THICKNESS = 0.4
 
@@ -9,7 +10,7 @@ function Strip({ a, b, halfWidth }: { a: Vec2; b: Vec2; halfWidth: number }) {
   return (
     <mesh position={at(mid, -THICKNESS / 2)} rotation={[0, yawFor(v.angleOf(v.sub(b, a))), 0]}>
       <boxGeometry args={[v.dist(a, b), THICKNESS, halfWidth * 2]} />
-      <meshStandardMaterial color="#cfcec8" roughness={0.95} />
+      <Concrete color="#cfcec8" roughness={0.95} />
     </mesh>
   )
 }

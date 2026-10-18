@@ -4,6 +4,8 @@ import { AdditiveBlending, BufferAttribute, BufferGeometry, type Points } from '
 import { v, type Vec2 } from '../../core/geometry'
 import { useRenderBudget } from '../quality'
 import { sim } from '../sim'
+import { softPointsMaterial } from '../v2/softPoints'
+import { V2 } from '../visual'
 
 const SPACING = 0.45
 
@@ -11,6 +13,7 @@ const SPACING = 0.45
 export function Trail() {
   const { spores: COUNT } = useRenderBudget()
   const ref = useRef<Points>(null)
+  const soft = useMemo(() => (V2 ? softPointsMaterial({ color: '#a8e070', size: 1.5, opacity: 0.9 }) : null), [])
   const geo = useMemo(() => {
     const g = new BufferGeometry()
     g.setAttribute('position', new BufferAttribute(new Float32Array(COUNT * 3), 3))
@@ -47,6 +50,8 @@ export function Trail() {
     }
     arr.needsUpdate = true
   })
+
+  if (soft) return <points ref={ref} geometry={geo} material={soft} frustumCulled={false} />
 
   return (
     <points ref={ref} geometry={geo} frustumCulled={false}>

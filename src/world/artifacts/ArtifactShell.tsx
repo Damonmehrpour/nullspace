@@ -8,6 +8,7 @@ import { useStore } from '../../state/store'
 import { BADGE_COPY } from '../../ui/StatusBadge'
 import { sim } from '../sim'
 import { at, TITLE_FONT } from '../space'
+import { Concrete } from '../v2/Surface'
 
 const RANGE = 1.5
 
@@ -32,7 +33,7 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
     <group position={at(slot)}>
       <mesh position={[0, 0.3, 0]}>
         <cylinderGeometry args={[0.55, 0.65, 0.6, 24]} />
-        <meshStandardMaterial color="#ecebe6" roughness={0.9} />
+        <Concrete color="#ecebe6" roughness={0.9} />
       </mesh>
       <group
         position={[0, 1.6, 0]}
