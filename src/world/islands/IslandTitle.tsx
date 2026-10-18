@@ -8,7 +8,7 @@ import { at, TITLE_FONT } from '../space'
 export function IslandTitle({ island }: { island: IslandDef }) {
   const section = cv[island.id]
   return (
-    <Billboard position={at(island.titleAnchor, 4.2)}>
+    <Billboard position={at(island.titleAnchor, 5)}>
       <Text font={TITLE_FONT} fontSize={1.1} color="#ecebe6" anchorX="center" anchorY="bottom">
         {section.title}
       </Text>

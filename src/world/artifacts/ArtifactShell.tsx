@@ -49,12 +49,12 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
         <ringGeometry args={[0.7, 0.78, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} />
       </mesh>
-      <Billboard position={[0, 2.9, 0]}>
-        <Text font={TITLE_FONT} fontSize={0.32} color="#ecebe6" anchorX="center" anchorY="bottom" maxWidth={4} textAlign="center">
+      <Billboard position={[0, 2.45, 0]}>
+        <Text font={TITLE_FONT} fontSize={0.2} color="#ecebe6" anchorX="center" anchorY="bottom" maxWidth={1.7} textAlign="center" lineHeight={1.1}>
           {main}
         </Text>
         {sub && (
-          <Text font={TITLE_FONT} fontSize={0.16} color="#8a8984" anchorX="center" anchorY="top" position={[0, -0.06, 0]}>
+          <Text font={TITLE_FONT} fontSize={0.12} color="#8a8984" anchorX="center" anchorY="top" position={[0, -0.06, 0]}>
             {sub}
           </Text>
         )}

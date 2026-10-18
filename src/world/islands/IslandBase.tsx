@@ -1,11 +1,15 @@
+import type { ReactNode } from 'react'
 import type { IslandDef } from '../../content/world'
-import { at } from '../space'
-import { Artifacts } from '../artifacts/Artifacts'
-import { SharedReveal } from '../reveals/SharedReveal'
+import { v } from '../../core/geometry'
+import { at, yawFor } from '../space'
 import { IslandTitle } from './IslandTitle'
 
-/** Greybox island: a floating slab with its title. Replaced per island in Task 30. */
-export function GreyIsland({ island }: { island: IslandDef }) {
+/**
+ * Shared island frame: the walkable slab (top at y = 0, radius from the layout), the arrival ring
+ * and the title. `children` are in local space where +x points outward, away from the monolith.
+ */
+export function IslandBase({ island, children }: { island: IslandDef; children?: ReactNode }) {
+  const outward = v.angleOf(island.centre)
   return (
     <group>
       <mesh position={at(island.centre, -0.75)}>
@@ -16,8 +20,9 @@ export function GreyIsland({ island }: { island: IslandDef }) {
         <ringGeometry args={[island.arrivalZoneRadius - 0.08, island.arrivalZoneRadius, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} transparent opacity={0.6} />
       </mesh>
-      <SharedReveal island={island} />
-      {island.id === 'projects' && <Artifacts island={island} />}
+      <group position={at(island.centre)} rotation={[0, yawFor(outward), 0]}>
+        {children}
+      </group>
       <IslandTitle island={island} />
     </group>
   )

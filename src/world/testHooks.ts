@@ -23,6 +23,9 @@ export type NullspaceHooks = {
   isRevealing(): boolean
   say(text: string): void
   interactArtifact(i: 0 | 1 | 2): void
+  /** Places player and camera for screenshots: player at pos, camera looking along yaw. */
+  setView(pos: Vec2, yaw: number): void
+  markAllRevealed(): void
 }
 
 const STEP = 1 / 60
@@ -55,6 +58,13 @@ export function installTestHooks(): void {
     isTourComplete: () => isTourComplete(WORLD.tourOrder, useStore.getState().worldVisited),
     isRevealing: () => useStore.getState().revealing !== null,
     say: (text) => useStore.getState().say(text),
+    setView: (pos, yaw) => {
+      teleportPlayer(pos)
+      sim.rig = { ...sim.rig, yaw, aim: pos }
+    },
+    markAllRevealed: () => {
+      for (const i of WORLD.islands) useStore.getState().markRevealPlayed(i.id)
+    },
     interactArtifact: (i) => {
       const slot = WORLD.islands.find((x) => x.id === 'projects')!.artifactSlots[i]
       teleportPlayer({ x: slot.x + 0.4, z: slot.z })

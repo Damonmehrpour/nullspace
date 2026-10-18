@@ -65,7 +65,7 @@ export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout 
       radius: p.islandRadius,
       arrivalPoint: v.sub(centre, v.scale(outward, 2)),
       arrivalZoneRadius: p.arrivalZoneRadius,
-      titleAnchor: v.add(centre, v.scale(outward, p.islandRadius - 1)),
+      titleAnchor: v.add(centre, v.scale(outward, p.islandRadius + 0.5)),
       artifactSlots,
     }
   })
