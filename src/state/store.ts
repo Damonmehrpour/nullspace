@@ -27,6 +27,10 @@ type Data = {
   revealElapsed: number
   /** Arrival point the player should be moved to on the next simulation step (touch "Guide me there"). */
   teleportRequest: Vec2 | null
+  /** Current kokedama line; id changes on every new line so repeats re-trigger. */
+  subtitle: { text: string; id: number } | null
+  /** Where the most recent panel was opened from (drives the skipTour line). */
+  lastOpenSource: OpenSource | null
   settings: Settings
   modePreference: ModePreference | null
 }
@@ -46,6 +50,8 @@ type Actions = {
   tickReveal(dt: number): void
   guideMeThere(id: SectionId, touch: boolean): void
   clearTeleport(): void
+  say(text: string): void
+  clearSubtitle(id: number): void
   updateSettings(p: Partial<Settings>): void
   setModePreference(m: ModePreference): void
 }
@@ -64,6 +70,8 @@ export function initialState(): Data {
     revealing: null,
     revealElapsed: 0,
     teleportRequest: null,
+    subtitle: null,
+    lastOpenSource: null,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
   }
@@ -79,8 +87,8 @@ const withAdded = <T>(set: Set<T>, v: T): Set<T> => (set.has(v) ? set : new Set(
 export const useStore = create<StoreState>()((set, get) => ({
   ...loadInitialState(),
   setPhase: (phase) => set({ phase }),
-  openSection: (id) => set((s) => ({ panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id) })),
-  openProject: (id) => set((s) => ({ panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects') })),
+  openSection: (id, o) => set((s) => ({ panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id), lastOpenSource: o.source })),
+  openProject: (id, o) => set((s) => ({ panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects'), lastOpenSource: o.source })),
   closePanel: () =>
     set((s) => ({
       panel: null,
@@ -115,6 +123,8 @@ export const useStore = create<StoreState>()((set, get) => ({
     set({ tourTarget: id, teleportRequest: touch ? island.arrivalPoint : null })
   },
   clearTeleport: () => set({ teleportRequest: null }),
+  say: (text) => set((s) => ({ subtitle: { text, id: (s.subtitle?.id ?? 0) + 1 } })),
+  clearSubtitle: (id) => set((s) => (s.subtitle?.id === id ? { subtitle: null } : {})),
   updateSettings: (p) => {
     const settings = { ...get().settings, ...p }
     saveSettings(settings)

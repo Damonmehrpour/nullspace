@@ -1,5 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { WORLD } from '../content/world'
+import { DialogueBridge } from './DialogueBridge'
 import { FollowCamera } from './FollowCamera'
 import { GameLoop } from './GameLoop'
 import { GuideBody } from './guide/GuideBody'
@@ -29,6 +30,7 @@ export function Scene() {
       <Trail />
       <OffscreenArrow />
       <GameLoop />
+      <DialogueBridge />
       {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
     </>
   )

@@ -21,6 +21,7 @@ export type NullspaceHooks = {
   getViewed(): SectionId[]
   isTourComplete(): boolean
   isRevealing(): boolean
+  say(text: string): void
 }
 
 const STEP = 1 / 60
@@ -52,6 +53,7 @@ export function installTestHooks(): void {
     getViewed: () => [...useStore.getState().viewed],
     isTourComplete: () => isTourComplete(WORLD.tourOrder, useStore.getState().worldVisited),
     isRevealing: () => useStore.getState().revealing !== null,
+    say: (text) => useStore.getState().say(text),
   }
   ;(window as unknown as { __nullspace: NullspaceHooks }).__nullspace = hooks
 }

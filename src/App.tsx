@@ -8,6 +8,9 @@ import { Boot } from './ui/Boot'
 import { Entry } from './ui/Entry'
 import { PanelHost } from './ui/Panel/PanelHost'
 import { TopBar } from './ui/TopBar'
+import { A11yStatus } from './ui/A11yStatus'
+import { ControlsHint } from './ui/ControlsHint'
+import { Subtitles } from './ui/Subtitles'
 import { useGlobalShortcuts } from './ui/useGlobalShortcuts'
 import { consumeEnter3dFlag } from './ui/worldLoader'
 import { WorldHost } from './ui/WorldHost'
@@ -32,6 +35,13 @@ export default function App() {
     <>
       <div id="app-background">
         {inWorld ? <WorldHost /> : phase === 'portfolio' ? <Portfolio /> : <Entry />}
+        {phase === 'world' && (
+          <>
+            <Subtitles />
+            <A11yStatus />
+            <ControlsHint />
+          </>
+        )}
         <TopBar
           mode={inWorld ? 'world' : phase === 'portfolio' ? 'portfolio' : 'entry'}
           onGuideMeThere={(id) => useStore.getState().guideMeThere(id, capabilities.isTouchFirst())}
