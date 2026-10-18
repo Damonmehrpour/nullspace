@@ -62,6 +62,13 @@ test('island views', async ({ page }, info) => {
       await play(name, 1.9 * Math.cos(o), 1.9 * Math.sin(o), o)
     }
   }
+  if (island === 'skills') {
+    // Standing in the plaza facing each district (game −58°, XR 0°, AI +58°, tools 160°, languages 200°).
+    for (const [name, deg] of [['district-game', -58], ['district-xr', 0], ['district-ai', 58], ['district-tools', 160], ['district-languages', 200]] as const) {
+      const o = (deg * Math.PI) / 180
+      await play(name, 1.1 * Math.cos(o), 1.1 * Math.sin(o), o)
+    }
+  }
   await play('edge', 5.6, 0)
   await play('look-back', 5.4, 0, Math.PI)
   await fixed('elevation', world3(2.2, 3.2, -11), world3(2.2, 2.4, 0))

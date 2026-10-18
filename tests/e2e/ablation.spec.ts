@@ -31,7 +31,7 @@ test('ablation', async ({ page }, info) => {
   await page.waitForTimeout(3000)
   await ns('freezeClock')
   await ns('markAllRevealed')
-  const VIEWS: Record<string, number> = { experience: 1, projects: 2 }
+  const VIEWS: Record<string, number> = { experience: 1, projects: 2, skills: 3 }
   if (process.env.ABLATION_VIEW && process.env.ABLATION_VIEW in VIEWS) {
     // Gameplay camera in front of the named island (same as the profile's "<island> close").
     const a = ((90 - 72 * VIEWS[process.env.ABLATION_VIEW]) * Math.PI) / 180
@@ -66,7 +66,7 @@ test('ablation', async ({ page }, info) => {
   const rows: string[] = []
   const base = await measure()
   rows.push(`| (everything on) | ${base.p50.toFixed(2)} | ${base.p90.toFixed(2)} | |`)
-  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow', 'v2-wanderer', 'v2-kokedama', 'v2-buds', 'v2-portal', 'v2-portal-lights', 'v2-engraving', 'v2-moss', 'v2-stele', 'v2-terraces', 'v2-plaques', 'v2-plinths', 'v2-atrium-wash', 'v2-ring', 'v2-atrium-lights'] : []
+  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow', 'v2-wanderer', 'v2-kokedama', 'v2-buds', 'v2-portal', 'v2-portal-lights', 'v2-engraving', 'v2-moss', 'v2-stele', 'v2-terraces', 'v2-plaques', 'v2-plinths', 'v2-atrium-wash', 'v2-ring', 'v2-atrium-lights', 'v2-district-game', 'v2-district-xr', 'v2-district-ai', 'v2-district-tools', 'v2-district-languages', 'v2-city-lights'] : []
   for (const p of parts) {
     const n = (await ns('setVisibleByName', p, false)) as number
     await page.waitForTimeout(200)

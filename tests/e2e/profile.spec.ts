@@ -27,6 +27,9 @@ test('profile world', async ({ page }, info) => {
   // Let adaptive quality settle first; its one-time downgrade (shader recompiles) is not steady-state cost.
   await page.waitForTimeout(6000)
   const quality = await page.evaluate(() => (window as unknown as { __nullspace: { getQuality(): unknown } }).__nullspace.getQuality())
+  // Measure the steady state a visitor sees after the tour: every island revealed (risen towers,
+  // lit portals, settled ring), not mid-reveal. Earlier phases measured unrevealed islands.
+  await page.evaluate(() => (window as unknown as { __nullspace: { markAllRevealed(): void } }).__nullspace.markAllRevealed())
 
   // Spawn and a ring overview, then each island from in front of it (18.5 m out on its own bearing,
   // facing outward), computed from the ring layout so every label shows the island it names.

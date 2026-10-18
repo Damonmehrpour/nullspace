@@ -33,8 +33,8 @@ const BEVEL_VERTEX = /* glsl */ `
  *  - ground-contact darkening on walls near the walkable plane (fake ambient occlusion)
  *  - darker undersides, and rock that fades into the void the deeper it hangs
  */
-export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; side?: Side; bevel?: boolean } = {}): MeshLambertMaterial {
-  const key = `${color}|${opts.emissive ?? ''}|${opts.side ?? 0}|${opts.bevel ? 'b' : ''}`
+export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; side?: Side; bevel?: boolean; lite?: boolean } = {}): MeshLambertMaterial {
+  const key = `${color}|${opts.emissive ?? ''}|${opts.side ?? 0}|${opts.bevel ? 'b' : ''}|${opts.lite ? 'l' : ''}`
   const hit = cache.get(key)
   if (hit) return hit
 
@@ -56,8 +56,13 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
   float nsStain = 0.0;
   if (uDetail > 0.5) {
     // Finest octave is a single hash per ~3 cm cell (1–2 px at play distance): reads as aggregate at 1/8 the cost.
-    nsAgg = nsNoise(vWPos * 1.6) * 0.55 + nsNoise(vWPos * 7.0) * 0.3 + nsHash(floor(vWPos * 31.0)) * 0.15;
-    nsStain = smoothstep(0.55, 0.95, nsNoise(vec3(vWPos.x * 0.22, vWPos.y * 0.8, vWPos.z * 0.22))) * 0.16;
+${
+      opts.lite
+        ? // Lite (many small buildings): coarse aggregate and the cheap grain only; no staining pass.
+          'nsAgg = nsNoise(vWPos * 1.6) * 0.8 + nsHash(floor(vWPos * 31.0)) * 0.2;'
+        : `nsAgg = nsNoise(vWPos * 1.6) * 0.55 + nsNoise(vWPos * 7.0) * 0.3 + nsHash(floor(vWPos * 31.0)) * 0.15;
+    nsStain = smoothstep(0.55, 0.95, nsNoise(vec3(vWPos.x * 0.22, vWPos.y * 0.8, vWPos.z * 0.22))) * 0.16;`
+    }
   }
   float nsBoard = smoothstep(0.965, 1.0, abs(sin(vWPos.y * 3.14159 / 0.55))) * 0.06 * (1.0 - abs(vWNormal.y));
   float nsWall = 1.0 - abs(vWNormal.y);
@@ -67,7 +72,7 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
   diffuseColor.rgb *= (0.84 + nsAgg * 0.24 - nsStain - nsBoard) * nsContact * nsUnder * nsDepth;`,
       )
   }
-  m.customProgramCacheKey = () => (opts.bevel ? 'nullspace-concrete-v2-bevel' : 'nullspace-concrete-v2')
+  m.customProgramCacheKey = () => `nullspace-concrete-v2${opts.bevel ? '-bevel' : ''}${opts.lite ? '-lite' : ''}`
   cache.set(key, m)
   return m
 }
@@ -79,8 +84,8 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
  * repeatedly. Both variants exist from startup (the monolith uses the transparent one), so switching
  * never compiles a shader.
  */
-export function fadingConcreteMaterial(color: string): MeshLambertMaterial {
-  const base = concreteMaterial(color)
+export function fadingConcreteMaterial(color: string, opts: { lite?: boolean } = {}): MeshLambertMaterial {
+  const base = concreteMaterial(color, opts)
   const m = base.clone()
   m.onBeforeCompile = base.onBeforeCompile
   m.customProgramCacheKey = base.customProgramCacheKey

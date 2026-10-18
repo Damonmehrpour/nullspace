@@ -1,6 +1,6 @@
 # Visual Rebirth: audit and plan
 
-Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture): Experience approved; Projects (`docs/visual-phase2b-projects/`) awaiting review.** Skills, Contact and later phases haven't started.
+Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture): Experience and Projects approved; Skills (`docs/visual-phase2b-skills/`) awaiting review.** Contact and later phases haven't started.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 
@@ -80,7 +80,7 @@ Add the public number **+358 45 8629910**, linked as `tel:+358458629910`, in the
 | 0. Proof of concept | Material, lighting, void, Education, first kokedama, camera | Accepted |
 | 1. Global look | Walkways, bridge, chamfers, contact shadows across the world | Delivered |
 | 2A. Character prototype | Hooded wanderer plus the upgraded kokedama | **Approved** (faceless wanderer and kokedama are the character baseline) |
-| **2B. Island architecture** | Per your direction, after 2A approval: one island at a time, each stopping for review. Experience (Monumental Corridor of Portals) **approved** (`docs/visual-phase2b/`). **Projects (sunken atrium under a floating ring) delivered** (`docs/visual-phase2b-projects/`). Then Skills and Contact | **Projects: awaiting review** |
+| **2B. Island architecture** | Per your direction, after 2A approval: one island at a time, each stopping for review. Experience (Monumental Corridor of Portals) **approved** (`docs/visual-phase2b/`). Projects (sunken atrium under a floating ring) **approved** (`docs/visual-phase2b-projects/`). **Skills (the Data City) delivered** (`docs/visual-phase2b-skills/`). Then Contact | **Skills: awaiting review** |
 | 2C. Character finish | Polish from feedback; the kokedama's environmental reactions across the world; Low-quality variants; reduced-motion review | Later |
 | 3. Story and contact | XR Meditation dialogue moment; contact number in the panel, the 2D portfolio and mobile | After 2B |
 | 5. UI/UX | Prompts, navigation, panels, typography and spacing, transitions, mobile and keyboard | After the islands (can run alongside them if you prefer) |

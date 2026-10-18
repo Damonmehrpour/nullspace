@@ -107,6 +107,7 @@ test('v2: the wanderer has no visible facial features', async ({ page }, info) =
 // discovery cues the kokedama (walking back through adds nothing).
 test('v2: walking the Experience corridor discovers each portal once', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // many small steps on the software renderer
   await gotoEntry(page)
   await page.goto('/?visual=v2')
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
@@ -160,6 +161,7 @@ test('v2: visiting every island compiles no new shader programs', async ({ page 
 // (its plinth lights and its thread of light ignite) and cues the kokedama.
 test('v2: approaching each project in the atrium discovers it once', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // many small steps on the software renderer
   await gotoEntry(page)
   await page.goto('/?visual=v2')
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
@@ -182,6 +184,41 @@ test('v2: approaching each project in the atrium discovers it once', async ({ pa
       await page.waitForTimeout(100)
     }
     expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 3)
+  }
+  expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
+})
+
+// Data City: reaching each district's name stone discovers it once per visit (its windows and
+// floor line light up) and cues the kokedama; no new shaders compile along the way.
+test('v2: visiting each Data City district discovers it once', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // many small steps on the software renderer
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  const ns = (fn: string, ...args: unknown[]) =>
+    page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
+  await ns('freezeClock')
+  await ns('markAllRevealed')
+  const a = ((90 - 3 * 72) * Math.PI) / 180 // Skills: fourth island on the ring
+  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const local = (r: number, deg: number) => {
+    const t = (deg * Math.PI) / 180
+    const x = r * Math.cos(t)
+    const z = r * Math.sin(t)
+    return { x: c.x + x * Math.cos(a) - z * Math.sin(a), z: c.z + x * Math.sin(a) + z * Math.cos(a) }
+  }
+  await ns('setView', c, a)
+  await page.waitForTimeout(600)
+  const before = (await ns('getGuideCue')) as number
+  const programs = ((await ns('listPrograms')) as string[]).length
+  for (const pass of [1, 2]) {
+    for (const deg of [-62, 0, 62, 160, 200]) {
+      await ns('setView', local(1.6, deg), a + (deg * Math.PI) / 180)
+      await page.waitForTimeout(150)
+    }
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 5)
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })

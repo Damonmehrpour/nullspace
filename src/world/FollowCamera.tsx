@@ -49,7 +49,8 @@ export function FollowCamera() {
     for (const b of blockers) {
       if (!b.userData.fadeOnBlock) continue
       const mat = (b as Mesh).material as Material
-      const target = fading.has(b) ? 0.04 : 1
+      // forceFade: an island can also ask for a fade when the camera passes right beside it.
+      const target = fading.has(b) || b.userData.forceFade ? 0.04 : 1
       mat.opacity += (target - mat.opacity) * (1 - Math.exp(-dt * 8))
       mat.depthWrite = mat.opacity > 0.95
     }
