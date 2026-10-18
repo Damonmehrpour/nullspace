@@ -19,6 +19,11 @@ test('?visual=v2 renders without shader or runtime errors and keeps arrivals wor
     page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
   await ns('freezeClock')
   await ns('advance', 0.6)
+  // Plan budget, checked at spawn (the view that sees the most of the world): ≤ 80 draw calls, ≤ 150k triangles.
+  await page.waitForTimeout(300)
+  const render = (await ns('getRenderInfo')) as { calls: number; triangles: number }
+  expect(render.calls).toBeLessThanOrEqual(80)
+  expect(render.triangles).toBeLessThanOrEqual(150_000)
   await ns('teleportPlayer', 'education')
   await ns('advance', 2.2)
   await expect(page.getByRole('dialog', { name: 'Education & Research' })).toBeVisible()

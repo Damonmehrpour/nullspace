@@ -58,7 +58,7 @@ test('ablation', async ({ page }, info) => {
   const rows: string[] = []
   const base = await measure()
   rows.push(`| (everything on) | ${base.p50.toFixed(2)} | ${base.p90.toFixed(2)} | |`)
-  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith'] : []
+  const parts = variant === 'v2' ? ['v2-dome', 'v2-mega', 'v2-dust', 'v2-contact', 'v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-monolith', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow'] : []
   for (const p of parts) {
     const n = (await ns('setVisibleByName', p, false)) as number
     await page.waitForTimeout(200)
@@ -82,7 +82,7 @@ test('ablation', async ({ page }, info) => {
       rows.push(`| concrete → ${mode} (${n} meshes) | ${m.p50.toFixed(2)} | ${m.p90.toFixed(2)} | ${(base.p50 - m.p50).toFixed(2)} |`)
     }
     await ns('swapConcrete', 'v2')
-    for (const p of ['v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-dome']) rows.push(`| triangles ${p} | ${await ns('triangles', p)} | | |`)
+    for (const p of ['v2-slab', 'v2-archive', 'v2-spine', 'v2-shell', 'v2-dome', 'v2-walkway', 'v2-pathlights', 'v2-blocks', 'v2-blockshadow']) rows.push(`| triangles ${p} | ${await ns('triangles', p)} | | |`)
   }
   const programs = (await ns('listPrograms')) as string[]
   mkdirSync('test-results', { recursive: true })

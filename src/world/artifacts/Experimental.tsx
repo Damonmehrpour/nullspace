@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import type { Group } from 'three'
 import { reducedMotion } from '../sim'
+import { Concrete } from '../v2/Surface'
 
 const FRAGMENTS = 8
 
@@ -42,7 +43,7 @@ export function Experimental() {
       {base.map((b, i) => (
         <mesh key={i}>
           <boxGeometry args={[b.size, b.size, b.size]} />
-          <meshStandardMaterial color={i % 3 === 0 ? '#8a8984' : '#ecebe6'} roughness={0.7} />
+          <Concrete color={i % 3 === 0 ? '#8a8984' : '#ecebe6'} roughness={0.7} />
         </mesh>
       ))}
     </group>

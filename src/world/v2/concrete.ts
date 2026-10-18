@@ -6,6 +6,24 @@ const cache = new Map<string, MeshLambertMaterial>()
 /** Shared by every concrete material: 1 = full surface detail, 0 = flat (adaptive quality Low). */
 export const CONCRETE_DETAIL = { value: 1 }
 
+/** Bevel radius baked into `bevelUnitBox()`; the shader rescales it to BEVEL_WORLD metres per instance. */
+export const BEVEL_UNIT = 0.1
+const BEVEL_WORLD = 0.045
+
+/**
+ * Vertex snippet for instanced unit rounded boxes (every vertex lies in a corner zone, |c| ≥ 0.5 − r):
+ * keeps the bevel a fixed world size whatever each instance's non-uniform scale, instead of
+ * stretching it. Clamped to 45% of the smallest side so flattened instances (reveals) stay valid.
+ */
+const BEVEL_VERTEX = /* glsl */ `
+  #ifdef USE_INSTANCING
+    vec3 nsS = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+    vec3 nsCore = sign(transformed) * 0.5;
+    vec3 nsOff = (transformed - nsCore) / ${BEVEL_UNIT.toFixed(3)};
+    transformed = nsCore + nsOff * min(vec3(${BEVEL_WORLD.toFixed(3)}), nsS * 0.45) / max(nsS, vec3(1e-4));
+  #endif
+`
+
 /**
  * Cast-concrete material for the v2 look: one shader reused everywhere (one compile).
  * Lambert, not PBR: on roughness-0.9 concrete the GGX specular is invisible but was ~35% of the
@@ -15,8 +33,8 @@ export const CONCRETE_DETAIL = { value: 1 }
  *  - ground-contact darkening on walls near the walkable plane (fake ambient occlusion)
  *  - darker undersides, and rock that fades into the void the deeper it hangs
  */
-export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; side?: Side } = {}): MeshLambertMaterial {
-  const key = `${color}|${opts.emissive ?? ''}|${opts.side ?? 0}`
+export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; side?: Side; bevel?: boolean } = {}): MeshLambertMaterial {
+  const key = `${color}|${opts.emissive ?? ''}|${opts.side ?? 0}|${opts.bevel ? 'b' : ''}`
   const hit = cache.get(key)
   if (hit) return hit
 
@@ -27,7 +45,7 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
   }
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uDetail = CONCRETE_DETAIL
-    shader.vertexShader = 'varying vec3 vWPos;\nvarying vec3 vWNormal;\nvarying vec3 vOPos;\n' + shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n${WORLD_VARYINGS_VERTEX}`)
+    shader.vertexShader = 'varying vec3 vWPos;\nvarying vec3 vWNormal;\nvarying vec3 vOPos;\n' + shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n${opts.bevel ? BEVEL_VERTEX : ''}${WORLD_VARYINGS_VERTEX}`)
     shader.fragmentShader =
       'varying vec3 vWPos;\nvarying vec3 vWNormal;\nvarying vec3 vOPos;\nuniform float uDetail;\n' +
       NOISE_GLSL +
@@ -49,7 +67,7 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
   diffuseColor.rgb *= (0.84 + nsAgg * 0.24 - nsStain - nsBoard) * nsContact * nsUnder * nsDepth;`,
       )
   }
-  m.customProgramCacheKey = () => 'nullspace-concrete-v2'
+  m.customProgramCacheKey = () => (opts.bevel ? 'nullspace-concrete-v2-bevel' : 'nullspace-concrete-v2')
   cache.set(key, m)
   return m
 }

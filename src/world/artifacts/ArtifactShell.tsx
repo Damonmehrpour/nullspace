@@ -8,6 +8,8 @@ import { useStore } from '../../state/store'
 import { BADGE_COPY } from '../../ui/StatusBadge'
 import { sim } from '../sim'
 import { at, TITLE_FONT } from '../space'
+import { ContactShadow } from '../v2/ContactShadow'
+import { V2 } from '../visual'
 import { Concrete } from '../v2/Surface'
 
 const RANGE = 1.5
@@ -31,6 +33,7 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
 
   return (
     <group position={at(slot)}>
+      {V2 && <ContactShadow position={[0, 0, 0]} size={[2.1, 2.1]} shape="round" opacity={0.5} />}
       <mesh position={[0, 0.3, 0]}>
         <cylinderGeometry args={[0.55, 0.65, 0.6, 24]} />
         <Concrete color="#ecebe6" roughness={0.9} />

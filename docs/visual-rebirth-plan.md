@@ -1,6 +1,6 @@
 # Visual Rebirth: audit and plan
 
-Status: **proposal, awaiting author approval.** Nothing is implemented yet.
+Status: **Phase 0 accepted; Phase 1 delivered for review** (see `docs/visual-phase0/`, `docs/visual-phase1/`). Phases 2–4 not started.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 

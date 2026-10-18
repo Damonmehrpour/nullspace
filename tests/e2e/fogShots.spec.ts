@@ -11,9 +11,14 @@ test('fog and island readability shots', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   test.setTimeout(120_000)
   await page.setViewportSize({ width: 1280, height: 720 })
+  // SHOTS_VARIANT=v2 shoots the ?visual=v2 look into test-results/shots-v2.
+  const v2 = process.env.SHOTS_VARIANT === 'v2'
   await gotoEntry(page)
+  if (v2) await page.goto('/?visual=v2')
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.waitForFunction(() => '__nullspace' in window)
+  // Headless rendering is slow; keep High quality so the shots show the full look.
+  await page.evaluate(() => (window as unknown as { __nullspace: { lockQuality(): void } }).__nullspace.lockQuality())
   const views = await page.evaluate(() => {
     const deg = (d: number) => (d * Math.PI) / 180
     const ids = ['education', 'experience', 'projects', 'skills', 'contact']
@@ -40,6 +45,6 @@ test('fog and island readability shots', async ({ page }, info) => {
   for (const v of views) {
     await page.evaluate(([pos, yaw]) => (window as unknown as { __nullspace: { setView(p: V, y: number): void } }).__nullspace.setView(pos as V, yaw as number), [v.pos, v.yaw] as const)
     await page.waitForTimeout(1200)
-    await page.screenshot({ path: `test-results/shots/${v.name}.png` })
+    await page.screenshot({ path: `test-results/shots${v2 ? '-v2' : ''}/${v.name}.png` })
   }
 })

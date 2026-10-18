@@ -5,13 +5,16 @@ import { gotoEntry } from './helpers'
 // Manual profiling only: PROFILE=1 npx playwright test profile --project=desktop
 // Measures real-time fps (rAF) plus draw calls and triangles at several viewpoints.
 test.skip(!process.env.PROFILE, 'manual profiling')
+// PROFILE_MODE: software (default, pixel-bound proxy) | uncapped (real GPU via ANGLE/D3D11, no vsync).
+const MODE = process.env.PROFILE_MODE === 'uncapped' ? 'uncapped' : 'software'
+if (MODE === 'uncapped') test.use({ launchOptions: { args: ['--use-angle=d3d11', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--disable-frame-rate-limit'] } })
 
 type V = { x: number; z: number }
 
 test('profile world', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   test.setTimeout(120_000)
-  await page.setViewportSize({ width: 1920, height: 1080 })
+  await page.setViewportSize(MODE === 'uncapped' ? { width: 1920, height: 1080 } : { width: 1280, height: 720 })
   const variant = process.env.PROFILE_VARIANT === 'v2' ? 'v2' : 'v1'
   await gotoEntry(page)
   if (variant === 'v2') await page.goto('/?visual=v2')
@@ -31,27 +34,37 @@ test('profile world', async ({ page }, info) => {
     { name: 'projects close', pos: { x: -14.6, z: -14.9 }, yaw: -2.33 },
     { name: 'skills close', pos: { x: 15.8, z: -11.5 }, yaw: -0.63 },
     { name: 'education close', pos: { x: 0, z: 17.2 }, yaw: Math.PI / 2 },
+    ...[1, 4].map((i) => {
+      // experience and contact, from in front of each island (same placement as the screenshot set)
+      const a = ((90 - i * 72) * Math.PI) / 180
+      return { name: `${i === 1 ? 'experience' : 'contact'} close`, pos: { x: 18.5 * Math.cos(a), z: 18.5 * Math.sin(a) }, yaw: a }
+    }),
   ]
   const rows: string[] = []
   for (const v of views) {
     await page.evaluate(([pos, yaw]) => (window as unknown as { __nullspace: { setView(p: V, y: number): void } }).__nullspace.setView(pos as V, yaw as number), [v.pos, v.yaw] as const)
     await page.waitForTimeout(800)
     const r = await page.evaluate(async () => {
-      let n = 0
+      const dts: number[] = []
       const t0 = performance.now()
+      let last = t0
       await new Promise<void>((done) => {
         const f = () => {
-          n++
-          if (performance.now() - t0 < 2000) requestAnimationFrame(f)
+          const now = performance.now()
+          dts.push(now - last)
+          last = now
+          if (now - t0 < 3000) requestAnimationFrame(f)
           else done()
         }
         requestAnimationFrame(f)
       })
+      dts.shift()
+      dts.sort((a, b) => a - b)
       const info = (window as unknown as { __nullspace: { getRenderInfo(): { calls: number; triangles: number } } }).__nullspace.getRenderInfo()
-      return { fps: Math.round(n / 2), ...info }
+      return { p50: dts[dts.length >> 1], p95: dts[Math.floor(dts.length * 0.95)], ...info }
     })
-    rows.push(`| ${v.name} | ${r.fps} | ${r.calls} | ${r.triangles} |`)
+    rows.push(`| ${v.name} | ${r.p50.toFixed(2)} | ${r.p95.toFixed(2)} | ${r.calls} | ${r.triangles} |`)
   }
   mkdirSync('test-results', { recursive: true })
-  writeFileSync(`test-results/profile-${variant}.md`, [`variant: ${variant}`, `startup (Enter click → world ready): ${startupMs} ms`, `quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | fps | draw calls | triangles |', '|---|---|---|---|', ...rows].join('\n'))
+  writeFileSync(`test-results/profile-${variant}-${MODE}.md`, [`variant: ${variant} · mode ${MODE}`, `startup (Enter click → world ready): ${startupMs} ms`, `quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | p50 frame ms | p95 frame ms | draw calls | triangles |', '|---|---|---|---|---|', ...rows].join('\n'))
 })

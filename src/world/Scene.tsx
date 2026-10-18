@@ -19,6 +19,7 @@ import { EducationV2 } from './v2/EducationV2'
 import { GuideBodyV2 } from './v2/GuideBodyV2'
 import { MonolithV2 } from './v2/MonolithV2'
 import { PlayerV2 } from './v2/PlayerV2'
+import { WalkwaysV2 } from './v2/WalkwaysV2'
 import { V2 } from './visual'
 
 const ISLANDS = { education: V2 ? EducationV2 : Education, experience: Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
@@ -48,7 +49,7 @@ export function Scene() {
           <Monolith layout={WORLD} />
         </>
       )}
-      <Walkways layout={WORLD} />
+      {V2 ? <WalkwaysV2 layout={WORLD} /> : <Walkways layout={WORLD} />}
       {WORLD.islands.map((i) => {
         const Island = ISLANDS[i.id]
         return <Island key={i.id} island={i} />
