@@ -7,13 +7,15 @@ import { ARROW_ID } from './guide/OffscreenArrow'
 import { QualityContext } from './quality'
 import { Scene } from './Scene'
 import { sim } from './sim'
-import type { WorldProps } from '../ui/worldLoader'
+import { markContextLost, registerWorldContext, type WorldProps } from '../ui/worldLoader'
 
 const CONTEXT_RESTORE_MS = 3000
 
 /** The lazily loaded 3D world. The only module tree that imports three.js. */
 export default function WorldRoot({ onFailure }: WorldProps) {
   const lostTimer = useRef<number | null>(null)
+  // While the context is lost nothing may render against it, or three.js throws and masks the real cause.
+  const [contextLost, setContextLost] = useState(false)
   const chosen = useStore((s) => s.settings.quality)
   const [quality, setQuality] = useState(() => createQuality(chosen))
   const budget = useMemo(() => renderBudget(quality), [quality])
@@ -32,16 +34,21 @@ export default function WorldRoot({ onFailure }: WorldProps) {
     <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
         dpr={budget.dpr}
+        frameloop={contextLost ? 'never' : 'always'}
         camera={{ fov: 50, near: 0.1, far: 200, position: [0, 4, -6] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
+          registerWorldContext(gl.getContext())
           canvas.addEventListener('webglcontextlost', (e) => {
             e.preventDefault()
+            markContextLost()
+            setContextLost(true)
             lostTimer.current = window.setTimeout(() => onFailure('context'), CONTEXT_RESTORE_MS)
           })
           canvas.addEventListener('webglcontextrestored', () => {
             if (lostTimer.current !== null) window.clearTimeout(lostTimer.current)
             lostTimer.current = null
+            setContextLost(false)
           })
           useStore.getState().setPhase('world')
         }}

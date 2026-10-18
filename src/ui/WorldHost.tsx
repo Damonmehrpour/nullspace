@@ -2,7 +2,7 @@ import { Component, Suspense, useState, type ReactNode } from 'react'
 import { writeJSON } from '../core/safeStorage'
 import { ErrorFallback, type FailureReason } from './ErrorFallback'
 import { Loading3D } from './Loading3D'
-import { ChunkLoadError, createWorldLoader, ENTER3D_FLAG, type WorldModule } from './worldLoader'
+import { ChunkLoadError, createWorldLoader, ENTER3D_FLAG, failureFollowsContextLoss, resetContextLoss, type WorldModule } from './worldLoader'
 
 class Boundary extends Component<{ onError: (r: FailureReason) => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -10,7 +10,8 @@ class Boundary extends Component<{ onError: (r: FailureReason) => void; children
     return { failed: true }
   }
   componentDidCatch(error: unknown) {
-    this.props.onError(error instanceof ChunkLoadError ? 'load' : 'crash')
+    console.error('[nullspace] 3D world failed:', error)
+    this.props.onError(error instanceof ChunkLoadError ? 'load' : failureFollowsContextLoss() ? 'context' : 'crash')
   }
   render() {
     return this.state.failed ? null : this.props.children
@@ -25,6 +26,7 @@ export function WorldHost({ importer, reload = () => window.location.reload() }:
   const [failure, setFailure] = useState<FailureReason | null>(null)
 
   function retry() {
+    resetContextLoss()
     setFailure(null)
     setLoader((l) => createWorldLoader(importer, l.attempt + 1))
   }

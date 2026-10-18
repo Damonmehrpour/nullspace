@@ -39,3 +39,30 @@ export function consumeEnter3dFlag(): boolean {
   if (set) removeKey(ENTER3D_FLAG, 'session')
   return set
 }
+
+/** How long after a WebGL context loss a world failure is attributed to that loss. */
+const CONTEXT_LOSS_WINDOW_MS = 5000
+let contextLostAt: number | null = null
+let worldContext: { isContextLost(): boolean } | null = null
+
+/** The world registers its WebGL context so failures can be checked against it synchronously. */
+export function registerWorldContext(ctx: { isContextLost(): boolean } | null): void {
+  worldContext = ctx
+}
+
+/** Called by the world when its WebGL context is lost. */
+export function markContextLost(): void {
+  contextLostAt = performance.now()
+}
+
+export function resetContextLoss(): void {
+  contextLostAt = null
+  worldContext = null
+}
+
+/** True when a failure happens shortly after a context loss (R3F rebuilds its root on the dead context and throws). */
+export function failureFollowsContextLoss(): boolean {
+  // isContextLost() flips synchronously; the context-lost event can arrive after the crash it causes.
+  if (worldContext?.isContextLost()) return true
+  return contextLostAt !== null && performance.now() - contextLostAt < CONTEXT_LOSS_WINDOW_MS
+}

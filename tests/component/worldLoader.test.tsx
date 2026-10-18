@@ -5,12 +5,13 @@ import { readJSON, writeJSON } from '../../src/core/safeStorage'
 import { initialState, useStore } from '../../src/state/store'
 import { ErrorFallback } from '../../src/ui/ErrorFallback'
 import { WorldHost } from '../../src/ui/WorldHost'
-import { consumeEnter3dFlag, ENTER3D_FLAG, type WorldModule } from '../../src/ui/worldLoader'
+import { consumeEnter3dFlag, ENTER3D_FLAG, markContextLost, registerWorldContext, resetContextLoss, type WorldModule } from '../../src/ui/worldLoader'
 
 const ok: WorldModule = { default: () => <p>WORLD OK</p> }
 
 beforeEach(() => {
   sessionStorage.clear()
+  resetContextLoss()
   useStore.setState({ ...initialState(), phase: 'loading3d' })
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
@@ -46,6 +47,35 @@ describe('WorldHost', () => {
     render(<WorldHost importer={() => Promise.reject(new Error('Failed to fetch dynamically imported module'))} />)
     await userEvent.click(await screen.findByRole('button', { name: 'View Portfolio' }))
     expect(useStore.getState().phase).toBe('portfolio')
+  })
+})
+
+describe('context loss classification', () => {
+  it('a crash right after a context loss shows the context-loss fallback, not the generic crash', async () => {
+    const Crashing = () => {
+      markContextLost()
+      throw new Error('Cannot read properties of null (reading precision)')
+    }
+    render(<WorldHost importer={() => Promise.resolve({ default: Crashing })} />)
+    expect(await screen.findByText('The graphics context was lost.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View Portfolio' })).toBeInTheDocument()
+  })
+
+  it('detects a lost context even before the browser’s context-lost event arrives', async () => {
+    registerWorldContext({ isContextLost: () => true })
+    const Crashing = () => {
+      throw new Error('Cannot read properties of null (reading precision)')
+    }
+    render(<WorldHost importer={() => Promise.resolve({ default: Crashing })} />)
+    expect(await screen.findByText('The graphics context was lost.')).toBeInTheDocument()
+  })
+
+  it('an unrelated crash still shows the generic copy', async () => {
+    const Crashing = () => {
+      throw new Error('boom')
+    }
+    render(<WorldHost importer={() => Promise.resolve({ default: Crashing })} />)
+    expect(await screen.findByText('The simulation collapsed. Typical.')).toBeInTheDocument()
   })
 })
 
