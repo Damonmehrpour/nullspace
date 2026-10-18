@@ -16,7 +16,8 @@ test('boot can be skipped with a key', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'ENTER SIMULATION' })).toBeVisible()
 })
 
-test('boot ends on its own within about three seconds', async ({ page }) => {
+test('boot ends on its own within about three seconds of appearing', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'ENTER SIMULATION' })).toBeVisible({ timeout: 3500 })
+  await expect(page.getByRole('button', { name: 'Skip' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'ENTER SIMULATION' })).toBeVisible({ timeout: 3200 })
 })

@@ -132,6 +132,10 @@ export function stepGuide(g0: GuideState, ctx: GuideContext): { guide: GuideStat
         g = toState(g, 'idle')
         break
       }
+      if (g.pathIndex >= g.path.length) {
+        g = toState(g, 'present')
+        break
+      }
       if (d > GUIDE.startWaitDist) {
         g = toState(g, 'wait')
         break

@@ -1,12 +1,16 @@
 // Mutable per-frame simulation state, advanced only by simulate(dt). Components read it in useFrame.
-// Keeping one step function makes a deterministic test clock possible (plan Task 25).
+// One step function means tests can freeze the clock and advance it deterministically.
+import type { SectionId } from '../content/schema'
 import { WORLD } from '../content/world'
 import { createCameraRig, stepCameraRig, type CameraRigState } from '../core/cameraRig'
+import { v, type Vec2 } from '../core/geometry'
 import { createGuide, stepGuide, type GuidePose, type GuideState } from '../core/guideBrain'
 import type { InputState } from '../core/input'
 import { createPlayer, stepPlayer, type PlayerState } from '../core/playerMotion'
 import { buildRouteGraph } from '../core/routeGraph'
+import { createZoneTracker, updateZones, type ZoneTracker } from '../core/tour'
 import { createWalkable } from '../core/walkable'
+import { isReducedMotion } from '../state/reducedMotion'
 import { isGameplayPaused, useStore } from '../state/store'
 
 export const walk = createWalkable(WORLD)
@@ -19,10 +23,13 @@ export type Sim = {
   rig: CameraRigState
   guide: GuideState
   guidePose: GuidePose
+  zones: ZoneTracker
   input: { state: InputState; clear(): void; dispose(): void } | null
-  listeners: Set<(events: SimEvent[]) => void>
-  /** Zone the player entered this step, consumed by arrival wiring (Task 25). */
-  enteredZone: import('../content/schema').SectionId | null
+  listeners: Set<(events: SimEvent[], entered: SectionId | null) => void>
+  /** Test clock: when frozen, only advance() moves the simulation. */
+  frozen: boolean
+  /** Test autopilot: remaining waypoints the player walks along, overriding keyboard input. */
+  autopilot: Vec2[] | null
 }
 
 function freshGuide() {
@@ -34,14 +41,19 @@ function freshGuide() {
 export const sim: Sim = {
   player: createPlayer(WORLD),
   rig: createCameraRig(WORLD.spawn.facing, WORLD.spawn.pos),
-  guide: freshGuide().guide,
-  guidePose: freshGuide().pose,
+  ...(() => {
+    const g = freshGuide()
+    return { guide: g.guide, guidePose: g.pose }
+  })(),
+  zones: createZoneTracker(WORLD.tourOrder),
   input: null,
   listeners: new Set(),
-  enteredZone: null,
+  frozen: false,
+  autopilot: null,
 }
 
 const NO_INPUT: InputState = { up: false, down: false, left: false, right: false, interact: false }
+const FORWARD: InputState = { ...NO_INPUT, up: true }
 
 export function resetSim(): void {
   sim.player = createPlayer(WORLD)
@@ -49,37 +61,58 @@ export function resetSim(): void {
   const g = freshGuide()
   sim.guide = g.guide
   sim.guidePose = g.pose
-  sim.enteredZone = null
+  sim.zones = createZoneTracker(WORLD.tourOrder)
+  sim.autopilot = null
 }
 
-export function reducedMotion(): boolean {
-  const pref = useStore.getState().settings.reducedMotion
-  if (pref !== 'system') return pref === 'on'
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  } catch {
-    return false
+export const reducedMotion = () => isReducedMotion(useStore.getState().settings)
+
+/** Moves the player instantly (touch "Guide me there", tests). Arrival points are walkable by validation. */
+export function teleportPlayer(pos: Vec2): void {
+  sim.player = { ...sim.player, pos, vel: { x: 0, z: 0 }, edgePushTime: 0, boundaryFired: false }
+  sim.autopilot = null
+}
+
+function autopilotInput(): { input: InputState; yaw: number } | null {
+  const path = sim.autopilot
+  if (!path) return null
+  while (path.length > 0 && v.dist(sim.player.pos, path[0]) < 0.3) path.shift()
+  if (path.length === 0) {
+    sim.autopilot = null
+    return null
   }
+  return { input: FORWARD, yaw: v.angleOf(v.sub(path[0], sim.player.pos)) }
 }
 
-/** Advances gameplay by dt seconds: input → player → guide → (zones, Task 25) → camera rig. */
+/** Advances gameplay by dt seconds: input → player → zones → guide → reveal → camera rig. */
 export function simulate(dt: number): void {
   const store = useStore.getState()
+  if (store.teleportRequest) {
+    teleportPlayer(store.teleportRequest)
+    store.clearTeleport()
+  }
   const paused = isGameplayPaused(store)
   if (paused) sim.input?.clear()
   const events: SimEvent[] = []
 
-  const p = stepPlayer(sim.player, sim.input?.state ?? NO_INPUT, sim.rig.yaw, dt, walk, paused)
+  const auto = paused ? null : autopilotInput()
+  const p = stepPlayer(sim.player, auto?.input ?? sim.input?.state ?? NO_INPUT, auto?.yaw ?? sim.rig.yaw, dt, walk, paused)
   sim.player = p.state
   events.push(...p.events)
 
+  let entered: SectionId | null = null
   if (!paused) {
+    const z = updateZones(sim.zones, sim.player.pos, WORLD.islands)
+    sim.zones = z.tracker
+    entered = z.entered
+    if (entered && !store.revealing) store.arrive(entered)
+
     const g = stepGuide(sim.guide, {
       graph,
       playerPos: sim.player.pos,
       playerSpeed: Math.hypot(sim.player.vel.x, sim.player.vel.z),
-      target: store.tourTarget,
-      playerEnteredZone: sim.enteredZone,
+      target: useStore.getState().tourTarget,
+      playerEnteredZone: entered,
       dt,
     })
     sim.guide = g.guide
@@ -87,6 +120,7 @@ export function simulate(dt: number): void {
     events.push(...g.events)
   }
 
+  useStore.getState().tickReveal(Math.min(dt, 0.1))
   sim.rig = stepCameraRig(sim.rig, { playerPos: sim.player.pos, playerVel: sim.player.vel, guidePos: sim.guide.pos }, dt, reducedMotion())
-  if (events.length > 0) for (const l of sim.listeners) l(events)
+  if (events.length > 0 || entered) for (const l of sim.listeners) l(events, entered)
 }

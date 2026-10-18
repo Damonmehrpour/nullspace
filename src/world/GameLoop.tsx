@@ -5,6 +5,7 @@ import { createKeyboardInput } from '../core/input'
 import { nextTarget } from '../core/tour'
 import { useStore } from '../state/store'
 import { resetSim, sim, simulate } from './sim'
+import { installTestHooks } from './testHooks'
 
 /** The single per-frame driver. Everything gameplay-related advances through simulate(). */
 export function GameLoop() {
@@ -13,12 +14,15 @@ export function GameLoop() {
     const s = useStore.getState()
     s.setTourTarget(nextTarget(WORLD.tourOrder, s.worldVisited))
     sim.input = createKeyboardInput(window)
+    if (import.meta.env.VITE_TEST_HOOKS === 'true') installTestHooks()
     return () => {
       sim.input?.dispose()
       sim.input = null
     }
   }, [])
 
-  useFrame((_, delta) => simulate(delta))
+  useFrame((_, delta) => {
+    if (!sim.frozen) simulate(delta)
+  })
   return null
 }

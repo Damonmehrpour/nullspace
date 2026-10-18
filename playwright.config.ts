@@ -5,6 +5,8 @@ const external = process.env.BASE_URL
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
+  // Each worker runs software WebGL; more workers starve timers and drop contexts on this machine.
+  workers: 4,
   retries: 0,
   reporter: [['list']],
   use: { baseURL: external ?? 'http://localhost:4173', trace: 'retain-on-failure' },

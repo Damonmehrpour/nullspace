@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { capabilities } from './core/capabilities'
 import { readJSON } from './core/safeStorage'
 import { Portfolio } from './portfolio/Portfolio'
 import { STORAGE_KEYS } from './state/settings'
@@ -31,7 +32,10 @@ export default function App() {
     <>
       <div id="app-background">
         {inWorld ? <WorldHost /> : phase === 'portfolio' ? <Portfolio /> : <Entry />}
-        <TopBar mode={inWorld ? 'world' : phase === 'portfolio' ? 'portfolio' : 'entry'} />
+        <TopBar
+          mode={inWorld ? 'world' : phase === 'portfolio' ? 'portfolio' : 'entry'}
+          onGuideMeThere={(id) => useStore.getState().guideMeThere(id, capabilities.isTouchFirst())}
+        />
       </div>
       <PanelHost />
     </>

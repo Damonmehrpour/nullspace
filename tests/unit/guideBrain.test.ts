@@ -119,6 +119,12 @@ describe('destinations', () => {
     expect(hold(g, 60, { playerPos: away }).g.name).toBe('present')
   })
 
+  it('presents at the destination even when the player is far behind', () => {
+    const g = leading()
+    const atEnd = { ...g, pos: g.path[g.path.length - 1], pathIndex: g.path.length }
+    expect(step(atEnd, { playerPos: WORLD.spawn.pos }).guide.name).toBe('present')
+  })
+
   it('arrives only when the player enters the target zone, then idles', () => {
     let g = presentAtEducation()
     expect(step(g, { playerPos: g.pos, entered: 'skills' }).guide.name).toBe('present')

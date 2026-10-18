@@ -1,5 +1,10 @@
 import { create } from 'zustand'
 import type { ProjectId, SectionId } from '../content/schema'
+import { WORLD } from '../content/world'
+import { revealDurationMs } from '../core/arrival'
+import type { Vec2 } from '../core/geometry'
+import { nextTarget } from '../core/tour'
+import { isReducedMotion } from './reducedMotion'
 import { DEFAULT_SETTINGS, loadModePreference, loadSettings, saveModePreference, saveSettings, type ModePreference, type Settings } from './settings'
 
 export type { Settings } from './settings'
@@ -18,6 +23,10 @@ type Data = {
   revealPlayed: Set<SectionId>
   tourTarget: SectionId | null
   revealing: SectionId | null
+  /** Seconds since the current reveal started (simulated clock). */
+  revealElapsed: number
+  /** Arrival point the player should be moved to on the next simulation step (touch "Guide me there"). */
+  teleportRequest: Vec2 | null
   settings: Settings
   modePreference: ModePreference | null
 }
@@ -31,6 +40,12 @@ type Actions = {
   markRevealPlayed(id: SectionId): void
   setTourTarget(id: SectionId | null): void
   setRevealing(id: SectionId | null): void
+  /** The player physically entered an island's arrival zone. */
+  arrive(id: SectionId): void
+  /** Advances a running reveal; opens the panel when it finishes. Driven by the simulation clock. */
+  tickReveal(dt: number): void
+  guideMeThere(id: SectionId, touch: boolean): void
+  clearTeleport(): void
   updateSettings(p: Partial<Settings>): void
   setModePreference(m: ModePreference): void
 }
@@ -47,6 +62,8 @@ export function initialState(): Data {
     revealPlayed: new Set(),
     tourTarget: null,
     revealing: null,
+    revealElapsed: 0,
+    teleportRequest: null,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
   }
@@ -64,11 +81,40 @@ export const useStore = create<StoreState>()((set, get) => ({
   setPhase: (phase) => set({ phase }),
   openSection: (id) => set((s) => ({ panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id) })),
   openProject: (id) => set((s) => ({ panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects') })),
-  closePanel: () => set({ panel: null }),
+  closePanel: () =>
+    set((s) => ({
+      panel: null,
+      ...(s.phase === 'world' ? { tourTarget: nextTarget(WORLD.tourOrder, s.worldVisited) } : {}),
+    })),
   markWorldVisited: (id) => set((s) => ({ worldVisited: withAdded(s.worldVisited, id) })),
   markRevealPlayed: (id) => set((s) => ({ revealPlayed: withAdded(s.revealPlayed, id) })),
   setTourTarget: (tourTarget) => set({ tourTarget }),
-  setRevealing: (revealing) => set({ revealing }),
+  setRevealing: (revealing) => set({ revealing, revealElapsed: 0 }),
+  arrive: (id) => {
+    const s = get()
+    if (s.panel || s.revealing) return
+    s.markWorldVisited(id)
+    if (s.revealPlayed.has(id)) s.openSection(id, { source: 'arrival' })
+    else s.setRevealing(id)
+  },
+  tickReveal: (dt) => {
+    const s = get()
+    if (!s.revealing) return
+    const id = s.revealing
+    const elapsed = s.revealElapsed + dt
+    if (elapsed * 1000 < revealDurationMs(id, s.revealPlayed, isReducedMotion(s.settings))) {
+      set({ revealElapsed: elapsed })
+      return
+    }
+    set({ revealing: null, revealElapsed: 0 })
+    get().markRevealPlayed(id)
+    get().openSection(id, { source: 'arrival' })
+  },
+  guideMeThere: (id, touch) => {
+    const island = WORLD.islands.find((i) => i.id === id)!
+    set({ tourTarget: id, teleportRequest: touch ? island.arrivalPoint : null })
+  },
+  clearTeleport: () => set({ teleportRequest: null }),
   updateSettings: (p) => {
     const settings = { ...get().settings, ...p }
     saveSettings(settings)
