@@ -1,5 +1,6 @@
 import type { ContactSection } from '../../../content/schema'
 import { FieldText } from '../../FieldText'
+import { ResumeLink } from '../../ResumeLink'
 import { Entry, EntryList } from './EntryList'
 
 export function ContactView({ section }: { section: ContactSection }) {
@@ -16,6 +17,9 @@ export function ContactView({ section }: { section: ContactSection }) {
           )}
         </Entry>
       ))}
+      <Entry heading="Résumé">
+        <ResumeLink contact={section} className="font-semibold underline underline-offset-4" />
+      </Entry>
     </EntryList>
   )
 }
