@@ -6,6 +6,7 @@ import { useStore } from '../state/store'
 import { rememberOpener } from './focusReturn'
 import { QuickNav } from './QuickNav'
 import { ResumeLink } from './ResumeLink'
+import { Settings } from './Settings'
 
 type Mode = 'world' | 'portfolio' | 'entry'
 
@@ -13,6 +14,7 @@ const linkClass = 'px-2 py-1 font-semibold hover:underline underline-offset-4'
 
 export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: (id: SectionId) => void }) {
   const [navOpen, setNavOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const openSection = useStore((s) => s.openSection)
   const setPhase = useStore((s) => s.setPhase)
   const setModePreference = useStore((s) => s.setModePreference)
@@ -61,6 +63,17 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
         >
           Sections
         </button>
+        <button
+          type="button"
+          className={linkClass}
+          onClick={(e) => {
+            rememberOpener(e.currentTarget)
+            setNavOpen(false)
+            setSettingsOpen(true)
+          }}
+        >
+          Settings
+        </button>
         {mode === 'world' && (
           <button type="button" className={linkClass} onClick={() => setPhase('portfolio')}>
             Exit to Portfolio
@@ -78,6 +91,7 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
             Enter 3D
           </button>
         )}
+        {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
         {navOpen && <QuickNav world={mode === 'world'} onGuideMeThere={onGuideMeThere} onDone={() => setNavOpen(false)} />}
       </div>
     </nav>

@@ -17,7 +17,9 @@ At 1280×720 the same software renderer reaches about 38 fps. The fps column mea
 
 **Bundles (gzipped):** initial 80.5 KB (target under 150 KB, contains no three.js). 3D chunk `WorldRoot` 294 KB (target under 900 KB).
 
-**Real hardware:** open the live site with `?debug` (for example `https://nullspace-saemmi-studios.vercel.app/?debug`) and enter the simulation. A GPU/fps overlay appears at the top left. Pending: the author's reading on their machine.
+**Real hardware:** open the live site with `?debug` (for example `https://nullspace-saemmi-studios.vercel.app/?debug`) and enter the simulation. An fps/CPU overlay appears at the top left, just below the top bar.
+
+**Author's machine (2026-10-18, live build `0341a84` plus the overlay fix):** **45–55 fps while moving.** That's playable, but below the 60 fps target, so M6 adds adaptive quality: a lower pixel ratio first, then Low quality. Expensive effects (post-processing) are deferred.
 
 **Action taken:** none needed. No visible stutter in any measured view, and every budget has large headroom.
 

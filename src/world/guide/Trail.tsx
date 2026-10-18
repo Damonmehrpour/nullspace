@@ -2,19 +2,20 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, type Points } from 'three'
 import { v, type Vec2 } from '../../core/geometry'
+import { useRenderBudget } from '../quality'
 import { sim } from '../sim'
 
-const COUNT = 60
 const SPACING = 0.45
 
 /** Moss spores drifting along the guide's remaining route while it leads or waits. */
 export function Trail() {
+  const { spores: COUNT } = useRenderBudget()
   const ref = useRef<Points>(null)
   const geo = useMemo(() => {
     const g = new BufferGeometry()
     g.setAttribute('position', new BufferAttribute(new Float32Array(COUNT * 3), 3))
     return g
-  }, [])
+  }, [COUNT])
 
   useFrame(({ clock }) => {
     const pts = ref.current

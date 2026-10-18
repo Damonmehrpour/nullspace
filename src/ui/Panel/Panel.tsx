@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { restoreFocus } from '../focusReturn'
 
 const TABBABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])'
@@ -60,7 +61,8 @@ export function Panel({ title, onClose, children, fallbackFocus, badge }: PanelP
     }
   }
 
-  return (
+  // Portal to <body>: a dialog must never sit inside #app-background, which it marks inert.
+  return createPortal(
     <div className="panel-layer" onKeyDown={onKeyDown}>
       <div
         ref={dialogRef}
@@ -82,6 +84,7 @@ export function Panel({ title, onClose, children, fallbackFocus, badge }: PanelP
         </header>
         <div className="flex-1 px-6 py-6 md:px-8">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

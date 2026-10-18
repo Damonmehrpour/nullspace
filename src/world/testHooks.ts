@@ -27,6 +27,7 @@ export type NullspaceHooks = {
   setView(pos: Vec2, yaw: number): void
   markAllRevealed(): void
   getRenderInfo(): { calls: number; triangles: number }
+  getQuality(): { chosen: string; effective: string; reducedDpr: boolean }
 }
 
 const STEP = 1 / 60
@@ -64,6 +65,7 @@ export function installTestHooks(): void {
       sim.rig = { ...sim.rig, yaw, aim: pos }
     },
     getRenderInfo: () => sim.renderInfo,
+    getQuality: () => sim.quality,
     markAllRevealed: () => {
       for (const i of WORLD.islands) useStore.getState().markRevealPlayed(i.id)
     },

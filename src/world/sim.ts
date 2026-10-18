@@ -10,6 +10,7 @@ import { createGuide, stepGuide, type GuidePose, type GuideState } from '../core
 import type { InputState } from '../core/input'
 import { createPlayer, stepPlayer, type PlayerState } from '../core/playerMotion'
 import { buildRouteGraph } from '../core/routeGraph'
+import { createQuality, type QualityState } from '../core/quality'
 import { createZoneTracker, updateZones, type ZoneTracker } from '../core/tour'
 import { createWalkable } from '../core/walkable'
 import { isReducedMotion } from '../state/reducedMotion'
@@ -36,6 +37,8 @@ export type Sim = {
   interactHeld: boolean
   /** Last frame's renderer stats, for profiling. */
   renderInfo: { calls: number; triangles: number }
+  /** Current adaptive quality, mirrored here for tests and the debug overlay. */
+  quality: QualityState
 }
 
 function freshGuide() {
@@ -58,6 +61,7 @@ export const sim: Sim = {
   autopilot: null,
   interactHeld: false,
   renderInfo: { calls: 0, triangles: 0 },
+  quality: createQuality('high'),
 }
 
 const PROJECTS = WORLD.islands.find((i) => i.id === 'projects')!
