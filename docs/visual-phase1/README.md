@@ -3,7 +3,7 @@
 **Status: deployed behind `?visual=v2` for author review. Not accepted. Phase 2 has not started.**
 
 - Review: https://nullspace-saemmi-studios.vercel.app/?visual=v2 (with the fps overlay: `…/?visual=v2&debug`)
-- The default experience (no flag) is unchanged. This was verified by pixel comparison: v1 screenshots before and after differ no more than two runs of identical code do.
+- The default experience (no flag) is unchanged apart from the approved Skills cube fix. This was verified by pixel comparison: v1 screenshots before and after Phase 1 differ no more than two runs of identical code do.
 
 ## What Phase 1 changes (v2 only)
 
@@ -15,7 +15,7 @@ Phase 0 already delivered several Phase 1 items: floating island slabs on every 
 | Island structures (Experience, Projects, Skills, Contact) | Same architecture (rebuilding it is Phase 2), now in the shared concrete with **chamfered edges** that catch the key light. The chamfer stays a constant 4.5 cm whatever each block's proportions, because the shader corrects the instance scale |
 | Grounding | Every structure that stands on an island gets a soft **contact shadow**: one draw call per island, no shadow maps. Pads grow with the first-visit reveals. The project pedestals get round ones |
 | Artifacts | The experimental artifact's fragments use the shared concrete (the rest of the artifact work is Phase 2) |
-| Skills | Fixed an existing bug: three grid cubes had negative heights (JS `%` on negative numbers) and never rendered. **The same bug exists in v1; it's left untouched there so v1 stays identical. Say if you want it fixed in v1 too** |
+| Skills | Fixed an existing bug: three grid cubes had negative heights (JS `%` on negative numbers) and never rendered. Fixed in the shared layout, so v1 shows them too (author-approved; covered by `tests/unit/skillsLayout.test.ts`) |
 
 Not changed in Phase 1: the monolith keeps its approved Phase 0 form (the plan's stepped plinth wasn't added, to avoid filling the hover gap that the approved design uses). The kokedama is Phase 3, and atmosphere and camera polish are Phase 4.
 
