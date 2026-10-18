@@ -19,7 +19,8 @@ function useViewedOnScroll(id: SectionId) {
           io.disconnect()
         }
       },
-      { threshold: 0.35 },
+      // Height-independent: a section counts as read once it reaches the upper 60% of the viewport.
+      { threshold: 0, rootMargin: '0px 0px -40% 0px' },
     )
     io.observe(el)
     return () => io.disconnect()
