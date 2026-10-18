@@ -1,8 +1,10 @@
 import { OrbitControls } from '@react-three/drei'
 import { WORLD } from '../content/world'
+import { GameLoop } from './GameLoop'
 import { GreyIsland } from './islands/GreyIsland'
 import { Monolith } from './islands/Monolith'
 import { Walkways } from './islands/Walkways'
+import { Player } from './Player'
 
 const DEV_ORBIT = import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('orbit')
 
@@ -18,6 +20,8 @@ export function Scene() {
       {WORLD.islands.map((i) => (
         <GreyIsland key={i.id} island={i} />
       ))}
+      <Player />
+      <GameLoop />
       {DEV_ORBIT && <OrbitControls />}
     </>
   )
