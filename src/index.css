@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+:root {
+  --void: #000;
+  --concrete: #e8e8e4;
+  --moss: #6fae3c;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--concrete);
+}
