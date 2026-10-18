@@ -1,5 +1,6 @@
 import type { IslandDef } from '../../content/world'
 import { at } from '../space'
+import { SharedReveal } from '../reveals/SharedReveal'
 import { IslandTitle } from './IslandTitle'
 
 /** Greybox island: a floating slab with its title. Replaced per island in Task 30. */
@@ -14,6 +15,7 @@ export function GreyIsland({ island }: { island: IslandDef }) {
         <ringGeometry args={[island.arrivalZoneRadius - 0.08, island.arrivalZoneRadius, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} transparent opacity={0.6} />
       </mesh>
+      <SharedReveal island={island} />
       <IslandTitle island={island} />
     </group>
   )

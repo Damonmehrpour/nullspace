@@ -48,6 +48,8 @@ type Actions = {
   arrive(id: SectionId): void
   /** Advances a running reveal; opens the panel when it finishes. Driven by the simulation clock. */
   tickReveal(dt: number): void
+  /** 0→1 progress of the running reveal, 0 when none. */
+  revealProgress(): number
   guideMeThere(id: SectionId, touch: boolean): void
   clearTeleport(): void
   say(text: string): void
@@ -84,11 +86,17 @@ export function loadInitialState(): Data {
 
 const withAdded = <T>(set: Set<T>, v: T): Set<T> => (set.has(v) ? set : new Set(set).add(v))
 
+/** Opening any panel ends a running reveal; the reveal counts as played and never reopens. */
+function cancelReveal(s: Data): Partial<Data> {
+  if (!s.revealing) return {}
+  return { revealing: null, revealElapsed: 0, revealPlayed: withAdded(s.revealPlayed, s.revealing) }
+}
+
 export const useStore = create<StoreState>()((set, get) => ({
   ...loadInitialState(),
   setPhase: (phase) => set({ phase }),
-  openSection: (id, o) => set((s) => ({ panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id), lastOpenSource: o.source })),
-  openProject: (id, o) => set((s) => ({ panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects'), lastOpenSource: o.source })),
+  openSection: (id, o) => set((s) => ({ ...cancelReveal(s), panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id), lastOpenSource: o.source })),
+  openProject: (id, o) => set((s) => ({ ...cancelReveal(s), panel: { kind: 'project', id }, viewed: withAdded(s.viewed, 'projects'), lastOpenSource: o.source })),
   closePanel: () =>
     set((s) => ({
       panel: null,
@@ -117,6 +125,12 @@ export const useStore = create<StoreState>()((set, get) => ({
     set({ revealing: null, revealElapsed: 0 })
     get().markRevealPlayed(id)
     get().openSection(id, { source: 'arrival' })
+  },
+  revealProgress: () => {
+    const s = get()
+    if (!s.revealing) return 0
+    const ms = revealDurationMs(s.revealing, s.revealPlayed, isReducedMotion(s.settings))
+    return ms === 0 ? 1 : Math.min(1, (s.revealElapsed * 1000) / ms)
   },
   guideMeThere: (id, touch) => {
     const island = WORLD.islands.find((i) => i.id === id)!
