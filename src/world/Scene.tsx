@@ -2,6 +2,9 @@ import { OrbitControls } from '@react-three/drei'
 import { WORLD } from '../content/world'
 import { FollowCamera } from './FollowCamera'
 import { GameLoop } from './GameLoop'
+import { GuideBody } from './guide/GuideBody'
+import { OffscreenArrow } from './guide/OffscreenArrow'
+import { Trail } from './guide/Trail'
 import { GreyIsland } from './islands/GreyIsland'
 import { Monolith } from './islands/Monolith'
 import { Walkways } from './islands/Walkways'
@@ -22,6 +25,9 @@ export function Scene() {
         <GreyIsland key={i.id} island={i} />
       ))}
       <Player />
+      <GuideBody />
+      <Trail />
+      <OffscreenArrow />
       <GameLoop />
       {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
     </>

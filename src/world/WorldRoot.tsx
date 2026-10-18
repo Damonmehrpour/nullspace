@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
+import { ARROW_ID } from './guide/OffscreenArrow'
 import { Scene } from './Scene'
 import type { WorldProps } from '../ui/worldLoader'
 
@@ -34,6 +35,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
       >
         <Scene />
       </Canvas>
+      <div id={ARROW_ID} aria-hidden className="pointer-events-none absolute top-0 left-0 text-3xl font-bold text-moss opacity-0">›</div>
     </div>
   )
 }
