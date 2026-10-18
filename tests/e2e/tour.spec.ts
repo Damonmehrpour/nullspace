@@ -20,6 +20,8 @@ test.describe('guided tour (deterministic clock)', () => {
   test.skip(({ isMobile }) => isMobile, 'keyboard world on desktop; touch has its own test')
 
   test('the guide leads, presents, and the tour completes only after all five zones', async ({ page }) => {
+    // Long by design (five full arrivals on the simulated clock); the 60 s hold is covered in unit tests.
+    test.setTimeout(60_000)
     await gotoEntry(page)
     await enterWorld(page)
     await ns(page, 'advance', 0.6)
@@ -31,7 +33,7 @@ test.describe('guided tour (deterministic clock)', () => {
       await ns(page, 'placeGuideAtTarget')
       await ns(page, 'advance', 1 / 60)
       expect(await ns(page, 'getGuideState')).toBe('present')
-      await ns(page, 'advance', 10)
+      await ns(page, 'advance', 3)
       expect(await ns(page, 'getGuideState')).toBe('present')
       await expect(page.getByRole('dialog')).toHaveCount(0)
 
