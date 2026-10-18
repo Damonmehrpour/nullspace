@@ -1,6 +1,6 @@
 import { cv } from '../../content/cv'
 import type { CV, SectionId } from '../../content/schema'
-import { useStore } from '../../state/store'
+import { useStore, type OpenSource } from '../../state/store'
 import { StatusBadge } from '../StatusBadge'
 import { Panel } from './Panel'
 import { ProjectDetail } from './ProjectDetail'
@@ -10,14 +10,14 @@ import { ExperienceView } from './sections/ExperienceView'
 import { ProjectsView } from './sections/ProjectsView'
 import { SkillsView } from './sections/SkillsView'
 
-export function SectionView({ id, content = cv }: { id: SectionId; content?: CV }) {
+export function SectionView({ id, content = cv, source = 'quicknav' }: { id: SectionId; content?: CV; source?: OpenSource }) {
   switch (id) {
     case 'education':
       return <EducationView section={content.education} />
     case 'experience':
       return <ExperienceView section={content.experience} />
     case 'projects':
-      return <ProjectsView section={content.projects} source="quicknav" />
+      return <ProjectsView section={content.projects} source={source} />
     case 'skills':
       return <SkillsView section={content.skills} />
     case 'contact':

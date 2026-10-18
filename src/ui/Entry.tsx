@@ -62,7 +62,7 @@ export function Entry() {
 
   return (
     <main className="flex min-h-svh flex-col justify-center gap-10 px-6 pt-24 pb-12 md:px-16">
-      <h1 className="display m-0 text-6xl md:text-[9rem]">NULLSPACE</h1>
+      <h1 className="display m-0 text-[clamp(2.75rem,11.5vw,9rem)]">NULLSPACE</h1>
       <p className="m-0 max-w-xl text-lg text-ash">A guided walk through a game and VR developer's CV, or the same CV as a plain page.</p>
       <div className="flex flex-col items-start gap-6 md:flex-row">{portfolioFirst ? [portfolio, enter] : [enter, portfolio]}</div>
     </main>

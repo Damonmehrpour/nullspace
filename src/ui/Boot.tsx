@@ -36,7 +36,7 @@ export function Boot({ onDone }: { onDone: () => void }) {
       <pre className="m-0 font-mono text-sm leading-relaxed text-ash md:text-base" aria-live="polite">
         {LINES.slice(0, shown).join('\n')}
       </pre>
-      <p className="display mt-6 mb-0 text-6xl text-concrete md:text-9xl">NULLSPACE</p>
+      <p className="display mt-6 mb-0 text-[clamp(2.75rem,11.5vw,9rem)] text-concrete">NULLSPACE</p>
       <button
         type="button"
         onClick={() => {

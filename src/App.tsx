@@ -3,6 +3,7 @@ import { readJSON } from './core/safeStorage'
 import { STORAGE_KEYS } from './state/settings'
 import { useStore } from './state/store'
 import { Boot } from './ui/Boot'
+import { Portfolio } from './portfolio/Portfolio'
 import { Entry } from './ui/Entry'
 import { PanelHost } from './ui/Panel/PanelHost'
 import { TopBar } from './ui/TopBar'
@@ -24,7 +25,7 @@ export default function App() {
     <>
       <div id="app-background">
         <TopBar mode={phase === 'world' ? 'world' : phase === 'portfolio' ? 'portfolio' : 'entry'} />
-        <Entry />
+        {phase === 'portfolio' ? <Portfolio /> : <Entry />}
       </div>
       <PanelHost />
     </>
