@@ -34,6 +34,8 @@ export type Sim = {
   autopilot: Vec2[] | null
   /** Interact key state from the previous step, so a held key triggers once. */
   interactHeld: boolean
+  /** Last frame's renderer stats, for profiling. */
+  renderInfo: { calls: number; triangles: number }
 }
 
 function freshGuide() {
@@ -55,6 +57,7 @@ export const sim: Sim = {
   frozen: false,
   autopilot: null,
   interactHeld: false,
+  renderInfo: { calls: 0, triangles: 0 },
 }
 
 const PROJECTS = WORLD.islands.find((i) => i.id === 'projects')!

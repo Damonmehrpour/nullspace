@@ -1,4 +1,4 @@
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, StatsGl } from '@react-three/drei'
 import { WORLD } from '../content/world'
 import { DialogueBridge } from './DialogueBridge'
 import { FollowCamera } from './FollowCamera'
@@ -16,6 +16,9 @@ import { Walkways } from './islands/Walkways'
 import { Player } from './Player'
 
 const ISLANDS = { education: Education, experience: Experience, projects: ProjectsIsland, skills: Skills, contact: Contact } as const
+
+/** ?debug shows an fps/GPU overlay, so the author can profile the live build on their own hardware. */
+const DEBUG_STATS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug')
 
 const DEV_ORBIT = import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('orbit')
 
@@ -41,6 +44,7 @@ export function Scene() {
       <GameLoop />
       <DialogueBridge />
       {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
+      {DEBUG_STATS && <StatsGl className="!top-16" />}
     </>
   )
 }

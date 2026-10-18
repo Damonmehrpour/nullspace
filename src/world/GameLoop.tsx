@@ -22,8 +22,9 @@ export function GameLoop() {
     }
   }, [])
 
-  useFrame((_, delta) => {
+  useFrame(({ gl }, delta) => {
     if (!sim.frozen) simulate(delta)
+    sim.renderInfo = { calls: gl.info.render.calls, triangles: gl.info.render.triangles }
   })
   return null
 }

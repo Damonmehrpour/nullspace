@@ -26,6 +26,7 @@ export type NullspaceHooks = {
   /** Places player and camera for screenshots: player at pos, camera looking along yaw. */
   setView(pos: Vec2, yaw: number): void
   markAllRevealed(): void
+  getRenderInfo(): { calls: number; triangles: number }
 }
 
 const STEP = 1 / 60
@@ -62,6 +63,7 @@ export function installTestHooks(): void {
       teleportPlayer(pos)
       sim.rig = { ...sim.rig, yaw, aim: pos }
     },
+    getRenderInfo: () => sim.renderInfo,
     markAllRevealed: () => {
       for (const i of WORLD.islands) useStore.getState().markRevealPlayed(i.id)
     },
