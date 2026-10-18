@@ -29,6 +29,8 @@ type Data = {
   teleportRequest: Vec2 | null
   /** Current kokedama line; id changes on every new line so repeats re-trigger. */
   subtitle: { text: string; id: number } | null
+  /** Index of the project artifact the player stands next to (drives the "E to open" prompt). */
+  nearArtifact: number | null
   /** Where the most recent panel was opened from (drives the skipTour line). */
   lastOpenSource: OpenSource | null
   settings: Settings
@@ -53,6 +55,7 @@ type Actions = {
   guideMeThere(id: SectionId, touch: boolean): void
   clearTeleport(): void
   say(text: string): void
+  setNearArtifact(i: number | null): void
   clearSubtitle(id: number): void
   updateSettings(p: Partial<Settings>): void
   setModePreference(m: ModePreference): void
@@ -74,6 +77,7 @@ export function initialState(): Data {
     teleportRequest: null,
     subtitle: null,
     lastOpenSource: null,
+    nearArtifact: null,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
   }
@@ -137,6 +141,9 @@ export const useStore = create<StoreState>()((set, get) => ({
     set({ tourTarget: id, teleportRequest: touch ? island.arrivalPoint : null })
   },
   clearTeleport: () => set({ teleportRequest: null }),
+  setNearArtifact: (nearArtifact) => {
+    if (get().nearArtifact !== nearArtifact) set({ nearArtifact })
+  },
   say: (text) => set((s) => ({ subtitle: { text, id: (s.subtitle?.id ?? 0) + 1 } })),
   clearSubtitle: (id) => set((s) => (s.subtitle?.id === id ? { subtitle: null } : {})),
   updateSettings: (p) => {

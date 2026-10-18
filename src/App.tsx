@@ -9,6 +9,7 @@ import { Entry } from './ui/Entry'
 import { PanelHost } from './ui/Panel/PanelHost'
 import { TopBar } from './ui/TopBar'
 import { A11yStatus } from './ui/A11yStatus'
+import { ArtifactPrompt } from './ui/ArtifactPrompt'
 import { ControlsHint } from './ui/ControlsHint'
 import { Subtitles } from './ui/Subtitles'
 import { useGlobalShortcuts } from './ui/useGlobalShortcuts'
@@ -40,6 +41,7 @@ export default function App() {
             <Subtitles />
             <A11yStatus />
             <ControlsHint />
+            <ArtifactPrompt />
           </>
         )}
         <TopBar

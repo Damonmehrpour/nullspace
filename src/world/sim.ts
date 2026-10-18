@@ -114,9 +114,11 @@ export function simulate(dt: number): void {
   sim.player = p.state
   events.push(...p.events)
 
+  const near = paused ? null : artifactInRange(sim.player.pos, PROJECTS.artifactSlots)
+  store.setNearArtifact(near)
   const interact = !paused && (sim.input?.state.interact ?? false)
   if (interact && !sim.interactHeld) {
-    const slot = artifactInRange(sim.player.pos, PROJECTS.artifactSlots)
+    const slot = near
     if (slot !== null) store.openProject(cv.projects.projects[slot].id, { source: 'artifact' })
   }
   sim.interactHeld = interact
