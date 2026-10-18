@@ -1,6 +1,10 @@
-import type { ReactNode } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useRef, type ReactNode } from 'react'
+import type { Mesh, MeshBasicMaterial } from 'three'
 import type { IslandDef } from '../../content/world'
 import { v } from '../../core/geometry'
+import { useStore } from '../../state/store'
+import { reducedMotion } from '../sim'
 import { at, yawFor } from '../space'
 import { IslandTitle } from './IslandTitle'
 
@@ -10,13 +14,25 @@ import { IslandTitle } from './IslandTitle'
  */
 export function IslandBase({ island, children }: { island: IslandDef; children?: ReactNode }) {
   const outward = v.angleOf(island.centre)
+  const ring = useRef<Mesh>(null)
+
+  // The current destination's ring breathes; the others stay quiet so the next step is obvious.
+  useFrame(({ clock }) => {
+    const m = ring.current
+    if (!m) return
+    const mat = m.material as MeshBasicMaterial
+    const isTarget = useStore.getState().tourTarget === island.id
+    const pulse = isTarget && !reducedMotion() ? 0.5 + 0.5 * Math.sin(clock.elapsedTime * 3) : 0
+    mat.opacity = isTarget ? 0.55 + 0.4 * pulse : 0.25
+    m.scale.setScalar(isTarget ? 1 + 0.06 * pulse : 1)
+  })
   return (
     <group>
       <mesh position={at(island.centre, -0.75)}>
         <cylinderGeometry args={[island.radius, island.radius * 0.85, 1.5, 48]} />
         <meshStandardMaterial color="#e2e1dc" roughness={0.95} />
       </mesh>
-      <mesh position={at(island.arrivalPoint, 0.01)} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh ref={ring} position={at(island.arrivalPoint, 0.01)} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[island.arrivalZoneRadius - 0.08, island.arrivalZoneRadius, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} transparent opacity={0.6} />
       </mesh>

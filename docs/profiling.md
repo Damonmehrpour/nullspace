@@ -24,3 +24,7 @@ At 1280×720 the same software renderer reaches about 38 fps. The fps column mea
 **Action taken:** none needed. No visible stutter in any measured view, and every budget has large headroom.
 
 To re-run: `PROFILE=1 npx playwright test profile --project=desktop` writes `test-results/profile.md`.
+
+## M7 check (2026-10-18): polish is FPS-neutral
+
+The twine band, leaf sway and pulsing destination ring add 1 draw call and about 480 triangles. Headless software renderer after a 6 s warm-up: spawn 16, ring overview 23, Projects 19, Skills 21 fps. That matches checkpoint C (17/24/20/23). Measurements taken right after entering are lower (9–12 fps at spawn) because adaptive quality steps down in slow software rendering, and removing the player light forces a one-time shader recompile. That's a one-off transition cost, not steady state. On real hardware at 45–55 fps within a 60 Hz refresh, Drei's default bounds (40–60) don't trigger a decline.

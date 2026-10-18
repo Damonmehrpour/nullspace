@@ -15,7 +15,9 @@ test('profile world', async ({ page }, info) => {
   await gotoEntry(page)
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.waitForFunction(() => '__nullspace' in window)
-  await page.waitForTimeout(1500)
+  // Let adaptive quality settle first; its one-time downgrade (shader recompiles) is not steady-state cost.
+  await page.waitForTimeout(6000)
+  const quality = await page.evaluate(() => (window as unknown as { __nullspace: { getQuality(): unknown } }).__nullspace.getQuality())
 
   const views: { name: string; pos: V; yaw: number }[] = [
     { name: 'spawn', pos: { x: -1.18, z: 1.62 }, yaw: 2.2 },
@@ -44,5 +46,5 @@ test('profile world', async ({ page }, info) => {
     rows.push(`| ${v.name} | ${r.fps} | ${r.calls} | ${r.triangles} |`)
   }
   mkdirSync('test-results', { recursive: true })
-  writeFileSync('test-results/profile.md', ['| View | fps | draw calls | triangles |', '|---|---|---|---|', ...rows].join('\n'))
+  writeFileSync('test-results/profile.md', [`quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | fps | draw calls | triangles |', '|---|---|---|---|', ...rows].join('\n'))
 })

@@ -47,20 +47,26 @@ export function GuideBody() {
   const mat = useRef<MeshStandardMaterial>(null)
   const geo = useMossGeometry()
 
-  useLayoutEffect(() => {
+  const leafObj = useMemo(() => new Object3D(), [])
+
+  /** Places the sprouts; sway (radians) bends them gently, more when the guide moves. */
+  const placeLeaves = (sway: number, t: number) => {
     const m = leaves.current
     if (!m) return
-    const o = new Object3D()
+    const o = leafObj
     for (let i = 0; i < LEAF_COUNT; i++) {
       const a = (i / LEAF_COUNT) * Math.PI * 2 + 0.4
+      const bend = 0.9 + Math.sin(t * 2.2 + i * 1.7) * sway
       o.position.set(Math.cos(a) * 0.06, RADIUS + 0.06, Math.sin(a) * 0.06)
-      o.rotation.set(0.9 * Math.cos(a), a, 0.9 * Math.sin(a))
+      o.rotation.set(bend * Math.cos(a), a, bend * Math.sin(a))
       o.scale.setScalar(i % 2 === 0 ? 1 : 0.75)
       o.updateMatrix()
       m.setMatrixAt(i, o.matrix)
     }
     m.instanceMatrix.needsUpdate = true
-  }, [])
+  }
+
+  useLayoutEffect(() => placeLeaves(0, 0))
 
   useFrame(({ clock }) => {
     const pose = sim.guidePose
@@ -77,6 +83,8 @@ export function GuideBody() {
     b.scale.set(1 + 0.1 * squash + 0.05 * speak, 1 - 0.2 * squash + 0.08 * speak, 1 + 0.1 * squash + 0.05 * speak)
     b.rotation.z = pose.beckon * Math.sin(t * 5) * 0.21 * calm + speak * 0.15
     if (mat.current) mat.current.emissiveIntensity = pose.glow
+    const moving = pose.state === 'lead' ? 1 : 0
+    placeLeaves((0.12 + 0.12 * moving + 0.2 * speak) * calm, t)
   })
 
   return (
@@ -84,6 +92,11 @@ export function GuideBody() {
       <group ref={body}>
         <mesh geometry={geo}>
           <meshStandardMaterial ref={mat} vertexColors roughness={1} emissive="#3d7a1f" emissiveIntensity={0.3} />
+        </mesh>
+        {/* Twine band: the detail that makes it read as a kokedama rather than a green ball. */}
+        <mesh rotation={[Math.PI / 2 - 0.18, 0, 0.1]}>
+          <torusGeometry args={[RADIUS * 1.07, 0.018, 6, 40]} />
+          <meshStandardMaterial color="#9a7a4f" roughness={1} />
         </mesh>
         <instancedMesh ref={leaves} args={[undefined, undefined, LEAF_COUNT]}>
           <planeGeometry args={[0.09, 0.2]} />
