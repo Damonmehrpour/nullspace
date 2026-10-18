@@ -20,7 +20,7 @@ export function ContactShadow({
 }) {
   const map = useMemo(() => (shape === 'rect' ? rectShadowTexture() : radialShadowTexture()), [shape])
   return (
-    <mesh position={[position[0], position[1] + 0.015, position[2]]} rotation={[-Math.PI / 2, 0, rotationY]} renderOrder={1}>
+    <mesh name="v2-contact" position={[position[0], position[1] + 0.015, position[2]]} rotation={[-Math.PI / 2, 0, rotationY]} renderOrder={1}>
       <planeGeometry args={size} />
       <meshBasicMaterial map={map} transparent opacity={opacity} depthWrite={false} color="black" fog={false} polygonOffset polygonOffsetFactor={-2} />
     </mesh>

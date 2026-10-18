@@ -52,6 +52,10 @@ Headless Chromium with **software WebGL (no GPU)**, 1920×1080, quality locked t
 
 **Reading:** the software renderer is pixel-bound, and v2's per-pixel concrete detail roughly halves its frame rate there. A real GPU handles this kind of shader very differently, so the only meaningful number is **the author's `?visual=v2&debug` reading**. The previous v1 baseline was 45–55 fps. If v2 is noticeably lower, the first levers are: the concrete noise octaves, the fuzz shell count, the dome/fog cost and the pixel ratio.
 
+## Performance
+
+The startup slowdown the author reported was investigated and fixed: see [performance.md](performance.md).
+
 ## Tests
 
 - Unit and component: 256/256

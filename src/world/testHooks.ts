@@ -8,6 +8,10 @@ import { arrivalNodeId, nearestNode, shortestPath } from '../core/routeGraph'
 import { isTourComplete } from '../core/tour'
 import { useStore } from '../state/store'
 import { graph, sim, simulate, teleportPlayer } from './sim'
+import { Mesh, MeshLambertMaterial, MeshStandardMaterial, type Material } from 'three'
+import { CONCRETE_DETAIL } from './v2/concrete'
+
+const concreteOriginals = new Map<Mesh, Material>()
 
 export type NullspaceHooks = {
   freezeClock(): void
@@ -31,6 +35,14 @@ export type NullspaceHooks = {
   setCamera(pos: [number, number, number] | null, look?: [number, number, number]): void
   placeGuide(pos: Vec2, facing?: number): void
   lockQuality(): void
+  startTimeline(): void
+  /** Ablation: hide/show every object whose name starts with prefix; returns how many matched. */
+  setVisibleByName(prefix: string, visible: boolean): number
+  listPrograms(): string[]
+  setConcreteDetail(on: boolean): void
+  swapConcrete(mode: 'v2' | 'plain' | 'lambert'): number
+  triangles(prefix: string): number
+  getTimeline(): { t: number; dt: number; programs: number; calls: number; quality: string }[]
 }
 
 const STEP = 1 / 60
@@ -72,6 +84,48 @@ export function installTestHooks(): void {
     setCamera: (pos, look) => {
       sim.cameraOverride = pos && look ? { pos, look } : null
     },
+    setVisibleByName: (prefix, visible) => {
+      let n = 0
+      sim.scene?.traverse((o) => {
+        if (o.name.startsWith(prefix)) {
+          o.visible = visible
+          n++
+        }
+      })
+      return n
+    },
+    listPrograms: () => (sim.gl?.info.programs ?? []).map((p) => String(p.cacheKey ?? '').split(',').filter(Boolean).slice(0, 6).join(',').slice(0, 140)),
+    setConcreteDetail: (on) => {
+      CONCRETE_DETAIL.value = on ? 1 : 0
+    },
+    // Profiling: swap the v2 concrete shader for stock materials to separate shader cost from coverage.
+    swapConcrete: (mode) => {
+      let n = 0
+      sim.scene?.traverse((o) => {
+        if (!(o instanceof Mesh)) return
+        const orig = concreteOriginals.get(o) ?? o.material
+        if (!(orig instanceof MeshLambertMaterial) || orig.customProgramCacheKey() !== 'nullspace-concrete-v2') return
+        concreteOriginals.set(o, orig)
+        const opts = { color: orig.color, side: orig.side, transparent: orig.transparent }
+        o.material = mode === 'v2' ? orig : mode === 'plain' ? new MeshStandardMaterial({ ...opts, roughness: 0.9 }) : new MeshLambertMaterial(opts)
+        n++
+      })
+      return n
+    },
+    triangles: (prefix) => {
+      let t = 0
+      sim.scene?.traverse((o) => {
+        if (o instanceof Mesh && o.name.startsWith(prefix)) {
+          const g = o.geometry
+          t += (g.index ? g.index.count : g.attributes.position.count) / 3
+        }
+      })
+      return t
+    },
+    startTimeline: () => {
+      sim.timeline = []
+    },
+    getTimeline: () => sim.timeline ?? [],
     lockQuality: () => {
       sim.qualityLocked = true
     },

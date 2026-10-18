@@ -33,7 +33,8 @@ export function PlayerV2() {
           <torusGeometry args={[0.12, 0.009, 6, 40]} />
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </mesh>
-        {playerLight && <pointLight position={[0, 0.9, 0]} intensity={0.5} distance={3} color="#ffffff" />}
+        {/* Always mounted: removing a light changes the light count and recompiles every lit shader. */}
+        <pointLight position={[0, 0.9, 0]} intensity={playerLight ? 0.5 : 0} distance={3} color="#ffffff" />
       </group>
       <mesh ref={shadow} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
         <planeGeometry args={[0.8, 0.8]} />

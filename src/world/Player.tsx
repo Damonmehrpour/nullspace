@@ -21,7 +21,8 @@ export function Player() {
         <capsuleGeometry args={[0.15, PLAYER.height - 0.3, 6, 16]} />
         <meshStandardMaterial color="#f4f4f0" emissive="#ffffff" emissiveIntensity={0.25} roughness={0.6} />
       </mesh>
-      {playerLight && <pointLight position={[0, 0.6, 0]} intensity={0.6} distance={3} color="#ffffff" />}
+      {/* Always mounted: removing a light changes the light count and recompiles every lit shader. */}
+      <pointLight position={[0, 0.6, 0]} intensity={playerLight ? 0.6 : 0} distance={3} color="#ffffff" />
     </group>
   )
 }

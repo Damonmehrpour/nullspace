@@ -38,7 +38,7 @@ export function MonolithV2({ layout }: { layout: WorldLayout }) {
       <IslandSlab position={[0, 0, 0]} radius={plinthRadius} depth={4.5} seed={3.3} />
       <ContactShadow position={[0, 0, 0]} size={[4.6, 2.6]} rotationY={-YAW} opacity={0.45} />
       <group rotation={[0, YAW, 0]}>
-        <mesh geometry={slab} material={slabMat} position={[0, LIFT + H / 2, 0]} userData={{ blocksCamera: true, fadeOnBlock: true }} />
+        <mesh name="v2-monolith" geometry={slab} material={slabMat} position={[0, LIFT + H / 2, 0]} userData={{ blocksCamera: true, fadeOnBlock: true }} />
         {/* The birth slit: a cut of pale light through the whole slab. */}
         <mesh position={[0, LIFT + H * 0.5, 0]} material={slitMat}>
           <boxGeometry args={[0.1, H * 0.72, 1.34]} />

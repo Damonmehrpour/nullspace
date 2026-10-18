@@ -41,6 +41,11 @@ export type Sim = {
   cameraOverride: { pos: [number, number, number]; look: [number, number, number] } | null
   /** Test-only: keep adaptive quality at the chosen level (slow headless renderers would otherwise drop to Low). */
   qualityLocked: boolean
+  /** Renderer and scene handles for test-only profiling hooks. */
+  scene: import('three').Scene | null
+  gl: import('three').WebGLRenderer | null
+  /** Test-only per-frame recording for startup profiling. */
+  timeline: { t: number; dt: number; programs: number; calls: number; quality: string }[] | null
   /** Current adaptive quality, mirrored here for tests and the debug overlay. */
   quality: QualityState
 }
@@ -68,6 +73,9 @@ export const sim: Sim = {
   quality: createQuality('high'),
   cameraOverride: null,
   qualityLocked: false,
+  timeline: null,
+  scene: null,
+  gl: null,
 }
 
 const PROJECTS = WORLD.islands.find((i) => i.id === 'projects')!

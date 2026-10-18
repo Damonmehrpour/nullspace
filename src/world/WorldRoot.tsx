@@ -1,14 +1,16 @@
 import { PerformanceMonitor } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createQuality, onDecline, onIncline, renderBudget } from '../core/quality'
 import { useStore } from '../state/store'
 import { ARROW_ID } from './guide/OffscreenArrow'
+import { Precompile } from './Precompile'
 import { QualityContext } from './quality'
 import { Scene } from './Scene'
 import { sim } from './sim'
 import { CONCRETE_DETAIL } from './v2/concrete'
 import { V2 } from './visual'
+import { Loading3D } from '../ui/Loading3D'
 import { markContextLost, registerWorldContext, type WorldProps } from '../ui/worldLoader'
 
 const CONTEXT_RESTORE_MS = 3000
@@ -18,6 +20,12 @@ export default function WorldRoot({ onFailure }: WorldProps) {
   const lostTimer = useRef<number | null>(null)
   // While the context is lost nothing may render against it, or three.js throws and masks the real cause.
   const [contextLost, setContextLost] = useState(false)
+  // Nothing draws until every shader is compiled, so the first visible frame doesn't freeze.
+  const [compiled, setCompiled] = useState(false)
+  const onCompiled = useCallback(() => {
+    setCompiled(true)
+    useStore.getState().setPhase('world')
+  }, [])
   const chosen = useStore((s) => s.settings.quality)
   const [quality, setQuality] = useState(() => createQuality(chosen))
   const budget = useMemo(() => renderBudget(quality), [quality])
@@ -38,7 +46,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
     <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
         dpr={budget.dpr}
-        frameloop={contextLost ? 'never' : 'always'}
+        frameloop={contextLost || !compiled ? 'never' : 'always'}
         camera={{ fov: V2 ? 42 : 50, near: 0.1, far: V2 ? 900 : 200, position: [0, 4, -6] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
@@ -54,15 +62,16 @@ export default function WorldRoot({ onFailure }: WorldProps) {
             lostTimer.current = null
             setContextLost(false)
           })
-          useStore.getState().setPhase('world')
         }}
       >
         <PerformanceMonitor onDecline={() => !sim.qualityLocked && setQuality(onDecline)} onIncline={() => !sim.qualityLocked && setQuality(onIncline)}>
           <QualityContext.Provider value={budget}>
             <Scene />
           </QualityContext.Provider>
+          {!compiled && <Precompile onDone={onCompiled} />}
         </PerformanceMonitor>
       </Canvas>
+      {!compiled && <Loading3D />}
       <div id={ARROW_ID} aria-hidden className="pointer-events-none absolute top-0 left-0 text-3xl font-bold text-moss opacity-0">›</div>
     </div>
   )

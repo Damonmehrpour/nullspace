@@ -40,5 +40,5 @@ function slabGeometry(radius: number, depth: number, seed: number): BufferGeomet
 /** A floating island mass: flat walkable top at y = 0 over a hanging rock that fades into the void. */
 export function IslandSlab({ position, radius, depth = 6, seed = 1 }: { position: [number, number, number]; radius: number; depth?: number; seed?: number }) {
   const geo = useMemo(() => slabGeometry(radius, depth, seed), [radius, depth, seed])
-  return <mesh geometry={geo} material={concreteMaterial('#d8d3ca')} position={position} />
+  return <mesh name="v2-slab" geometry={geo} material={concreteMaterial('#d8d3ca')} position={position} />
 }

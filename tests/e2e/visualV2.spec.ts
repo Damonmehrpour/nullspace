@@ -41,3 +41,40 @@ test('without the flag the original look is used', async ({ page }, info) => {
   const usesV2 = await page.evaluate(() => new URLSearchParams(location.search).get('visual'))
   expect(usesV2).toBeNull()
 })
+
+// Dropping to Low quality (by hand or adaptively) must not recompile shaders: a recompile cascade
+// froze slow machines for seconds right when they most needed relief.
+for (const variant of ['v1', 'v2'] as const) {
+  test(`${variant}: switching to Low quality compiles no new shader programs`, async ({ page }, info) => {
+    test.skip(isTouchProject(info.project.name), 'desktop only')
+    await gotoEntry(page)
+    if (variant === 'v2') await page.goto('/?visual=v2')
+    await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+    await expect(page.locator('#world-canvas canvas')).toBeVisible({ timeout: 15_000 })
+    await page.waitForFunction(() => '__nullspace' in window)
+    const programs = () => page.evaluate(() => (window as unknown as { __nullspace: { listPrograms(): string[] } }).__nullspace.listPrograms().length)
+    await page.waitForTimeout(800)
+    const before = await programs()
+    await page.getByRole('button', { name: 'Settings' }).click()
+    await page.getByRole('dialog', { name: 'Settings' }).getByRole('radio', { name: 'Low', exact: true }).click()
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(800)
+    expect(await programs()).toBe(before)
+  })
+}
+
+// Shaders compile behind the loading screen: the first visible frame already has every program,
+// instead of freezing for ~1 s while the driver compiles them all synchronously.
+test('v2: the first drawn frame already has every shader compiled', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.evaluate(() => ((window as unknown as { __recordTimeline: boolean }).__recordTimeline = true))
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  await page.waitForTimeout(1500)
+  const frames = (await page.evaluate(() => (window as unknown as { __nullspace: { getTimeline(): { programs: number }[] } }).__nullspace.getTimeline())) as { programs: number }[]
+  expect(frames.length).toBeGreaterThan(0)
+  const steady = Math.max(...frames.map((f) => f.programs))
+  expect(frames[0].programs).toBeGreaterThanOrEqual(steady - 1)
+})

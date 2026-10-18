@@ -41,7 +41,9 @@ function SkyDome() {
     [],
   )
   return (
-    <mesh material={mat} renderOrder={-10} frustumCulled={false}>
+    // Drawn after the opaque world (still before transparents): depth-tested, so only sky pixels shade
+    // it instead of the whole screen being painted twice (measured ≈ 8 ms on a fill-bound renderer).
+    <mesh name="v2-dome" material={mat} renderOrder={10} frustumCulled={false}>
       <sphereGeometry args={[450, 24, 16]} />
     </mesh>
   )
@@ -87,7 +89,7 @@ function Megastructures() {
     m.instanceMatrix.needsUpdate = true
   }, [mesh])
   return (
-    <instancedMesh ref={(r) => (mesh.ref = r)} args={[undefined, undefined, MEGA.length]} frustumCulled={false}>
+    <instancedMesh name="v2-mega" ref={(r) => (mesh.ref = r)} args={[undefined, undefined, MEGA.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <primitive object={megaMaterial} attach="material" />
     </instancedMesh>
@@ -117,7 +119,7 @@ function Dust() {
     mat.uniforms.uTime.value = clock.elapsedTime
     mat.uniforms.uPixelRatio.value = gl.getPixelRatio()
   })
-  return <points geometry={geo} material={mat} frustumCulled={false} />
+  return <points name="v2-dust" geometry={geo} material={mat} frustumCulled={false} />
 }
 
 /** The v2 void: background, fog, dome, megastructures and dust. */

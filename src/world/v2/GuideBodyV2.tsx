@@ -5,7 +5,7 @@ import {
   CatmullRomCurve3,
   Color,
   DoubleSide,
-  MeshStandardMaterial,
+  MeshLambertMaterial,
   Object3D,
   PlaneGeometry,
   SphereGeometry,
@@ -58,8 +58,9 @@ function useMossCore() {
 }
 
 /** Moss material: fine speckle in the shader; shells discard by noise so the silhouette turns fuzzy. */
-function mossMaterial(threshold: number, tint: string | null): MeshStandardMaterial {
-  const m = new MeshStandardMaterial({ vertexColors: tint === null, color: tint ?? '#ffffff', roughness: 1, emissive: new Color('#2a5214'), emissiveIntensity: 0.45 })
+/** Lambert: fully rough, so PBR specular added nothing but cost (three shells overdraw the core). */
+function mossMaterial(threshold: number, tint: string | null): MeshLambertMaterial {
+  const m = new MeshLambertMaterial({ vertexColors: tint === null, color: tint ?? '#ffffff', emissive: new Color('#2a5214'), emissiveIntensity: 0.45 })
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uThreshold = { value: threshold }
     shader.vertexShader = 'varying vec3 vMoss;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvMoss = position;')
@@ -213,9 +214,9 @@ export function GuideBodyV2() {
       <group ref={root}>
         <group ref={body}>
           <mesh geometry={core} material={coreMat} />
-          {fullDetail && shellMats.map((m, i) => <mesh key={i} geometry={core} material={m} scale={SHELLS[i].scale} />)}
+          {fullDetail && shellMats.map((m, i) => <mesh name="v2-shell" key={i} geometry={core} material={m} scale={SHELLS[i].scale} />)}
           <mesh geometry={twine}>
-            <meshStandardMaterial color="#a8854e" roughness={1} />
+            <meshLambertMaterial color="#a8854e" />
           </mesh>
           <instancedMesh ref={leaves} args={[leaf, undefined, LEAVES]}>
             <meshStandardMaterial color="#8fd14f" side={DoubleSide} roughness={0.7} emissive="#2b5a12" emissiveIntensity={0.45} />
@@ -223,7 +224,7 @@ export function GuideBodyV2() {
           {roots.map((rt, i) => (
             <group key={i} ref={(g) => void (rootRefs.current[i] = g)} position={rt.attach}>
               <mesh geometry={rt.geo}>
-                <meshStandardMaterial color="#8a6a3e" roughness={1} />
+                <meshLambertMaterial color="#8a6a3e" />
               </mesh>
             </group>
           ))}

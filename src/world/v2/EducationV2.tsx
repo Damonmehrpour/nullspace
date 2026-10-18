@@ -71,7 +71,7 @@ export function EducationV2({ island }: { island: IslandDef }) {
   return (
     <IslandBase island={island}>
       <ContactShadow position={[3.3, 0, 0]} size={[7.6, 8.4]} opacity={0.62} />
-      <mesh geometry={mass} material={concreteMaterial('#ebe7df')} />
+      <mesh name="v2-archive" geometry={mass} material={concreteMaterial('#ebe7df')} />
       {/* Light slot under the lintel's front edge: knowledge as a line of light. */}
       <mesh position={[2.62, MASS_TOP - 0.03, 0]}>
         <boxGeometry args={[0.08, 0.05, 5.6]} />
@@ -79,7 +79,7 @@ export function EducationV2({ island }: { island: IslandDef }) {
       </mesh>
       {spines.map((s) => (
         <group key={s.i} ref={(r) => void (refs.current[s.i] = r)} position={[s.x, 0, s.side * 2.62]}>
-          <mesh geometry={spineGeo} material={concreteMaterial(s.i % 3 === 0 ? '#d9d5cc' : '#e4e0d7')} position={[0, s.h / 2, 0]} scale={[1, s.h, 1]} rotation={[s.tilt, 0, 0]} />
+          <mesh name="v2-spine" geometry={spineGeo} material={concreteMaterial(s.i % 3 === 0 ? '#d9d5cc' : '#e4e0d7')} position={[0, s.h / 2, 0]} scale={[1, s.h, 1]} rotation={[s.tilt, 0, 0]} />
         </group>
       ))}
     </IslandBase>
