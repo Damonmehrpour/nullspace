@@ -27,3 +27,6 @@ dist-ssr
 test-results
 playwright-report
 .superpowers
+
+# Raw CV sources: personal documents, never committed
+cv-sources/
