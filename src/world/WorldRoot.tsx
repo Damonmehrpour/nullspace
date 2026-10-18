@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
+import { Scene } from './Scene'
 import type { WorldProps } from '../ui/worldLoader'
 
 const CONTEXT_RESTORE_MS = 3000
@@ -17,7 +18,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
     <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
         dpr={[1, 1.5]}
-        camera={{ fov: 50, near: 0.1, far: 200, position: [0, 6, 12] }}
+        camera={{ fov: 50, near: 0.1, far: 200, position: [0, 40, 45] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
           canvas.addEventListener('webglcontextlost', (e) => {
@@ -31,8 +32,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
           useStore.getState().setPhase('world')
         }}
       >
-        <color attach="background" args={['#000000']} />
-        <fogExp2 attach="fog" args={['#000000', 0.018]} />
+        <Scene />
       </Canvas>
     </div>
   )
