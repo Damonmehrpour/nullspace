@@ -13,7 +13,7 @@ export const dialogue: DialogueTable = {
   tourComplete: { lines: ['That is everything. Feel free to drift. I will.'], cooldownMs: 0, probability: 1, once: true },
   skipTour: { lines: ['Skipping ahead. Very efficient. Very recruiter.'], cooldownMs: 60 * S, probability: 0.7 },
 
-  'arrive:education': { lines: ['Education. Where it started.'], cooldownMs: 0, probability: 1 },
+  'arrive:education': { lines: ['Education and research. Where it started.'], cooldownMs: 0, probability: 1 },
   'arrive:experience': { lines: ['Experience. Each frame is a chapter.'], cooldownMs: 0, probability: 1 },
   'arrive:projects': { lines: ['Projects. Walk up to an artifact. Gently.'], cooldownMs: 0, probability: 1 },
   'arrive:skills': { lines: ['Skills. The cubes are not decorative. Mostly.'], cooldownMs: 0, probability: 1 },

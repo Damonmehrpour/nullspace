@@ -1,10 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { cv } from '../../src/content/cv'
-import { confirmed } from '../../src/content/schema'
 import { PanelHost } from '../../src/ui/Panel/PanelHost'
-import { ResumeLink } from '../../src/ui/ResumeLink'
 import { TopBar } from '../../src/ui/TopBar'
 import { useGlobalShortcuts } from '../../src/ui/useGlobalShortcuts'
 import { initialState, useStore } from '../../src/state/store'
@@ -56,11 +53,9 @@ describe('TopBar', () => {
     expect(screen.getByRole('dialog', { name: 'Contact' })).toBeInTheDocument()
   })
 
-  it('shows the résumé as coming soon when no PDF is confirmed', () => {
+  it('offers no CV download anywhere in the top bar', () => {
     render(<Shell />)
-    const item = screen.getByText('Résumé: coming soon')
-    expect(item.closest('[aria-disabled="true"]')).not.toBeNull()
-    expect(item.closest('a')).toBeNull()
+    expect(screen.queryByText(/résumé|resume|download/i)).toBeNull()
   })
 
   it('in world mode shows read and reached marks independently', async () => {
@@ -74,10 +69,3 @@ describe('TopBar', () => {
   })
 })
 
-describe('ResumeLink', () => {
-  it('links directly to a confirmed PDF', () => {
-    render(<ResumeLink contact={{ ...cv.contact, resumePdf: confirmed('/resume.pdf') }} />)
-    const a = screen.getByRole('link', { name: 'Download résumé (PDF)' })
-    expect(a).toHaveAttribute('href', '/resume.pdf')
-  })
-})

@@ -15,7 +15,7 @@ test('keyboard-only: open and close sections, focus returns, shortcuts paused in
   await expect(contact).toBeFocused()
 
   const toggle = page.getByRole('button', { name: 'Sections' })
-  for (const title of ['Education', 'Experience', 'Projects', 'Skills', 'Contact']) {
+  for (const title of ['Education & Research', 'Experience', 'Projects', 'Skills', 'Contact']) {
     await toggle.focus()
     await page.keyboard.press('Enter')
     await page.getByRole('listitem', { name: title }).getByRole('button', { name: 'Open' }).focus()

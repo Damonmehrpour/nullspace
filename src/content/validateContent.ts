@@ -9,13 +9,20 @@ export type ContentRule =
   | 'missing-alt'
   | 'bad-url'
   | 'section-world-mismatch'
+  | 'corrected-claim'
 
 export type ContentIssue = { path: string; rule: ContentRule; message: string }
 
 type FoundField = { path: string; key: string; field: Field<unknown> }
 
 /** Keys whose values are addresses, not prose: exempt from the sample-marker rules. */
-const ADDRESS_KEYS = new Set(['url', 'src', 'resumePdf'])
+const ADDRESS_KEYS = new Set(['url', 'src'])
+
+/** Claims the author has explicitly corrected; they must never reappear in confirmed text. */
+const CORRECTED_CLAIMS: { pattern: RegExp; why: string }[] = [
+  { pattern: /shipped (more than seven|7+|seven)|(7+|seven) shipped/i, why: 'Medrick: 7+ projects worked on, four released (not 7+ shipped)' },
+  { pattern: /neural network/i, why: 'WasteGo: use of neural networks is unconfirmed' },
+]
 
 function collectFields(node: unknown, path: string, key: string, out: FoundField[], skipKey?: string): void {
   if (isField(node)) {
@@ -61,10 +68,16 @@ function checkItem(item: unknown, status: ItemStatus, path: string, issues: Cont
     if (status === 'pending-content' && field.state === 'confirmed') {
       issues.push({ path: p, rule: 'pending-content-has-confirmed', message: 'Pending-content item has a confirmed field' })
     }
+    if (key === 'url' && field.state === 'confirmed' && typeof field.value === 'string' && !/^(https:|mailto:)/.test(field.value)) {
+      issues.push({ path: p, rule: 'bad-url', message: 'Urls must use https: (or mailto: for email)' })
+    }
     if (ADDRESS_KEYS.has(key)) continue
     for (const text of textValues(field)) {
       if (status === 'placeholder' && !text.startsWith(SAMPLE_MARKER)) {
         issues.push({ path: p, rule: 'sample-marker-missing', message: `Placeholder text must start with "${SAMPLE_MARKER}"` })
+      }
+      for (const c of CORRECTED_CLAIMS) {
+        if (c.pattern.test(text)) issues.push({ path: p, rule: 'corrected-claim', message: c.why })
       }
       if ((status === 'real' || status === 'partial') && text.includes(SAMPLE_MARKER)) {
         issues.push({ path: p, rule: 'sample-marker-leak', message: 'Sample text inside a real item' })
@@ -98,12 +111,6 @@ export function validateContent(cv: CV, worldSectionIds: readonly SectionId[]): 
     p.media.forEach((m, j) => {
       if (m.alt.trim() === '') issues.push({ path: `${path}.media[${j}].alt`, rule: 'missing-alt', message: 'Media needs alt text' })
     })
-    p.links.forEach((l, j) => {
-      const url = confirmedValue(l.url)
-      if (url !== null && !url.startsWith('https:')) {
-        issues.push({ path: `${path}.links[${j}].url`, rule: 'bad-url', message: 'Links must use https:' })
-      }
-    })
   })
 
   cv.contact.channels.forEach((c, i) => {
@@ -114,11 +121,6 @@ export function validateContent(cv: CV, worldSectionIds: readonly SectionId[]): 
       issues.push({ path: `contact.channels[${i}].url`, rule: 'bad-url', message: c.kind === 'email' ? 'Email url must be mailto:' : 'Url must use https:' })
     }
   })
-
-  const resume = confirmedValue(cv.contact.resumePdf)
-  if (resume !== null && !(resume.startsWith('https:') || resume.startsWith('/'))) {
-    issues.push({ path: 'contact.resumePdf', rule: 'bad-url', message: 'Résumé must be an https: url or a site-relative path' })
-  }
 
   return issues
 }

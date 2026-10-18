@@ -1,4 +1,5 @@
 import type { Project } from '../../content/schema'
+import { AreaTags } from '../AreaTags'
 import { FieldText } from '../FieldText'
 import { StatusBadge } from '../StatusBadge'
 import { MediaItem } from './MediaItem'
@@ -14,9 +15,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 /** Full detail of one project. Used inside the Panel for quick nav, artifacts and the portfolio. */
 export function ProjectDetail({ project, showTitle = true }: { project: Project; showTitle?: boolean }) {
+  const images = project.media.filter((m) => m.kind === 'image')
+  const videos = project.media.filter((m) => m.kind !== 'image')
   return (
     <article aria-label={project.name.state === 'confirmed' ? project.name.value : project.id}>
-      <StatusBadge status={project.status} />
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge status={project.status} />
+        <AreaTags areas={project.areas} />
+      </div>
       {showTitle && (
         <h3 className="display mt-2 text-3xl">
           <FieldText field={project.name} />
@@ -53,12 +59,21 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
           </Row>
         )}
       </dl>
-      {project.media.length > 0 && (
+      {videos.length > 0 && (
         <div className="mt-4 space-y-4">
-          {project.media.map((m, i) => (
+          {videos.map((m, i) => (
             <MediaItem key={i} media={m} />
           ))}
         </div>
+      )}
+      {images.length > 0 && (
+        <ul aria-label="Gallery" className="mt-4 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2">
+          {images.map((m, i) => (
+            <li key={i}>
+              <MediaItem media={m} />
+            </li>
+          ))}
+        </ul>
       )}
     </article>
   )

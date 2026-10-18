@@ -13,17 +13,20 @@ function project(id: Project['id'], appearance: Project['appearance']): Project 
     media: [],
     links: [],
     appearance,
+    areas: ['xr'],
   }
 }
 
 function validCV(): CV {
   return {
+    profile: { name: 'Test Person', headline: 'Headline.', areas: ['game', 'xr', 'ai-hci'] },
     education: { id: 'education', status: 'pending-content', title: 'Education', entries: [{ institution: pending(), degree: pending(), dates: pending() }] },
     experience: { id: 'experience', status: 'pending-content', title: 'Experience', entries: [{ org: pending(), role: pending(), dates: pending(), highlights: pending() }] },
     projects: {
       id: 'projects',
       status: 'partial',
       title: 'Projects',
+      honors: [],
       projects: [
         { ...project('project-01', 'featured'), status: 'partial', name: confirmed('Real Project'), media: [{ kind: 'youtube', src: pending('video coming soon'), alt: 'Gameplay video' }] },
         project('project-02', 'technical'),
@@ -31,7 +34,7 @@ function validCV(): CV {
       ],
     },
     skills: { id: 'skills', status: 'pending-content', title: 'Skills', groups: [{ label: 'Skills', items: pending() }] },
-    contact: { id: 'contact', status: 'pending-content', title: 'Contact', channels: [{ kind: 'email', label: 'Email', value: pending() }], resumePdf: pending() },
+    contact: { id: 'contact', status: 'pending-content', title: 'Contact', channels: [{ kind: 'email', label: 'Email', value: pending() }], location: pending(), availability: pending() },
   }
 }
 
@@ -106,6 +109,22 @@ describe('validateContent', () => {
     cv.contact.channels[0].value = confirmed('me@example.com')
     cv.contact.channels[0].url = confirmed('mailto:me@example.com')
     expect(rules(cv)).toEqual([])
+  })
+
+  it('flags claims the author has corrected', () => {
+    const cv = validCV()
+    cv.projects.projects[0].summary = confirmed('Shipped more than seven mobile games')
+    expect(rules(cv)).toContain('corrected-claim')
+    const cv2 = validCV()
+    cv2.projects.projects[0].summary = confirmed('Uses neural networks to classify waste')
+    expect(rules(cv2)).toContain('corrected-claim')
+  })
+
+  it('flags a confirmed non-https url anywhere, e.g. a thesis link', () => {
+    const cv = validCV()
+    cv.education.status = 'partial'
+    cv.education.entries[0].thesis = { title: confirmed('A thesis'), url: confirmed('http://example.com/t') }
+    expect(rules(cv)).toContain('bad-url')
   })
 
   it('flags a section id missing from the world', () => {

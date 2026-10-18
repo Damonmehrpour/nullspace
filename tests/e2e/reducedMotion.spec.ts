@@ -18,5 +18,5 @@ test('reduced motion: subtitles appear whole and reveals take at most 0.4 s', as
   await ns(page, (n) => n.teleportPlayer('education'))
   await ns(page, (n) => n.advance(0.4))
   expect(await ns(page, (n) => n.isRevealing())).toBe(false)
-  await expect(page.getByRole('dialog', { name: 'Education' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Education & Research' })).toBeVisible()
 })

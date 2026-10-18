@@ -81,7 +81,7 @@ describe('Subtitles', () => {
     act(() => useStore.getState().say(LINE))
     expect(screen.queryByText('KOKEDAMA ›')).toBeNull()
     act(() => useStore.getState().setTourTarget('education'))
-    expect(screen.getByTestId('a11y-status')).toHaveTextContent('Next destination: Education. Follow the guide or press 1 to open.')
+    expect(screen.getByTestId('a11y-status')).toHaveTextContent('Next destination: Education & Research. Follow the guide or press 1 to open.')
   })
 
   it('is hidden while a panel is open on a narrow screen', () => {

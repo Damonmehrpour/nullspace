@@ -16,14 +16,41 @@ import { initialState, useStore } from '../../src/state/store'
 beforeEach(() => useStore.setState(initialState()))
 
 describe('section views', () => {
-  it.each([
-    ['education', () => <EducationView section={cv.education} />],
-    ['experience', () => <ExperienceView section={cv.experience} />],
-    ['skills', () => <SkillsView section={cv.skills} />],
-    ['contact', () => <ContactView section={cv.contact} />],
-  ])('%s renders launch content with pending markers', (_, view) => {
-    render(view())
-    expect(screen.getAllByText('[pending]').length).toBeGreaterThan(0)
+  it('education & research shows degrees, the linked thesis, the publication and interests', () => {
+    render(<EducationView section={cv.education} />)
+    expect(screen.getByText('MSc in Computer Science and Engineering')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /LLM-Driven AI Avatars: A Framework/ })).toHaveAttribute('href', 'https://oulurepo.oulu.fi/handle/10024/56921')
+    expect(screen.getByText(/Meta-Cognitive 3D AI Avatar/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Research interests' })).toBeInTheDocument()
+    expect(screen.getByText('2018–2021')).toBeInTheDocument()
+  })
+
+  it('experience tags areas and shows the tutor role as a minor entry', () => {
+    render(<ExperienceView section={cv.experience} />)
+    expect(screen.getAllByText('XR / Immersive').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Game Development').length).toBeGreaterThan(0)
+    expect(screen.getByText('Tutor').closest('li')).toHaveAttribute('data-minor')
+  })
+
+  it('skills are grouped by the three areas plus tools and languages', () => {
+    render(<SkillsView section={cv.skills} />)
+    for (const g of ['Game Development', 'XR / Immersive', 'AI / HCI Research', 'Programming & tools', 'Languages']) expect(screen.getByText(g)).toBeInTheDocument()
+    expect(screen.getByText('English (C1, IELTS Academic 7.0)')).toBeInTheDocument()
+  })
+
+  it('contact lists email, GitHub, LinkedIn and availability without a phone number', () => {
+    render(<ContactView section={cv.contact} />)
+    expect(screen.getByRole('link', { name: 'github.com/Damonmehrpour' })).toHaveAttribute('href', 'https://github.com/Damonmehrpour')
+    expect(screen.getByText('Oulu, Finland')).toBeInTheDocument()
+    expect(screen.getByText('Open to remote work and relocation opportunities')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/\+358/)
+  })
+
+  it('projects view lists the honors with their projects', () => {
+    render(<ProjectsView section={cv.projects} source="quicknav" />)
+    expect(screen.getByRole('heading', { name: 'Honors' })).toBeInTheDocument()
+    for (const p of ['Grand Tour XR', 'WasteGo', 'Who Are You?']) expect(screen.getByText(p)).toBeInTheDocument()
+    expect(screen.getByText('4th place', { exact: false })).toBeInTheDocument()
   })
 
   it('projects view lists three projects that open their detail', async () => {
@@ -41,17 +68,21 @@ describe('section views', () => {
 })
 
 describe('ProjectDetail', () => {
-  it('shows only confirmed facts for project 01, with no fake embed', () => {
+  it('project 01 shows its confirmed details and a Watch demo link, with no embed until played', () => {
     render(<ProjectDetail project={cv.projects.projects[0]} />)
-    expect(screen.getByText('IN DOCUMENTATION')).toBeInTheDocument()
+    expect(screen.queryByText('IN DOCUMENTATION')).toBeNull()
     expect(screen.getByText('Developed with a team at the University of Oulu, OASIS department')).toBeInTheDocument()
-    expect(screen.getByText('video coming soon')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Watch demo' })).toHaveAttribute('href', 'https://youtu.be/lvPXvY1qMxk')
     expect(document.querySelector('iframe')).toBeNull()
   })
 
-  it('labels project 03 as a placeholder', () => {
+  it('project 03 opens a captioned gallery of the four released games', () => {
     render(<ProjectDetail project={cv.projects.projects[2]} />)
-    expect(screen.getByText('PLACEHOLDER')).toBeInTheDocument()
+    const gallery = screen.getByRole('list', { name: 'Gallery' })
+    expect(within(gallery).getAllByRole('img')).toHaveLength(4)
+    for (const name of ['Monster Squish', 'Baby Musk', 'Arrow', 'Color Finch']) expect(within(gallery).getByText(new RegExp('^' + name + ':'))).toBeInTheDocument()
+    expect(screen.getByText(/Gameplay video/)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /gameplay video/i })).toBeNull()
   })
 
   it('does not render links whose url is pending', () => {

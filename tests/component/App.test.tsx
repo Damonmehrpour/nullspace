@@ -19,7 +19,7 @@ describe('App', () => {
   it('portfolio shows all five sections and three project cards', () => {
     useStore.setState({ phase: 'portfolio' })
     render(<App />)
-    for (const title of ['Education', 'Experience', 'Projects', 'Skills', 'Contact']) {
+    for (const title of ['Education & Research', 'Experience', 'Projects', 'Skills', 'Contact']) {
       expect(screen.getByRole('heading', { level: 2, name: title })).toBeInTheDocument()
     }
     expect(screen.getAllByRole('button', { name: /open project/i })).toHaveLength(3)
@@ -36,7 +36,8 @@ describe('App', () => {
     render(<App />)
     await userEvent.click(screen.getByRole('button', { name: 'Contact' }))
     expect(screen.getByRole('dialog', { name: 'Contact' })).toBeInTheDocument()
-    expect(screen.getByText('Résumé: coming soon', { selector: '[role="dialog"] *' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'damons3m@gmail.com' })).toHaveAttribute('href', 'mailto:damons3m@gmail.com')
+    expect(screen.getByText('Open to remote work and relocation opportunities')).toBeInTheDocument()
   })
 
   it('viewing every portfolio section never touches worldVisited', () => {

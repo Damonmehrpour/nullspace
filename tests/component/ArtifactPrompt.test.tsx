@@ -18,16 +18,16 @@ describe('ArtifactPrompt', () => {
     expect(screen.getByTestId('artifact-prompt')).toHaveTextContent('E or Enter · open XR Meditation System')
   })
 
-  it('uses honest labels for projects without a confirmed name', () => {
+  it('names the game development artifact', () => {
     render(<ArtifactPrompt />)
     act(() => useStore.getState().setNearArtifact(2))
-    expect(screen.getByTestId('artifact-prompt')).toHaveTextContent('open the experimental project (placeholder)')
+    expect(screen.getByTestId('artifact-prompt')).toHaveTextContent('open Mobile games at Medrick')
   })
 
   it('tells touch visitors to tap', () => {
     vi.mocked(capabilities.isTouchFirst).mockReturnValue(true)
     render(<ArtifactPrompt />)
     act(() => useStore.getState().setNearArtifact(1))
-    expect(screen.getByTestId('artifact-prompt')).toHaveTextContent('Tap it · open the technical project')
+    expect(screen.getByTestId('artifact-prompt')).toHaveTextContent('Tap it · open LLM-Driven AI Avatars')
   })
 })

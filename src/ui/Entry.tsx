@@ -1,4 +1,6 @@
 import { useId, useMemo, useState } from 'react'
+import { cv } from '../content/cv'
+import { AREA_LABEL } from '../content/schema'
 import { capabilities } from '../core/capabilities'
 import { WORLD_AVAILABLE } from '../core/config'
 import { useStore } from '../state/store'
@@ -63,7 +65,12 @@ export function Entry() {
   return (
     <main className="flex min-h-svh flex-col justify-center gap-10 px-6 pt-24 pb-12 md:px-16">
       <h1 className="display m-0 text-[clamp(2.75rem,11.5vw,9rem)]">NULLSPACE</h1>
-      <p className="m-0 max-w-xl text-lg text-ash">A guided walk through a game and VR developer's CV, or the same CV as a plain page.</p>
+      <div className="max-w-2xl">
+        <p className="m-0 text-2xl font-semibold">{cv.profile.name}</p>
+        <p className="mt-1 mb-0 text-xl">{cv.profile.headline}</p>
+        <p className="mt-2 mb-0 text-ash">{cv.profile.areas.map((a) => AREA_LABEL[a]).join(' · ')}</p>
+        <p className="mt-3 mb-0 text-ash">Walk through the portfolio with a moss guide, or read it as a plain page.</p>
+      </div>
       <div className="flex flex-col items-start gap-6 md:flex-row">{portfolioFirst ? [portfolio, enter] : [enter, portfolio]}</div>
     </main>
   )

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { cv } from '../content/cv'
 import type { SectionId } from '../content/schema'
 import { WORLD_AVAILABLE } from '../core/config'
 import { useStore } from '../state/store'
 import { rememberOpener } from './focusReturn'
 import { QuickNav } from './QuickNav'
-import { ResumeLink } from './ResumeLink'
 import { Settings } from './Settings'
 
 type Mode = 'world' | 'portfolio' | 'entry'
@@ -49,7 +47,6 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
         <button type="button" className={linkClass} onClick={(e) => open('projects', e.currentTarget)}>
           Projects
         </button>
-        <ResumeLink contact={cv.contact} className={linkClass} />
         <button type="button" className={linkClass} onClick={(e) => open('contact', e.currentTarget)}>
           Contact
         </button>

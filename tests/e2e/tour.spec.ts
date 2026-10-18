@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { gotoEntry, isTouchProject } from './helpers'
 
 const ORDER = ['education', 'experience', 'projects', 'skills', 'contact'] as const
-const TITLES: Record<string, string> = { education: 'Education', experience: 'Experience', projects: 'Projects', skills: 'Skills', contact: 'Contact' }
+const TITLES: Record<string, string> = { education: 'Education & Research', experience: 'Experience', projects: 'Projects', skills: 'Skills', contact: 'Contact' }
 
 /** Calls a hook in the page. */
 async function ns<T>(page: Page, fn: string, ...args: unknown[]): Promise<T> {
@@ -107,10 +107,12 @@ test.describe('guided tour (deterministic clock)', () => {
     await ns(page, 'interactArtifact', 0)
     const featured = page.getByRole('dialog', { name: 'XR Meditation System' })
     await expect(featured).toBeVisible()
-    await expect(featured.getByText('IN DOCUMENTATION')).toBeVisible()
+    await expect(featured.getByRole('link', { name: 'Watch demo' })).toHaveAttribute('href', 'https://youtu.be/lvPXvY1qMxk')
     await page.keyboard.press('Escape')
     await ns(page, 'interactArtifact', 2)
-    await expect(page.getByRole('dialog').getByText('PLACEHOLDER')).toBeVisible()
+    const games = page.getByRole('dialog', { name: 'Mobile games at Medrick' })
+    await expect(games).toBeVisible()
+    await expect(games.getByRole('img')).toHaveCount(4)
   })
 
   test('quick-nav Open inside the world never counts as a visit', async ({ page }) => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { cv } from '../content/cv'
-import { SECTION_IDS, type SectionId } from '../content/schema'
+import { AREA_LABEL, SECTION_IDS, type SectionId } from '../content/schema'
 import { useStore } from '../state/store'
 import { SectionView } from '../ui/Panel/PanelHost'
 import { StatusBadge } from '../ui/StatusBadge'
@@ -54,9 +54,9 @@ export function Portfolio() {
       <div className="hero relative mb-16 overflow-hidden">
         <div aria-hidden className="void-lines" />
         <h1 className="display relative m-0 text-[clamp(2.75rem,11.5vw,10rem)]">NULLSPACE</h1>
-        <p className="relative mt-4 mb-0 max-w-xl text-lg text-ash">
-          The CV of a game and VR developer. Everything here is also inside the simulation, where a moss ball will walk you through it.
-        </p>
+        <p className="relative mt-4 mb-0 text-2xl font-semibold">{cv.profile.name}</p>
+        <p className="relative mt-1 mb-0 max-w-2xl text-xl">{cv.profile.headline}</p>
+        <p className="relative mt-2 mb-0 text-ash">{cv.profile.areas.map((a) => AREA_LABEL[a]).join(' · ')}</p>
       </div>
       {SECTION_IDS.map((id) => (
         <PortfolioSection key={id} id={id} />

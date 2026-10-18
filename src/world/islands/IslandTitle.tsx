@@ -9,7 +9,7 @@ export function IslandTitle({ island }: { island: IslandDef }) {
   const section = cv[island.id]
   return (
     <Billboard position={at(island.titleAnchor, 5)}>
-      <Text font={TITLE_FONT} fontSize={1.1} color="#ecebe6" anchorX="center" anchorY="bottom">
+      <Text font={TITLE_FONT} fontSize={section.title.length > 12 ? 0.8 : 1.1} color="#ecebe6" anchorX="center" anchorY="bottom">
         {section.title}
       </Text>
       {section.status !== 'real' && (
