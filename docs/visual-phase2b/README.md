@@ -43,7 +43,7 @@ Unchanged: the Experience panel content and its arrival trigger, the tour order,
 | At the edge, and looking back | `edge.webp`, `look-back.webp` |
 | Side elevation, from the void, overview | `elevation.webp`, `from-void.webp`, `overview.webp` |
 
-Regenerate: `SHOTS=1 SHOTS_VARIANT=v2 npx playwright test experienceShots --project=desktop`.
+Regenerate: `SHOTS=1 SHOTS_VARIANT=v2 ISLAND=experience npx playwright test islandShots --project=desktop`.
 
 ## Performance (against the approved Phase 2A build)
 

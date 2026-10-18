@@ -28,16 +28,16 @@ test('profile world', async ({ page }, info) => {
   await page.waitForTimeout(6000)
   const quality = await page.evaluate(() => (window as unknown as { __nullspace: { getQuality(): unknown } }).__nullspace.getQuality())
 
+  // Spawn and a ring overview, then each island from in front of it (18.5 m out on its own bearing,
+  // facing outward), computed from the ring layout so every label shows the island it names.
+  // (Earlier phases used hand-placed "projects/skills close" positions that actually framed each other.)
+  const ISLANDS = ['education', 'experience', 'projects', 'skills', 'contact']
   const views: { name: string; pos: V; yaw: number }[] = [
     { name: 'spawn', pos: { x: -1.18, z: 1.62 }, yaw: 2.2 },
-    { name: 'ring overview (projects)', pos: { x: -10, z: -14 }, yaw: -2.2 },
-    { name: 'projects close', pos: { x: -14.6, z: -14.9 }, yaw: -2.33 },
-    { name: 'skills close', pos: { x: 15.8, z: -11.5 }, yaw: -0.63 },
-    { name: 'education close', pos: { x: 0, z: 17.2 }, yaw: Math.PI / 2 },
-    ...[1, 4].map((i) => {
-      // experience and contact, from in front of each island (same placement as the screenshot set)
+    { name: 'ring overview', pos: { x: -10, z: -14 }, yaw: -2.2 },
+    ...ISLANDS.map((id, i) => {
       const a = ((90 - i * 72) * Math.PI) / 180
-      return { name: `${i === 1 ? 'experience' : 'contact'} close`, pos: { x: 18.5 * Math.cos(a), z: 18.5 * Math.sin(a) }, yaw: a }
+      return { name: `${id} close`, pos: { x: 18.5 * Math.cos(a), z: 18.5 * Math.sin(a) }, yaw: a }
     }),
   ]
   const rows: string[] = []

@@ -12,7 +12,7 @@ import { useReveal } from '../reveals/useReveal'
 import { sim } from '../sim'
 import { TITLE_FONT } from '../space'
 import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
-import { concreteMaterial } from './concrete'
+import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { experienceChapters, type Chapter, type PortalStyle } from './experienceChapters'
 
@@ -160,20 +160,6 @@ function mossGeometry(): BufferGeometry {
   return mergeGeometries(parts, false)!
 }
 
-/**
- * Lambert concrete per portal, so each can fade when it blocks the camera (like the monolith). It
- * stays opaque until it actually fades: four telescoping gates drawn as transparent shaded every
- * pixel up to four times (measured +21 ms on the pixel-bound profile). Both variants are already
- * compiled at startup (the monolith uses the transparent one), so switching costs nothing.
- */
-function fadingConcrete(): MeshLambertMaterial {
-  const base = concreteMaterial('#ebe7df')
-  const m = base.clone()
-  m.onBeforeCompile = base.onBeforeCompile
-  m.customProgramCacheKey = base.customProgramCacheKey
-  return m
-}
-
 export function ExperienceV2({ island }: { island: IslandDef }) {
   const progress = useReveal(island.id)
   const chapters = useMemo(() => experienceChapters(cv.experience.entries), [])
@@ -182,7 +168,7 @@ export function ExperienceV2({ island }: { island: IslandDef }) {
   const built = useMemo(() => {
     const lights: Light[] = []
     const geos = portals.map((c, i) => portalGeometry(c.style, SPECS[c.style], i, lights))
-    return { geos, lights, proxies: portals.map((c) => proxyGeometry(c.style, SPECS[c.style])), mats: portals.map(() => fadingConcrete()) }
+    return { geos, lights, proxies: portals.map((c) => proxyGeometry(c.style, SPECS[c.style])), mats: portals.map(() => fadingConcreteMaterial('#ebe7df')) }
   }, [portals])
   const stele = useMemo(() => steleGeometry(), [])
   const moss = useMemo(() => mossGeometry(), [])
@@ -227,13 +213,7 @@ export function ExperienceV2({ island }: { island: IslandDef }) {
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1)
     const st = state.current
-    for (const m of built.mats) {
-      const fading = m.opacity < 0.999
-      if (m.transparent !== fading) {
-        m.transparent = fading
-        m.needsUpdate = true
-      }
-    }
+    syncFadeTransparency(built.mats)
     // The player in island-local space (+x outward, z across).
     const dx = sim.player.pos.x - island.centre.x
     const dz = sim.player.pos.z - island.centre.z

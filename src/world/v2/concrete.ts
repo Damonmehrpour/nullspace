@@ -71,3 +71,28 @@ export function concreteMaterial(color = '#e9e6df', opts: { emissive?: string; s
   cache.set(key, m)
   return m
 }
+
+/**
+ * Concrete with its own material instance, so one object can fade when it blocks the camera (see
+ * FollowCamera's fadeOnBlock). It stays opaque until it actually fades (call syncFadeTransparency each
+ * frame): transparent surfaces lose early depth rejection, and overlapping ones shade the same pixels
+ * repeatedly. Both variants exist from startup (the monolith uses the transparent one), so switching
+ * never compiles a shader.
+ */
+export function fadingConcreteMaterial(color: string): MeshLambertMaterial {
+  const base = concreteMaterial(color)
+  const m = base.clone()
+  m.onBeforeCompile = base.onBeforeCompile
+  m.customProgramCacheKey = base.customProgramCacheKey
+  return m
+}
+
+export function syncFadeTransparency(mats: MeshLambertMaterial[]): void {
+  for (const m of mats) {
+    const fading = m.opacity < 0.999
+    if (m.transparent !== fading) {
+      m.transparent = fading
+      m.needsUpdate = true
+    }
+  }
+}

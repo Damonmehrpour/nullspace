@@ -155,3 +155,33 @@ test('v2: visiting every island compiles no new shader programs', async ({ page 
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(before)
 })
+
+// Projects atrium: coming within interaction range of each project discovers it once per visit
+// (its plinth lights and its thread of light ignite) and cues the kokedama.
+test('v2: approaching each project in the atrium discovers it once', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  const ns = (fn: string, ...args: unknown[]) =>
+    page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
+  await ns('freezeClock')
+  const a = ((90 - 2 * 72) * Math.PI) / 180 // Projects: third island on the ring
+  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const near = (off: number) => ({ x: c.x + 2 * Math.cos(a + (off * Math.PI) / 180), z: c.z + 2 * Math.sin(a + (off * Math.PI) / 180) })
+  await ns('setView', c, a)
+  await page.waitForTimeout(300)
+  const before = (await ns('getGuideCue')) as number
+  const programs = ((await ns('listPrograms')) as string[]).length
+  for (const pass of [1, 2]) {
+    for (const off of [-40, 0, 40]) {
+      await ns('setView', near(off), a + (off * Math.PI) / 180)
+      await page.waitForTimeout(150)
+      await ns('setView', c, a)
+      await page.waitForTimeout(100)
+    }
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 3)
+  }
+  expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
+})

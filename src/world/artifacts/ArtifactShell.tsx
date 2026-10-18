@@ -34,10 +34,13 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
   return (
     <group position={at(slot)}>
       {V2 && <ContactShadow position={[0, 0, 0]} size={[2.1, 2.1]} shape="round" opacity={0.5} />}
-      <mesh position={[0, 0.3, 0]}>
-        <cylinderGeometry args={[0.55, 0.65, 0.6, 24]} />
-        <Concrete color="#ecebe6" roughness={0.9} />
-      </mesh>
+      {/* v2: the Projects atrium builds its own plinths, one per project kind. */}
+      {!V2 && (
+        <mesh position={[0, 0.3, 0]}>
+          <cylinderGeometry args={[0.55, 0.65, 0.6, 24]} />
+          <Concrete color="#ecebe6" roughness={0.9} />
+        </mesh>
+      )}
       <group
         position={[0, 1.6, 0]}
         onClick={(e) => {
@@ -49,7 +52,7 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
       >
         {children}
       </group>
-      <mesh ref={ring} position={[0, 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+      <mesh ref={ring} position={[0, V2 ? 0.74 : 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
         <ringGeometry args={[0.7, 0.78, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} />
       </mesh>

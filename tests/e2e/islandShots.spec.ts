@@ -2,18 +2,22 @@ import { test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { gotoEntry } from './helpers'
 
-// Manual review of the Experience island: SHOTS=1 SHOTS_VARIANT=v1|v2 npx playwright test experienceShots --project=desktop
-// Gameplay-camera views along the portal corridor plus fixed views, into test-results/experience-<variant>.
+// Manual review of one island: SHOTS=1 SHOTS_VARIANT=v1|v2 ISLAND=experience|projects|… npx playwright test islandShots --project=desktop
+// Gameplay-camera views across the island plus fixed views, into test-results/<island>-<variant>.
 test.skip(!process.env.SHOTS, 'manual screenshots')
 
 type V = { x: number; z: number }
 type Hooks = Record<string, (...a: unknown[]) => unknown>
 
-test('experience island views', async ({ page }, info) => {
+const ISLANDS = ['education', 'experience', 'projects', 'skills', 'contact']
+
+test('island views', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   test.setTimeout(120_000)
   const variant = process.env.SHOTS_VARIANT === 'v2' ? 'v2' : 'v1'
-  const dir = `test-results/experience-${variant}`
+  const island = process.env.ISLAND ?? 'experience'
+  const index = ISLANDS.indexOf(island)
+  const dir = `test-results/${island}-${variant}`
   mkdirSync(dir, { recursive: true })
   await page.setViewportSize({ width: 1280, height: 720 })
   await gotoEntry(page)
@@ -26,8 +30,8 @@ test('experience island views', async ({ page }, info) => {
   await ns('freezeClock')
   await ns('markAllRevealed')
 
-  // Experience is the second island on the ring (90° − 72°). Local +x points outward.
-  const a = ((90 - 72) * Math.PI) / 180
+  // Islands sit on the ring at 90° − 72°·index. Local +x points outward.
+  const a = ((90 - 72 * index) * Math.PI) / 180
   const c: V = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
   const local = (lx: number, lz: number): V => ({ x: c.x + lx * Math.cos(a) - lz * Math.sin(a), z: c.z + lx * Math.sin(a) + lz * Math.cos(a) })
   const world3 = (lx: number, y: number, lz: number): [number, number, number] => {
@@ -46,11 +50,18 @@ test('experience island views', async ({ page }, info) => {
     await page.waitForTimeout(1000)
     await page.screenshot({ path: `${dir}/${name}.png` })
   }
-  // Approach from the Education walkway, then the corridor from the arrival ring outward.
+  // Approach from a neighbouring walkway, then across the island from the arrival ring outward.
   await play('approach', -5.2, -3.6, 0.55)
   await play('arrival', -3.4, 0)
   await play('corridor-1', -0.1, 0)
   await play('corridor-2', 2.0, 0)
+  if (island === 'projects') {
+    // In range of each artifact (slots at 3 m, −40°/0°/+40° from outward), facing it.
+    for (const [name, off] of [['artifact-left', -40], ['artifact-centre', 0], ['artifact-right', 40]] as const) {
+      const o = (off * Math.PI) / 180
+      await play(name, 1.9 * Math.cos(o), 1.9 * Math.sin(o), o)
+    }
+  }
   await play('edge', 5.6, 0)
   await play('look-back', 5.4, 0, Math.PI)
   await fixed('elevation', world3(2.2, 3.2, -11), world3(2.2, 2.4, 0))
