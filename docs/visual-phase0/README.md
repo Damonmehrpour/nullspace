@@ -48,7 +48,7 @@ Headless Chromium with **software WebGL (no GPU)**, 1920×1080, quality locked t
 | Draw calls, spawn / Education close | 20 / 14 | 52 / 32 (budget ≤ 80) |
 | Triangles, spawn / Education close | 2.4k / 1.5k | 26.5k / 9.7k (budget ≤ 150k) |
 | fps, software renderer (5 views) | 9–12 | 4–9 |
-| 3D chunk (gzipped) | 298 KB | about 302 KB (no new assets) |
+| 3D chunk (gzipped) | 298 KB | 305 KB (no new assets; one chunk serves both looks) |
 
 **Reading:** the software renderer is pixel-bound, and v2's per-pixel concrete detail roughly halves its frame rate there. A real GPU handles this kind of shader very differently, so the only meaningful number is **the author's `?visual=v2&debug` reading**. The previous v1 baseline was 45–55 fps. If v2 is noticeably lower, the first levers are: the concrete noise octaves, the fuzz shell count, the dome/fog cost and the pixel ratio.
 
