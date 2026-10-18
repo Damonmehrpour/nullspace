@@ -97,7 +97,7 @@ export const cv: CV = {
         areas: ['game'],
         highlights: c([
           'Worked on 7+ mobile game projects, four of which reached release: Monster Squish, Baby Musk, Arrow and Color Finch.',
-          'Built core gameplay loops, UI flows and progression systems in Unity and C#.',
+          'Built core gameplay loops, UI flows and progression systems; the four released titles were developed in Construct.',
           'Iterated with analytics and A/B testing; optimised memory, loading times and frame rate for low-end hardware.',
         ]),
       },
@@ -150,7 +150,7 @@ export const cv: CV = {
         context: c('Game Developer, Medrick mobile game studio (08/2020 – 12/2021)'),
         summary: c('Worked on 7+ mobile game projects, four of which reached release: Monster Squish, Baby Musk, Arrow and Color Finch.'),
         role: c('Core gameplay loops, UI flows and progression systems; iteration with analytics and A/B testing; optimisation for low-end mobile hardware.'),
-        tech: c(['Android and iOS', 'Analytics and A/B testing', 'Low-end hardware optimisation']),
+        tech: c(['Construct', 'Android and iOS', 'Analytics and A/B testing', 'Low-end hardware optimisation']),
         media: [
           {
             kind: 'image',
@@ -218,7 +218,7 @@ export const cv: CV = {
       {
         label: 'Game Development',
         areas: ['game'],
-        items: c(['Gameplay systems, core loops, UI flows and progression', 'Unity and C#', 'Mobile (Android, iOS)', 'Performance optimisation for low-end hardware', 'Analytics and A/B testing']),
+        items: c(['Gameplay systems, core loops, UI flows and progression', 'Construct', 'Unity and C#', 'Mobile (Android, iOS)', 'Performance optimisation for low-end hardware', 'Analytics and A/B testing']),
       },
       {
         label: 'XR / Immersive',

@@ -29,7 +29,9 @@ Test totals at `6c47cca`:
 
 ## Not done or pending (author input)
 - **GamePlay URL**: pending (shown as "[pending]" on the games project)
-- **Engine of the four released games** (F1: screenshots show Construct, CVs say Unity) and their release status (F2)
 - **Project 02 technology stack** (F3) and **store links** (F4)
 - **WasteGo hackathon year**: not in any source, shown as "[pending]"
 - Deferred minors from the final review are listed in the progress ledger. None blocks acceptance.
+
+## Final acceptance
+- **Pending the author's final manual playthrough.** Not marked finished.

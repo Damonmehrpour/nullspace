@@ -34,6 +34,16 @@ describe('merged CV content', () => {
     expect(allText).not.toMatch(/shipped more than seven|7\+ shipped|seven shipped/i)
   })
 
+  it('credits Construct, not Unity, for the four released Medrick games', () => {
+    const medrick = cv.experience.entries.find((e) => value(e.org)?.startsWith('Medrick'))!
+    const games = cv.projects.projects[2]
+    expect(value(games.tech)).toContain('Construct')
+    expect(JSON.stringify(games)).not.toMatch(/unity/i)
+    expect(JSON.stringify(medrick)).not.toMatch(/unity/i)
+    expect(value(medrick.highlights)?.join(' ')).toMatch(/Construct/)
+    expect(value(cv.skills.groups.find((g) => g.label === 'Game Development')!.items)).toContain('Construct')
+  })
+
   it('includes the tutor role as a minor entry', () => {
     const tutor = cv.experience.entries.find((e) => value(e.role) === 'Tutor')!
     expect(tutor.minor).toBe(true)

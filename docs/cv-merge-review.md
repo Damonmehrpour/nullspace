@@ -59,8 +59,8 @@
 
 | # | Flag | Handling until resolved |
 |---|---|---|
-| F1 | **Engine for the four released games.** The screenshots in D show the games running at `preview.construct.net`, which is the **Construct** engine. CVs A, B and C describe the Medrick work as "Unity and C#" | The gallery names **no engine**. The Medrick experience entry keeps the CV wording ("Unity and C#") as a description of the role. Please confirm which engine(s) built these four titles |
-| F2 | **Screenshot dates.** The taskbar clocks in D's screenshots show January 2023, after the Medrick role ended (12/2021) | Probably re-run later for the portfolio. No dates are shown with the screenshots. Please confirm the four titles were Medrick releases |
+| F1 | **Resolved (author, 2026-10-18):** Monster Squish, Baby Musk, Arrow and Color Finch were developed in **Construct**, not Unity | Project 03 lists Construct, and the Medrick entry credits Construct for the four released titles. Unity/C# stays only where other work supports it (ARVO, tutoring, skills). A content test blocks Unity from being attributed to these games |
+| F2 | **Resolved (author, 2026-10-18):** all four games were developed during the Medrick role (08/2020 – 12/2021). The screenshots were taken later (January 2023 timestamps) | No change to dates. Screenshots carry no dates |
 | F3 | **Project 02 technologies.** The CVs name the thesis and demo, not the stack used | Technologies shown as **[pending]** on Project 02 |
 | F4 | **Store links** for the four released games | None published. Please provide them if you'd like them linked |
 
