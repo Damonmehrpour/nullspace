@@ -67,7 +67,7 @@ Kokedama guidance (lead, wait/beckon, present, greet, arrive), free exploration,
 3. Decorative animations (leaf sway, idle flourishes, artifact-specific idle motion).
 4. Kokedama shader detail (fuzz, twine).
 5. Distinct per-island reveals → one shared simple reveal style (slabs rise and light sweeps).
-6. Off-route handling simplified: arrival zones still work on every island at any time (free visits are preserved). Only the guide's dynamic re-routing is reduced to "after a panel closes, route to the next unvisited island from the nearest node".
+6. Off-route handling simplified: arrival zones still work on every island at any time (free visits are preserved). Only the guide's dynamic re-routing is reduced to "after a panel closes, route to the next island not yet in `worldVisited` from the nearest node".
 
 ---
 
@@ -117,11 +117,11 @@ src/
     routeGraph.ts              build graph from world.ts; nearestNode(); shortestPath() (BFS)
     validateWorld.ts           layout integrity checks
     guideBrain.ts              guide state machine → GuidePose
-    tour.ts                    visit order, visited set, next target
+    tour.ts                    visit order, worldVisited set, next target, completion
     dialogueDirector.ts        event → line selection, cooldowns, global silence gap
     config.ts                  all tunable numbers (speeds, thresholds, timings)
   state/
-    store.ts                   Zustand: phase, activeSection/project, visited, tourTarget, settings
+    store.ts                   Zustand: phase, activeSection/project, viewed, worldVisited, tourTarget, settings
     settings.ts                persisted settings (localStorage wrapped in try/catch)
   ui/
     TopBar.tsx, QuickNav.tsx   always-visible navigation
@@ -155,9 +155,10 @@ docs/superpowers/specs/        this document
 
 - `phase`: `'boot' | 'entry' | 'loading3d' | 'world' | 'portfolio'`
 - `panel`: `null | { kind: 'section', id } | { kind: 'project', id }`, plus `returnFocusTo` (an element reference held outside the store)
-- `visited`: set of section ids
+- `viewed`: set of section ids whose content has been opened from **any** source (portfolio, quick-nav, arrival). Purely informational (a "read" mark in the UI). **Never affects the tour.**
+- `worldVisited`: set of section ids whose **arrival zone the player has physically entered** in 3D. This alone drives the tour, the tour target and tour completion.
 - `tourTarget`: section id or `null`
-- `revealPlayed`: set of section ids
+- `revealPlayed`: set of section ids (set on the first in-world arrival; in practice the same set as `worldVisited`, kept explicit for reveal logic)
 - `settings`: `{ typing: boolean, reducedMotion: 'system' | 'on' | 'off', subtitles: boolean, quality: 'high' | 'low' }`
 - `mode preference`: last entry choice (`'world' | 'portfolio'`), persisted
 
@@ -248,14 +249,16 @@ The guide is split into two parts so the visual body can be replaced:
 
 ### 6.4 Tour and arrival
 
-- The tour target is the first unvisited island in `tourOrder`.
+- The tour target is the first island in `tourOrder` that is not in `worldVisited`.
+- **Content viewed ≠ destination visited.** Reading a section in View Portfolio or via quick-nav **Open** adds it to `viewed` only. It never advances or completes the tour. A visitor who reads the whole CV first can then enter 3D and get the full guided journey from the beginning.
 - **Arrival is player-driven.** Entering any island's arrival zone (whether following the guide or exploring freely) triggers:
   - if that island's reveal has not played yet (`revealPlayed`): the island reveal (≤ 2 s), then `openSection(id, { source: 'arrival' })`;
   - otherwise: the panel opens instantly (no reveal, or a reveal of ≤ 0.3 s).
-- A section is marked visited whenever its panel opens from any source, including quick-nav and View Portfolio. "Visited" drives the tour and the ✓ marks. "Reveal played" is tracked separately and is only set by an in-world arrival, so a section first read via quick-nav still gets its reveal on the first in-world arrival.
-- After the panel closes, the tour target becomes the next unvisited island and the guide leads there.
-- Visiting islands out of order is allowed. Those islands count as visited and the guide quietly re-routes.
-- After all five are visited, the guide switches to `idle` and says a closing line. Free exploration and revisits continue.
+- Entering an arrival zone adds the island to `worldVisited` (and `revealPlayed`), and opening its panel adds it to `viewed`. A section first read via quick-nav or View Portfolio still gets its full first-visit reveal on the first in-world arrival.
+- After the panel closes, the tour target becomes the next island not in `worldVisited`, and the guide leads there.
+- Visiting islands out of order is allowed. Those islands count as world-visited and the guide quietly re-routes.
+- **The tour completes only when all five arrival zones are in `worldVisited`.** The guide then switches to `idle` and says a closing line. Free exploration and revisits continue.
+- **Quick-nav "Guide me there"** sets the tour target to that island. On touch devices it teleports the player into the arrival zone (8.1). That counts as a world visit, because the arrival path really runs in the world.
 - Re-entering a zone after closing its panel does not reopen the panel until the player has left the zone (hysteresis).
 - **Projects island:** arrival opens the Projects section panel, which lists all three projects. Each artifact also opens its own project detail directly via interaction (`openProject(id, { source: 'artifact' })`).
 
@@ -352,7 +355,10 @@ The build fails if:
   - Skipped automatically on return visits (`localStorage`, try/catch).
   - The longer cinematic version is stretch item 4.
 - **Entry screen:** **ENTER SIMULATION** and **VIEW PORTFOLIO**.
-  - Only two hints: on a narrow (< 768 px) or coarse-pointer screen, View Portfolio is highlighted as the suggestion; without WebGL2, Enter is disabled with an explanation.
+  - Only simple hints, no device fingerprinting:
+    - **Touch-first** (`(pointer: coarse)` and `(hover: none)`) or a narrow screen (< 768 px): View Portfolio becomes the primary, recommended button. A clear note sits under ENTER SIMULATION **before** anything loads: "3D walking needs a keyboard in this version. View Portfolio has everything." Enter stays allowed.
+    - Without WebGL2: Enter is disabled with an explanation.
+    - The note is part of the button's accessible description (`aria-describedby`).
   - The choice is remembered and can be switched at any time from the top bar.
   - The top bar (Projects, Résumé, Contact) is already usable on this screen.
 - **First 3D entry:** a controls hint: `WASD / arrows · move` `E / click · interact` `Esc · close`.
@@ -367,7 +373,7 @@ The build fails if:
 ### 8.3 Top bar and quick navigation
 
 - Always visible and keyboard-reachable in every phase after boot: `NULLSPACE` · Projects · Résumé · Contact · ☰ Sections · ⚙ Settings · **Exit to Portfolio / Enter 3D**.
-- ☰ Sections lists all five sections, each with a visited ✓ and status badge, plus **Open** and (in 3D) **Guide me there**. It also shows the current next destination.
+- ☰ Sections lists all five sections, each with a status badge and two separate marks: **read** (in `viewed`) and, in 3D, **reached** (in `worldVisited`). Each has **Open** and, in 3D, **Guide me there**. In 3D it also shows the next tour destination and tour progress (`reached 2/5`).
 - **Résumé:** if `resumePdf` is confirmed, a direct **Download résumé (PDF)** link; otherwise a disabled item labeled **Résumé: coming soon**.
 - **Contact:** opens the Contact panel directly. It never requires the tour.
 - Quick-nav **Open** always opens instantly, with no reveal or cinematic wait. If that island's reveal hasn't played yet, it stays available for the player's first in-world arrival.
@@ -489,7 +495,7 @@ In every failure the top bar's Projects, Résumé and Contact keep working.
 - `walkable.clamp`: interior points unchanged; edge sliding; corners; walkway-island joins; the bridge.
 - `validateWorld`: passes on the real layout; fails on deliberately broken layouts (node outside walkable area, disconnected island, zone outside footprint, missing artifact slot).
 - `guideBrain`: every transition in the state table; no flicker inside the 5–7 m gap; `present` never opens a panel; arrival fires only on player zone entry.
-- `tour`: order, out-of-order visits, completion, revisit behavior, zone hysteresis.
+- `tour`: order, out-of-order visits, revisit behavior, zone hysteresis; completion only when all five zones are world-visited; `markViewed` (portfolio and quick-nav) never changes the tour target or completion.
 - `dialogueDirector`: per-event cooldowns, global silence gap, `once`, probabilities with a seeded random generator, lines dropped rather than queued.
 - `validateContent`: each rule in 7.4, using deliberately invalid fixtures.
 
@@ -507,11 +513,13 @@ In every failure the top bar's Projects, Résumé and Contact keep working.
 3. View Portfolio: all five sections and three projects render with correct badges; **no three.js or 3D chunk request appears in the network log**; works at a 375 × 812 viewport.
 4. Keyboard-only: Tab through the top bar, open and close each panel, focus returns correctly; number keys do nothing while the panel is open.
 5. 3D: Enter shows the loading state, then the canvas renders; quick-nav Open shows the panel instantly.
-6. Tour: using the test-only `window.__nullspace` hook (`teleportPlayer`, `getGuideState`, `getVisited`), move the player to each arrival zone in order; check that the reveal and panel happen, the guide's state is `present` before player entry, and visited updates.
-7. Free visit: teleport into an out-of-order island zone; the panel opens and the guide re-routes.
-8. Reduced motion (emulated): no typing effect; reveals shortened.
-9. Error path: simulate a 3D chunk load failure; Retry and View Portfolio appear and work.
-10. Deployed smoke test: tests 1–3 and 5 run against the public URL.
+6. Tour: using the test-only `window.__nullspace` hook (`teleportPlayer`, `getGuideState`, `getWorldVisited`, `getViewed`, `isTourComplete`), move the player to each arrival zone in order; check that the reveal and panel happen, the guide's state is `present` before player entry, `worldVisited` grows by one each time, and the tour completes only after the fifth zone.
+7. Free visit: teleport into an out-of-order island zone; the panel opens, it's added to `worldVisited`, and the guide re-routes.
+8. **Read first, then play:** in View Portfolio open all five sections, then Enter 3D. `getViewed()` has 5 entries, `getWorldVisited()` is empty, `isTourComplete()` is false, the guide leads to Education, and Education's first arrival plays its full reveal. Quick-nav **Open** in 3D likewise leaves `worldVisited` unchanged.
+9. **Touch-first entry:** with a touch-device emulation (`hasTouch`, coarse pointer, 375 × 812), the entry screen shows View Portfolio as the primary button and the keyboard note under Enter is visible and part of the button's accessible description before any 3D request. With a desktop profile, the note is absent.
+10. Reduced motion (emulated): no typing effect; reveals shortened.
+11. Error path: simulate a 3D chunk load failure; Retry and View Portfolio appear and work.
+12. Deployed smoke test: tests 1–3, 5 and 9 run against the public URL.
 
 The `window.__nullspace` hook exists only when built with a test flag and is absent from the public production build. The deployed smoke test therefore skips hook-based tests.
 
@@ -528,7 +536,7 @@ Estimates are targets. Each milestone ends with the app working **and deployed**
 | Hours (target) | Milestone | Done when |
 |---|---|---|
 | 0–1 | **M0 Foundation:** scaffold (Vite 8, React 19, TS 5.9, Tailwind 4), lint, Vitest and Playwright setup, `schema.ts` + `validateContent` (test-first), `cv.ts` launch content, store | `npm test` and `npm run build` pass; content validates |
-| 1–3.5 | **M1 Recruiter-first portfolio + first deploy:** boot (≤ 3 s, Skip), entry screen (Enter shows "coming online" until M2), top bar, Résumé/Contact, Panel with full focus and inert handling, all five section views, ProjectDetail, status badges, View Portfolio mode; **hosting set up and deployed** | **Checkpoint A:** the public URL is a usable, honest portfolio on desktop and phone; e2e tests 1–4 pass |
+| 1–3.5 | **M1 Recruiter-first portfolio + first deploy:** boot (≤ 3 s, Skip), entry screen (Enter shows "coming online" until M2), top bar, Résumé/Contact, Panel with full focus and inert handling, all five section views, ProjectDetail, status badges, View Portfolio mode, touch-first entry note; **hosting set up and deployed** | **Checkpoint A:** the public URL is a usable, honest portfolio on desktop and phone; e2e tests 1–4 and 9 pass |
 | 3.5–7 | **M2 World core:** `world.ts`, `walkable`, `routeGraph`, `validateWorld` (test-first), lazy `world/` chunk with loading and error states, greybox monolith, bridge, islands and walkways, player and follow camera | Walk the whole layout with no void falls; camera cases feel stable; deployed |
 | 7–11 | **M3 Guide and tour (core):** `guideBrain` (test-first), kokedama v1 body, trail, off-screen arrow, tour, arrival zones, free visits, revisits, quick-nav Guide me there | **Checkpoint B:** following the guide reaches all 5 islands; wait, beckon, greet, present and arrive all work; deployed |
 | 11–14 | **M4 Content in the world:** dialogue director and subtitles, `A11yStatus`, shared simple reveal, panels opening on arrival, three artifacts with interaction and ProjectDetail | Full core loop playable end to end; deployed |
@@ -550,9 +558,11 @@ Estimates are targets. Each milestone ends with the app working **and deployed**
 1. From first load, a visitor opens Contact and sees the résumé status in at most 2 clicks and under 10 seconds, without entering 3D.
 2. The boot sequence lasts ≤ 3 s, can be skipped from the first frame by button, key or click, and is skipped automatically on return visits.
 3. View Portfolio shows all 5 sections and 3 projects with correct status badges, downloads no 3D code, and is usable at 375 px width.
+3a. On touch-first devices, the entry screen recommends View Portfolio as the primary choice and states, before anything 3D loads, that 3D walking needs a keyboard in this version while View Portfolio works fully. Entering 3D is still allowed, and quick-nav "Guide me there" teleports the player into each arrival zone.
 4. In 3D, the player can't leave the walkable area; `validateWorld()` passes, confirming every island is reachable from spawn and from every node.
 5. The kokedama leads 2–3 m ahead, waits and beckons when the player is more than 7 m behind, greets when they return, and waits (`present`) at each destination without opening anything until the player enters the arrival zone.
-6. Following the guide visits all 5 islands in tour order. Each first visit plays a reveal of ≤ 2 s followed by the panel. Revisits and quick-nav open the panel with no forced wait. Out-of-order free visits work.
+6. Following the guide visits all 5 islands in tour order. Each first visit plays a reveal of ≤ 2 s followed by the panel. Revisits and quick-nav open the panel with no forced wait. Out-of-order free visits work. The tour completes only when the player has physically entered all five arrival zones.
+6a. Content viewed and destinations visited are tracked separately. Reading sections in View Portfolio or via quick-nav **Open** never advances or completes the tour. A visitor who has read every section can still enter 3D and get the full guided journey, starting at Education, with every first-visit reveal intact.
 7. The three artifacts look clearly different, and each opens its own project detail.
 8. Every non-confirmed item and field carries its status label (IN DOCUMENTATION, AWAITING DATA, PLACEHOLDER, [pending]). No invented professional facts, media, links or contact details exist in the content.
 9. Panels trap focus, make the background inert, close on Esc and restore focus. Shortcuts never fire in input fields or dialogs. Navigation guidance is still available to assistive technology with subtitles off.
