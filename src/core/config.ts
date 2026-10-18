@@ -5,8 +5,8 @@ export const BOOT_MS = 2500
 /** Largest simulation step; protects against huge deltas after a backgrounded tab. */
 export const MAX_DT = 0.1
 
-/** False until the lazy 3D chunk exists (plan Task 18). */
-export const WORLD_AVAILABLE = false
+/** The lazy 3D chunk exists; Enter loads it. */
+export const WORLD_AVAILABLE = true
 
 export const WALK = {
   /** Sweep substep (m). Must stay below the narrowest strip half-width and void gap (validateWorld checks). */
