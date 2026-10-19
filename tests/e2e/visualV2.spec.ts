@@ -222,3 +222,38 @@ test('v2: visiting each Data City district discovers it once', async ({ page }, 
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })
+
+// Signal tower: approaching each contact channel's stone discovers it once per visit (a pulse climbs
+// its cable to the tower) and cues the kokedama; no new shaders compile.
+test('v2: approaching each contact stone discovers it once', async ({ page }, info) => {
+  test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // many small steps on the software renderer
+  await gotoEntry(page)
+  await page.goto('/?visual=v2')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  const ns = (fn: string, ...args: unknown[]) =>
+    page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
+  await ns('freezeClock')
+  await ns('markAllRevealed')
+  const a = ((90 - 4 * 72) * Math.PI) / 180 // Contact: fifth island on the ring
+  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const local = (x: number, z: number) => ({ x: c.x + x * Math.cos(a) - z * Math.sin(a), z: c.z + x * Math.sin(a) + z * Math.cos(a) })
+  // Stones fan around the tower (2.4, 0) at 3.15 m, at 180° and ±46°; stand 1 m in front of each.
+  const front = (deg: number) => {
+    const t = ((180 + deg) * Math.PI) / 180
+    return local(2.4 + 4.15 * Math.cos(t), 4.15 * Math.sin(t))
+  }
+  await ns('setView', local(-3.5, 0), a)
+  await page.waitForTimeout(500)
+  const before = (await ns('getGuideCue')) as number
+  const programs = ((await ns('listPrograms')) as string[]).length
+  for (const pass of [1, 2]) {
+    for (const deg of [-46, 0, 46]) {
+      await ns('setView', front(deg), a)
+      await page.waitForTimeout(200)
+    }
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 3)
+  }
+  expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
+})
