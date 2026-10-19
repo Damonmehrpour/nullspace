@@ -9,6 +9,7 @@ import { isTourComplete } from '../core/tour'
 import { useStore } from '../state/store'
 import { graph, sim, simulate, teleportPlayer } from './sim'
 import { type Color, Mesh, MeshLambertMaterial, Vector3, MeshStandardMaterial, type Material } from 'three'
+import { soundRunning } from '../audio/soundscape'
 import { applyLook } from '../core/cameraRig'
 import { CONCRETE_DETAIL } from './v2/concrete'
 import { guideCue } from './v2/cues'
@@ -39,6 +40,7 @@ export type NullspaceHooks = {
   getPlayer(): { pos: Vec2; facing: number }
   setPlayerFacing(facing: number): void
   getGuideCue(): number
+  soundRunning(): boolean
   look(yaw: number, pitch: number, zoom: number): void
   getCameraInfo(): { position: [number, number, number]; forward: [number, number, number]; yaw: number; pitch: number; zoom: number; facing: number }
   materialsUnder(name: string): { mesh: string; type: string; color: string; emissive: string | null }[]
@@ -159,6 +161,7 @@ export function installTestHooks(): void {
       return out
     },
     getGuideCue: () => guideCue.seq,
+    soundRunning: () => soundRunning(),
     look: (yaw, pitch, zoom) => {
       sim.rig = applyLook(sim.rig, { yaw, pitch, zoom })
     },

@@ -11,6 +11,10 @@ export type Settings = {
   lookSensitivity: 'low' | 'normal' | 'high'
   /** Drag up to look down instead (and I/K swapped). */
   invertLook: boolean
+  /** Ambient sound and soft effects; off until the visitor switches it on. */
+  sound: boolean
+  /** 0..1 */
+  volume: number
 }
 
 export type ModePreference = 'world' | 'portfolio'
@@ -21,7 +25,7 @@ export const STORAGE_KEYS = {
   booted: 'nullspace.booted',
 } as const
 
-export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'auto', lookSensitivity: 'normal', invertLook: false }
+export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'auto', lookSensitivity: 'normal', invertLook: false, sound: false, volume: 0.6 }
 
 export function loadSettings(): Settings {
   return { ...DEFAULT_SETTINGS, ...readJSON<Partial<Settings>>(STORAGE_KEYS.settings, {}) }

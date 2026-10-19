@@ -22,7 +22,7 @@ function Radio<K extends keyof SettingsData>({ name, value, label, field }: { na
   )
 }
 
-function Check({ field, label, hint }: { field: 'typing' | 'subtitles' | 'invertLook'; label: string; hint: string }) {
+function Check({ field, label, hint }: { field: 'typing' | 'subtitles' | 'invertLook' | 'sound'; label: string; hint: string }) {
   const checked = useStore((s) => s.settings[field])
   const update = useStore((s) => s.updateSettings)
   const hintId = useId()
@@ -37,6 +37,21 @@ function Check({ field, label, hint }: { field: 'typing' | 'subtitles' | 'invert
           {hint}
         </p>
       </div>
+    </div>
+  )
+}
+
+function Volume() {
+  const volume = useStore((s) => s.settings.volume)
+  const sound = useStore((s) => s.settings.sound)
+  const update = useStore((s) => s.updateSettings)
+  const id = useId()
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <label htmlFor={id} className="font-semibold">
+        Volume
+      </label>
+      <input id={id} type="range" min={0} max={1} step={0.05} value={volume} disabled={!sound} onChange={(e) => update({ volume: Number(e.target.value) })} className="w-48 accent-black disabled:opacity-40" />
     </div>
   )
 }
@@ -67,6 +82,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
         <Radio name="look-sensitivity" field="lookSensitivity" value="high" label="Fast" />
         <p className="m-0 w-full text-sm text-graphite">How fast dragging turns the camera.</p>
       </Group>
+      <div className="border-t-2 border-slab py-2">
+        <Check field="sound" label="Sound" hint="A quiet ambience and soft effects, all generated in your browser. Off by default." />
+        <Volume />
+      </div>
       <div className="border-t-2 border-slab py-2">
         <Check field="invertLook" label="Invert vertical look" hint="Drag up (or press K) to look down instead of up." />
       </div>

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { capabilities } from '../../src/core/capabilities'
 import { initialState, useStore } from '../../src/state/store'
@@ -102,17 +102,24 @@ describe('A11yStatus', () => {
   })
 })
 
-describe('ControlsHint', () => {
-  it('shows keyboard controls on desktop and hides after 6 s', () => {
+describe('ControlsHint (controls card)', () => {
+  it('lists every desktop control, hides after a while, and reopens from the Controls button', () => {
     render(<ControlsHint />)
-    expect(screen.getByText(/WASD \/ arrows/)).toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(6100))
-    expect(screen.queryByText(/WASD \/ arrows/)).toBeNull()
+    const card = screen.getByRole('region', { name: 'Controls' })
+    for (const row of ['Move', 'Look around', 'Zoom', 'Recenter camera', 'Interact', 'Close']) expect(within(card).getByText(row)).toBeInTheDocument()
+    expect(within(card).getByText(/drag/i)).toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(14_100))
+    expect(screen.queryByRole('region', { name: 'Controls' })).toBeNull()
+    act(() => useStore.getState().setControlsOpen(true))
+    expect(screen.getByRole('region', { name: 'Controls' })).toBeInTheDocument()
   })
 
-  it('tells touch visitors that walking needs a keyboard', () => {
+  it('tells touch visitors how to look around and travel', () => {
     vi.mocked(capabilities.isTouchFirst).mockReturnValue(true)
     render(<ControlsHint />)
-    expect(screen.getByText('Walking needs a keyboard here, for now. Tap Sections to travel.')).toBeInTheDocument()
+    const card = screen.getByRole('region', { name: 'Controls' })
+    expect(within(card).getByText(/Drag to look around/)).toBeInTheDocument()
+    expect(within(card).getByText(/Pinch to zoom/)).toBeInTheDocument()
+    expect(within(card).getByText(/Sections/)).toBeInTheDocument()
   })
 })

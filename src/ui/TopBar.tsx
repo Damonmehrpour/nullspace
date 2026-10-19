@@ -14,6 +14,10 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
   const [navOpen, setNavOpen] = useState(false)
   const settingsOpen = useStore((s) => s.overlay === 'settings')
   const setOverlay = useStore((s) => s.setOverlay)
+  const controlsOpen = useStore((s) => s.controlsOpen)
+  const sound = useStore((s) => s.settings.sound)
+  const updateSettings = useStore((s) => s.updateSettings)
+  const setControlsOpen = useStore((s) => s.setControlsOpen)
   const openSection = useStore((s) => s.openSection)
   const setPhase = useStore((s) => s.setPhase)
   const setModePreference = useStore((s) => s.setModePreference)
@@ -42,10 +46,11 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
   }
 
   return (
-    <nav aria-label="Quick navigation" className="fixed inset-x-0 top-0 z-20 flex items-center justify-between gap-2 bg-void/90 px-4 py-3 md:px-6">
+    <nav aria-label="Quick navigation" className="fixed inset-x-0 top-0 z-20 flex items-center justify-between gap-2 border-b border-graphite/60 bg-void px-4 py-3 md:px-6">
       <span className="display text-lg tracking-tight">NULLSPACE</span>
       <div ref={wrapRef} className="relative flex flex-wrap items-center justify-end gap-x-1 gap-y-1 text-sm md:text-base">
-        <button type="button" className={linkClass} onClick={(e) => open('projects', e.currentTarget)}>
+        {/* Projects lives in Sections on narrow screens; Contact always stays one tap away. */}
+        <button type="button" className={`${linkClass} hidden sm:inline-block`} onClick={(e) => open('projects', e.currentTarget)}>
           Projects
         </button>
         <button type="button" className={linkClass} onClick={(e) => open('contact', e.currentTarget)}>
@@ -72,6 +77,16 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
         >
           Settings
         </button>
+        {mode === 'world' && (
+          <button type="button" className={linkClass} aria-pressed={sound} onClick={() => updateSettings({ sound: !sound })}>
+            {sound ? 'Sound on' : 'Sound off'}
+          </button>
+        )}
+        {mode === 'world' && (
+          <button type="button" className={linkClass} aria-pressed={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>
+            Controls
+          </button>
+        )}
         {mode === 'world' && (
           <button type="button" className={linkClass} onClick={() => setPhase('portfolio')}>
             Exit to Portfolio

@@ -33,6 +33,8 @@ type Data = {
   nearArtifact: number | null
   /** A non-section dialog (Settings) is open; pauses the world like a panel. */
   overlay: 'settings' | null
+  /** The controls card (shown on entering the world; reopened from the top bar). */
+  controlsOpen: boolean
   /** Where the most recent panel was opened from (drives the skipTour line). */
   lastOpenSource: OpenSource | null
   settings: Settings
@@ -59,6 +61,7 @@ type Actions = {
   say(text: string): void
   setNearArtifact(i: number | null): void
   setOverlay(o: 'settings' | null): void
+  setControlsOpen(open: boolean): void
   /** Clears in-flight world state (reveal, teleport) when the world is left. */
   leaveWorld(): void
   clearSubtitle(id: number): void
@@ -83,6 +86,7 @@ export function initialState(): Data {
     subtitle: null,
     lastOpenSource: null,
     overlay: null,
+    controlsOpen: true,
     nearArtifact: null,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
@@ -109,6 +113,7 @@ export const useStore = create<StoreState>()((set, get) => ({
     set({ phase })
   },
   setOverlay: (overlay) => set({ overlay }),
+  setControlsOpen: (controlsOpen) => set({ controlsOpen }),
   leaveWorld: () =>
     set((s) => ({
       revealing: null,

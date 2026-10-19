@@ -4,6 +4,7 @@ import { AREA_LABEL, SECTION_IDS, type SectionId } from '../content/schema'
 import { useStore } from '../state/store'
 import { SectionView } from '../ui/Panel/PanelHost'
 import { StatusBadge } from '../ui/StatusBadge'
+import { AtAGlance } from './AtAGlance'
 
 /** Marks a section viewed once it scrolls into view. Viewing never counts as a world visit. */
 function useViewedOnScroll(id: SectionId) {
@@ -35,7 +36,7 @@ function PortfolioSection({ id }: { id: SectionId }) {
   return (
     <section ref={ref} aria-labelledby={headingId} className="slab border-t-4 border-concrete py-12 md:grid md:grid-cols-[minmax(12rem,1fr)_3fr] md:gap-12">
       <header className="mb-6 md:mb-0">
-        <h2 id={headingId} className="display m-0 text-4xl md:text-5xl">
+        <h2 id={headingId} className="display m-0 scroll-mt-24 text-4xl md:text-5xl">
           {section.title}
         </h2>
         <div className="mt-3">
@@ -58,6 +59,7 @@ export function Portfolio() {
         <p className="relative mt-4 mb-0 text-2xl font-semibold">{cv.profile.name}</p>
         <p className="relative mt-1 mb-0 max-w-2xl text-xl">{cv.profile.headline}</p>
         <p className="relative mt-2 mb-0 text-ash">{cv.profile.areas.map((a) => AREA_LABEL[a]).join(' · ')}</p>
+        <AtAGlance cv={cv} />
       </div>
       {SECTION_IDS.map((id) => (
         <PortfolioSection key={id} id={id} />

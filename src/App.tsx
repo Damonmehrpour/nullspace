@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { AudioBridge } from './audio/AudioBridge'
 import { capabilities } from './core/capabilities'
 import { readJSON } from './core/safeStorage'
 import { Portfolio } from './portfolio/Portfolio'
@@ -50,6 +51,7 @@ export default function App() {
         />
       </div>
       <PanelHost />
+      <AudioBridge />
     </>
   )
 }

@@ -12,8 +12,15 @@ test('reduced motion: subtitles appear whole and reveals take at most 0.4 s', as
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.waitForFunction(() => '__nullspace' in window)
   await ns(page, (n) => n.freezeClock())
-  await ns(page, (n) => n.say('The void is not a shortcut.'))
-  await expect(page.getByTestId('subtitle-text')).toHaveText('The void is not a shortcut.')
+  // Say the line and read the subtitle two frames later, in one step: under reduced motion it must
+  // already be whole (no typing). (Checked atomically: under heavy test load the line's display time
+  // can otherwise run out before a separate assertion looks.)
+  const shown = await page.evaluate(async () => {
+    ;(window as unknown as { __nullspace: NS }).__nullspace.say('The void is not a shortcut.')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    return document.querySelector('[data-testid="subtitle-text"]')?.textContent
+  })
+  expect(shown).toBe('The void is not a shortcut.')
 
   await ns(page, (n) => n.teleportPlayer('education'))
   await ns(page, (n) => n.advance(0.4))

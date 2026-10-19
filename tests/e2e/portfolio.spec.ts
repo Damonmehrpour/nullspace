@@ -36,9 +36,13 @@ test('portfolio has no horizontal scroll', async ({ page }) => {
 test('portfolio contact offers the phone number as a tel: link', async ({ page }) => {
   await gotoEntry(page)
   await page.getByRole('button', { name: 'VIEW PORTFOLIO' }).click()
-  const phone = page.getByRole('link', { name: '+358 45 8629910' })
-  await phone.scrollIntoViewIfNeeded()
-  await expect(phone).toBeVisible()
-  await expect(phone).toHaveAttribute('href', 'tel:+358458629910')
-  await expect(phone).not.toHaveAttribute('target', '_blank')
+  // It appears in the at-a-glance summary and in the Contact section; every one must dial the number.
+  const phones = page.getByRole('link', { name: '+358 45 8629910' })
+  await expect(phones).toHaveCount(2)
+  for (const phone of await phones.all()) {
+    await phone.scrollIntoViewIfNeeded()
+    await expect(phone).toBeVisible()
+    await expect(phone).toHaveAttribute('href', 'tel:+358458629910')
+    await expect(phone).not.toHaveAttribute('target', '_blank')
+  }
 })
