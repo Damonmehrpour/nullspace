@@ -57,7 +57,7 @@ export default function WorldRoot({ onFailure }: WorldProps) {
   }, [])
 
   return (
-    <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
+    <div id="world-canvas" role="region" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
         // Never render more pixels than the screen has: a 1x display stays at 1x even on High.
         dpr={[1, budget.dpr]}

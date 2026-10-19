@@ -24,7 +24,9 @@ export function Subtitles() {
     const typer = instant
       ? undefined
       : window.setInterval(() => setShown((n) => (n >= len ? n : n + 1)), 1000 / DIALOGUE.typeCharsPerS)
-    const hold = window.setTimeout(() => clearSubtitle(subtitle.id), DIALOGUE.holdBaseMs + DIALOGUE.holdPerCharMs * len)
+    // The reading time starts once the line has finished typing, so long lines are never cut short.
+    const typingMs = instant ? 0 : (len * 1000) / DIALOGUE.typeCharsPerS
+    const hold = window.setTimeout(() => clearSubtitle(subtitle.id), typingMs + DIALOGUE.holdBaseMs + DIALOGUE.holdPerCharMs * len)
     return () => {
       if (typer) window.clearInterval(typer)
       window.clearTimeout(hold)

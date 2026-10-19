@@ -23,7 +23,9 @@ test('profile world', async ({ page }, info) => {
   await page.waitForFunction(() => '__nullspace' in window)
   await page.locator('#world-canvas canvas').waitFor()
   const startupMs = Date.now() - t0
-  await page.evaluate(() => (window as unknown as { __nullspace: { lockQuality(): void } }).__nullspace.lockQuality())
+  // PROFILE_QUALITY=high|medium|low pins the level (default High, the worst case).
+  const level = process.env.PROFILE_QUALITY ?? 'high'
+  await page.evaluate((l) => (window as unknown as { __nullspace: { lockQuality(l: string): void } }).__nullspace.lockQuality(l), level)
   // Let adaptive quality settle first; its one-time downgrade (shader recompiles) is not steady-state cost.
   await page.waitForTimeout(6000)
   const quality = await page.evaluate(() => (window as unknown as { __nullspace: { getQuality(): unknown } }).__nullspace.getQuality())
@@ -69,5 +71,5 @@ test('profile world', async ({ page }, info) => {
     rows.push(`| ${v.name} | ${r.p50.toFixed(2)} | ${r.p95.toFixed(2)} | ${r.calls} | ${r.triangles} |`)
   }
   mkdirSync('test-results', { recursive: true })
-  writeFileSync(`test-results/profile-${variant}-${MODE}.md`, [`variant: ${variant} · mode ${MODE}`, `startup (Enter click → world ready): ${startupMs} ms`, `quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | p50 frame ms | p95 frame ms | draw calls | triangles |', '|---|---|---|---|---|', ...rows].join('\n'))
+  writeFileSync(`test-results/profile-${variant}-${MODE}-${level}.md`, [`variant: ${variant} · mode ${MODE} · quality ${level}`, `startup (Enter click → world ready): ${startupMs} ms`, `quality after warm-up: ${JSON.stringify(quality)}`, '', '| View | p50 frame ms | p95 frame ms | draw calls | triangles |', '|---|---|---|---|---|', ...rows].join('\n'))
 })

@@ -1,6 +1,6 @@
 # Visual Rebirth: audit and plan
 
-Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture) approved on all islands; Phase 3 (story and contact, `docs/visual-phase3/`) awaiting review.** The UI/UX and final passes haven't started.
+Status: **Complete and live as the default experience** (final report: `docs/FINAL.md`). All phases approved by the author up to Phase 3; the finishing pass (camera, quality, UI/UX, sound, content) ran under the author's final directive. Final user acceptance is pending the author's own playthrough.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 

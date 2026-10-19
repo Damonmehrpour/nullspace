@@ -8,7 +8,7 @@ import { Settings } from './Settings'
 
 type Mode = 'world' | 'portfolio' | 'entry'
 
-const linkClass = 'px-2 py-1 font-semibold hover:underline underline-offset-4'
+const linkClass = 'px-1.5 py-1 font-semibold hover:underline underline-offset-4 sm:px-2'
 
 export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: (id: SectionId) => void }) {
   const [navOpen, setNavOpen] = useState(false)
@@ -47,7 +47,7 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
 
   return (
     <nav aria-label="Quick navigation" className="fixed inset-x-0 top-0 z-20 flex items-center justify-between gap-2 border-b border-graphite/60 bg-void px-4 py-3 md:px-6">
-      <span className="display text-lg tracking-tight">NULLSPACE</span>
+      <span className="display text-base tracking-tight sm:text-lg">NULLSPACE</span>
       <div ref={wrapRef} className="relative flex flex-wrap items-center justify-end gap-x-1 gap-y-1 text-sm md:text-base">
         {/* Projects lives in Sections on narrow screens; Contact always stays one tap away. */}
         <button type="button" className={`${linkClass} hidden sm:inline-block`} onClick={(e) => open('projects', e.currentTarget)}>
@@ -95,7 +95,8 @@ export function TopBar({ mode, onGuideMeThere }: { mode: Mode; onGuideMeThere?: 
         {mode === 'portfolio' && WORLD_AVAILABLE && (
           <button
             type="button"
-            className={linkClass}
+            // On narrow screens the portfolio's own "Enter the 3D world" button takes this role.
+            className={`${linkClass} hidden sm:inline-block`}
             onClick={() => {
               setModePreference('world')
               setPhase('loading3d')

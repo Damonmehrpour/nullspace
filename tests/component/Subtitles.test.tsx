@@ -63,7 +63,19 @@ describe('Subtitles', () => {
     expect(visible()).toBe(LINE)
   })
 
-  it('fades out after 2.5 s plus 40 ms per character', () => {
+  it('stays readable: fades out 2.5 s plus 40 ms per character after the line has finished typing', () => {
+    render(<Subtitles />)
+    act(() => useStore.getState().say(LINE))
+    const typing = (LINE.length * 1000) / 40
+    const hold = 2500 + 40 * LINE.length
+    act(() => vi.advanceTimersByTime(typing + hold - 100))
+    expect(screen.queryByTestId('subtitle-text')).not.toBeNull()
+    act(() => vi.advanceTimersByTime(200))
+    expect(screen.queryByTestId('subtitle-text')).toBeNull()
+  })
+
+  it('without typing, fades out 2.5 s plus 40 ms per character after appearing', () => {
+    useStore.setState({ settings: { ...useStore.getState().settings, typing: false } })
     render(<Subtitles />)
     act(() => useStore.getState().say(LINE))
     act(() => vi.advanceTimersByTime(2500 + 40 * LINE.length + 50))
