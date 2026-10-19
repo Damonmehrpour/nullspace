@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { DEFAULT_SETTINGS } from '../../src/state/settings'
 import { initialState, isGameplayPaused, loadInitialState, useStore } from '../../src/state/store'
 
 const s = () => useStore.getState()
@@ -38,7 +39,7 @@ describe('store', () => {
 
   it('settings persist and reload from storage', () => {
     s().updateSettings({ typing: false, quality: 'low' })
-    expect(loadInitialState().settings).toEqual({ typing: false, reducedMotion: 'system', subtitles: true, quality: 'low' })
+    expect(loadInitialState().settings).toEqual({ ...DEFAULT_SETTINGS, typing: false, quality: 'low' })
   })
 
   it('mode preference persists', () => {
@@ -47,7 +48,7 @@ describe('store', () => {
   })
 
   it('starts with default settings when nothing is stored', () => {
-    expect(s().settings).toEqual({ typing: true, reducedMotion: 'system', subtitles: true, quality: 'high' })
+    expect(s().settings).toEqual(DEFAULT_SETTINGS)
     expect(s().phase).toBe('boot')
   })
 })

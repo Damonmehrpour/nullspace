@@ -44,6 +44,7 @@ export type Sim = {
   /** Renderer and scene handles for test-only profiling hooks. */
   scene: import('three').Scene | null
   gl: import('three').WebGLRenderer | null
+  camera: import('three').Camera | null
   /** Test-only per-frame recording for startup profiling. */
   timeline: { t: number; dt: number; programs: number; calls: number; quality: string }[] | null
   /** Current adaptive quality, mirrored here for tests and the debug overlay. */
@@ -75,6 +76,7 @@ export const sim: Sim = {
   qualityLocked: false,
   timeline: null,
   scene: null,
+  camera: null,
   gl: null,
 }
 

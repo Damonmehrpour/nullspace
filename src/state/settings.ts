@@ -5,6 +5,10 @@ export type Settings = {
   reducedMotion: 'system' | 'on' | 'off'
   subtitles: boolean
   quality: 'high' | 'low'
+  /** How fast dragging turns the camera. */
+  lookSensitivity: 'low' | 'normal' | 'high'
+  /** Drag up to look down instead (and I/K swapped). */
+  invertLook: boolean
 }
 
 export type ModePreference = 'world' | 'portfolio'
@@ -15,7 +19,7 @@ export const STORAGE_KEYS = {
   booted: 'nullspace.booted',
 } as const
 
-export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'high' }
+export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'high', lookSensitivity: 'normal', invertLook: false }
 
 export function loadSettings(): Settings {
   return { ...DEFAULT_SETTINGS, ...readJSON<Partial<Settings>>(STORAGE_KEYS.settings, {}) }

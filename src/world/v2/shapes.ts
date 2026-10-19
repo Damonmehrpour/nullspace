@@ -2,9 +2,9 @@
 
 export type VisualVersion = 'v1' | 'v2'
 
-/** `?visual=v2` switches the 3D world to the Phase 0 look; anything else keeps the original. */
+/** The finished (v2) look is the default; `?visual=v1` keeps the original look for comparison. */
 export function visualVersion(search: string): VisualVersion {
-  return new URLSearchParams(search).get('visual') === 'v2' ? 'v2' : 'v1'
+  return new URLSearchParams(search).get('visual') === 'v1' ? 'v1' : 'v2'
 }
 
 export type ProfilePoint = { x: number; y: number }

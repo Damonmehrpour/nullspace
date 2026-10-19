@@ -38,13 +38,20 @@ test('?visual=v2 renders without shader or runtime errors and keeps arrivals wor
   expect(errors.filter((e) => /shader|webgl|three|error/i.test(e))).toEqual([])
 })
 
-test('without the flag the original look is used', async ({ page }, info) => {
+test('the clean URL shows the finished (v2) world; ?visual=v1 keeps the original look', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
+  const wanderer = () => page.evaluate(() => (window as unknown as { __nullspace: { materialsUnder(n: string): unknown[] } }).__nullspace.materialsUnder('v2-wanderer').length)
   await gotoEntry(page)
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
-  await expect(page.locator('#world-canvas canvas')).toBeVisible({ timeout: 15_000 })
-  const usesV2 = await page.evaluate(() => new URLSearchParams(location.search).get('visual'))
-  expect(usesV2).toBeNull()
+  await page.waitForFunction(() => '__nullspace' in window)
+  await page.waitForFunction(() => (window as unknown as { __nullspace: { materialsUnder(n: string): unknown[] } }).__nullspace.materialsUnder('v2-wanderer').length > 0)
+  expect(await wanderer()).toBeGreaterThan(0)
+  await page.goto('/?visual=v1')
+  await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
+  await page.waitForFunction(() => '__nullspace' in window)
+  await page.locator('#world-canvas canvas').waitFor()
+  await page.waitForTimeout(500)
+  expect(await wanderer()).toBe(0)
 })
 
 // Dropping to Low quality (by hand or adaptively) must not recompile shaders: a recompile cascade

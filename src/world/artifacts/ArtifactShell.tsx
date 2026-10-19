@@ -6,6 +6,7 @@ import type { Project } from '../../content/schema'
 import { v, type Vec2 } from '../../core/geometry'
 import { useStore } from '../../state/store'
 import { BADGE_COPY } from '../../ui/StatusBadge'
+import { DRAG_THRESHOLD } from '../CameraControls'
 import { sim } from '../sim'
 import { at, TITLE_FONT } from '../space'
 import { ContactShadow } from '../v2/ContactShadow'
@@ -45,6 +46,7 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
         position={[0, 1.6, 0]}
         onClick={(e) => {
           e.stopPropagation()
+          if (e.delta > DRAG_THRESHOLD) return // the end of a camera drag, not a click
           openProject(project.id, { source: 'artifact' })
         }}
         onPointerOver={() => (document.body.style.cursor = 'pointer')}

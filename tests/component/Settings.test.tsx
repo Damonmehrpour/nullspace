@@ -1,3 +1,4 @@
+import { DEFAULT_SETTINGS } from '../../src/state/settings'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -41,7 +42,7 @@ describe('Settings', () => {
   })
 
   it('reflects the current values when opened', async () => {
-    useStore.setState({ settings: { typing: false, reducedMotion: 'off', subtitles: true, quality: 'low' } })
+    useStore.setState({ settings: { ...DEFAULT_SETTINGS, typing: false, reducedMotion: 'off', subtitles: true, quality: 'low' } })
     await open()
     expect(screen.getByRole('checkbox', { name: 'Typing effect' })).not.toBeChecked()
     expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()

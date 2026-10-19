@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { islandSlabProfile, leafShape, visualVersion } from '../../src/world/v2/shapes'
 
 describe('visual flag', () => {
-  it('is v2 only for ?visual=v2', () => {
+  it('is v2 by default; only ?visual=v1 keeps the original look', () => {
+    expect(visualVersion('')).toBe('v2')
     expect(visualVersion('?visual=v2')).toBe('v2')
-    expect(visualVersion('?debug&visual=v2')).toBe('v2')
-    expect(visualVersion('')).toBe('v1')
-    expect(visualVersion('?visual=v3')).toBe('v1')
+    expect(visualVersion('?debug')).toBe('v2')
+    expect(visualVersion('?visual=v3')).toBe('v2')
+    expect(visualVersion('?visual=v1')).toBe('v1')
+    expect(visualVersion('?debug&visual=v1')).toBe('v1')
   })
 })
 

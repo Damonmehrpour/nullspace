@@ -29,6 +29,20 @@ export const CAMERA = {
   steadyBeforeTurnS: 0.4,
   ignoreReversalS: 0.3,
   pullbackMax: 1.5,
+  // Orbit: the camera sits `radius` m from the look point at an elevation of `pitch` (rad); defaults
+  // reproduce the approved framing (7.6 m back, 4.6 m up, aiming 1.4 m up and 1.8 m ahead).
+  radius: Math.hypot(7.6, 3.2),
+  pitchDefault: Math.atan2(3.2, 7.6),
+  pitchMin: -0.21, // camera low, looking up at towers and floating structures
+  pitchMax: 1.13, // high, looking down over an island
+  zoomMin: 0.55,
+  zoomMax: 1.5,
+  lookHeight: 1.4,
+  lookAhead: 1.8,
+  lookLiftMax: 2.8, // at the lowest tilt the view aims this much higher, so tall things come into frame
+  minHeight: 0.45,
+  manualHoldS: 3, // after the visitor looks around, auto-follow waits this long
+  recenterRate: 6,
 } as const
 
 export const GUIDE = {

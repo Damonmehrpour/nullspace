@@ -1,6 +1,7 @@
 import { OrbitControls, StatsGl } from '@react-three/drei'
 import { WORLD } from '../content/world'
 import { DialogueBridge } from './DialogueBridge'
+import { CameraControls } from './CameraControls'
 import { FollowCamera } from './FollowCamera'
 import { GameLoop } from './GameLoop'
 import { GuideBody } from './guide/GuideBody'
@@ -65,6 +66,7 @@ export function Scene() {
       <GameLoop />
       <DialogueBridge />
       {DEV_ORBIT ? <OrbitControls /> : <FollowCamera />}
+      {!DEV_ORBIT && <CameraControls />}
       {/* Drei strips stats-gl's inline position/z-index, so positioning must come from these classes. */}
       {DEBUG_STATS && <StatsGl id="debug-stats" className="pointer-events-none fixed top-16 left-2 z-50" />}
     </>

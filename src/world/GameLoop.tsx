@@ -26,8 +26,9 @@ export function GameLoop() {
     }
   }, [])
 
-  useFrame(({ gl, scene }, delta) => {
+  useFrame(({ gl, scene, camera }, delta) => {
     sim.gl = gl
+    sim.camera = camera
     sim.scene = scene
     if (!sim.frozen) simulate(delta)
     sim.renderInfo = { calls: gl.info.render.calls, triangles: gl.info.render.triangles }
