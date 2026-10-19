@@ -83,15 +83,15 @@ describe('ProjectDetail', () => {
     const gallery = screen.getByRole('list', { name: 'Gallery' })
     expect(within(gallery).getAllByRole('img')).toHaveLength(4)
     for (const name of ['Monster Squish', 'Baby Musk', 'Arrow', 'Color Finch']) expect(within(gallery).getByText(new RegExp('^' + name + ':'))).toBeInTheDocument()
-    expect(screen.getByText(/Gameplay video/)).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /gameplay video/i })).toBeNull()
+    // No public gameplay video is known, so none is mentioned (no placeholder link).
+    expect(screen.queryByText(/Gameplay video/)).toBeNull()
   })
 
-  it('does not render links whose url is pending', () => {
+  it('omits links whose url is unknown, label and all', () => {
     const p: Project = { ...cv.projects.projects[1], links: [{ kind: 'github', label: 'Repository', url: pending() }] }
     render(<ProjectDetail project={p} />)
-    expect(screen.queryByRole('link', { name: /repository/i })).toBeNull()
-    expect(screen.getByText(/Repository/)).toBeInTheDocument()
+    expect(screen.queryByText(/Repository/)).toBeNull()
+    expect(screen.queryByText('Links')).toBeNull()
   })
 
   it('renders confirmed links as external anchors', () => {
@@ -121,8 +121,8 @@ describe('MediaItem', () => {
     expect(within(fig).getByText('Level screenshot')).toBeInTheDocument()
   })
 
-  it('shows image coming soon for a pending image', () => {
-    render(<MediaItem media={{ kind: 'image', src: pending(), alt: 'Screenshot' }} />)
-    expect(screen.getByText('image coming soon')).toBeInTheDocument()
+  it('shows nothing for an image whose source is unknown', () => {
+    const { container } = render(<MediaItem media={{ kind: 'image', src: pending(), alt: 'Screenshot' }} />)
+    expect(container.textContent).toBe('')
   })
 })

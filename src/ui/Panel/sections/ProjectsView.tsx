@@ -45,7 +45,8 @@ export function ProjectsView({ section, source }: { section: ProjectsSection; so
               <li key={h.project}>
                 <div className="font-bold">{h.project}</div>
                 <div className="opacity-80">
-                  <FieldText field={h.award} /> · {h.event} · <FieldText field={h.year} />
+                  <FieldText field={h.award} /> · {h.event}
+                  {h.year?.state === 'confirmed' && <> · {h.year.value}</>}
                 </div>
                 <FieldText field={h.detail} as="p" className="mt-1 mb-1" />
                 <AreaTags areas={h.areas} />

@@ -31,14 +31,8 @@ describe('FieldText', () => {
     expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['C#', 'Unity'])
   })
 
-  it('renders [pending] for a pending field', () => {
-    render(<FieldText field={pending()} />)
-    const el = screen.getByText('[pending]')
-    expect(el).toHaveAttribute('data-pending')
-  })
-
-  it('appends the pending note', () => {
-    render(<FieldText field={pending('video coming soon')} />)
-    expect(screen.getByText('[pending] — video coming soon')).toBeInTheDocument()
+  it('renders nothing for a pending field: visitors never see placeholders', () => {
+    const { container } = render(<FieldText field={pending('video coming soon')} />)
+    expect(container.textContent).toBe('')
   })
 })

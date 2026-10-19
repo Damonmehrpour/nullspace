@@ -2,18 +2,9 @@ import type { Field } from '../content/schema'
 
 type As = 'p' | 'span' | 'li'
 
-export function pendingCopy(note?: string): string {
-  return note ? `[pending] — ${note}` : '[pending]'
-}
-
-export function FieldText({ field, as: Tag = 'span', className = '' }: { field: Field<string | string[]>; as?: As; className?: string }) {
-  if (field.state === 'pending') {
-    return (
-      <Tag className={`pending ${className}`} data-pending="">
-        {pendingCopy(field.note)}
-      </Tag>
-    )
-  }
+/** A confirmed field's text. Unknown (pending or absent) fields render nothing: visitors never see placeholders. */
+export function FieldText({ field, as: Tag = 'span', className = '' }: { field: Field<string | string[]> | undefined; as?: As; className?: string }) {
+  if (!field || field.state === 'pending') return null
   if (Array.isArray(field.value)) {
     return (
       <ul className={`field-list ${className}`}>

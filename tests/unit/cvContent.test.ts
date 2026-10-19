@@ -56,11 +56,11 @@ describe('merged CV content', () => {
     expect(p1.areas).toContain('xr')
     expect(p1.links).toContainEqual(expect.objectContaining({ label: 'Watch demo', url: confirmed('https://youtu.be/lvPXvY1qMxk') }))
     expect(p2.areas).toContain('ai-hci')
-    expect(p2.tech.state).toBe('pending')
+    expect(p2.tech).toBeUndefined() // no source states it, so it is omitted
     expect(p3.areas).toContain('game')
     expect(p3.media.map((m) => m.caption?.split(':')[0])).toEqual(['Monster Squish', 'Baby Musk', 'Arrow', 'Color Finch'])
     for (const m of p3.media) expect(value(m.src)).toMatch(/^\/media\/games\/[a-z-]+\.webp$/)
-    expect(p3.links.find((l) => l.label === 'Gameplay video')?.url.state).toBe('pending')
+    expect(p3.links).toEqual([]) // no public gameplay video is known
   })
 
   it('features the three honors without unconfirmed claims', () => {
@@ -86,5 +86,25 @@ describe('merged CV content', () => {
   it('lists languages exactly as approved', () => {
     const langs = cv.skills.groups.find((g) => g.label === 'Languages')!
     expect(value(langs.items)).toEqual(['Persian (native)', 'English (C1, IELTS Academic 7.0)', 'Finnish (A2)', 'German (A1)'])
+  })
+})
+
+describe('finished content', () => {
+  it('has no pending fields anywhere: unknown facts are omitted, never shown as placeholders', () => {
+    const pendingPaths: string[] = []
+    const walk = (x: unknown, path: string) => {
+      if (Array.isArray(x)) x.forEach((y, i) => walk(y, `${path}[${i}]`))
+      else if (x && typeof x === 'object') {
+        if ((x as { state?: unknown }).state === 'pending') pendingPaths.push(path)
+        for (const [k, y] of Object.entries(x)) walk(y, `${path}.${k}`)
+      }
+    }
+    walk(cv, 'cv')
+    expect(pendingPaths).toEqual([])
+  })
+
+  it('marks every section and project complete', () => {
+    expect([cv.education, cv.experience, cv.projects, cv.skills, cv.contact].map((s) => s.status)).toEqual(['real', 'real', 'real', 'real', 'real'])
+    expect(cv.projects.projects.map((p) => p.status)).toEqual(['real', 'real', 'real'])
   })
 })

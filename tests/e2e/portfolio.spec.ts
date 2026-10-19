@@ -9,7 +9,9 @@ test('view portfolio shows every section with honest badges and loads no 3D code
   for (const title of ['Education & Research', 'Experience', 'Projects', 'Skills', 'Contact']) {
     await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible()
   }
-  await expect(page.getByText('IN DOCUMENTATION').first()).toBeVisible()
+  // Finished: nothing unknown is shown as a placeholder or an in-progress badge.
+  await expect(page.getByText('[pending]')).toHaveCount(0)
+  await expect(page.getByText('IN DOCUMENTATION')).toHaveCount(0)
   await expect(page.getByText('PLACEHOLDER')).toHaveCount(0)
   await expect(page.getByText('AWAITING DATA')).toHaveCount(0)
   for (const honor of ['Grand Tour XR', 'WasteGo', 'Who Are You?']) await expect(page.getByText(honor).first()).toBeVisible()

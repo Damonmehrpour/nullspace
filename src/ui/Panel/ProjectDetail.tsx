@@ -36,13 +36,15 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
         <Row label="My role">
           <FieldText field={project.role} />
         </Row>
-        <Row label="Technologies">
-          <FieldText field={project.tech} />
-        </Row>
-        {project.links.length > 0 && (
+        {project.tech?.state === 'confirmed' && (
+          <Row label="Technologies">
+            <FieldText field={project.tech} />
+          </Row>
+        )}
+        {project.links.some((l) => l.url.state === 'confirmed') && (
           <Row label="Links">
             <ul className="m-0 list-none space-y-1 p-0">
-              {project.links.map((l) => (
+              {project.links.filter((l) => l.url.state === 'confirmed').map((l) => (
                 <li key={l.label}>
                   {l.url.state === 'confirmed' ? (
                     <a href={l.url.value} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">

@@ -33,7 +33,8 @@ export type Project = {
   context?: Field<string>
   summary: Field<string>
   role: Field<string>
-  tech: Field<string[]>
+  /** Omitted when no source states it. */
+  tech?: Field<string[]>
   media: Media[]
   links: Link[]
   appearance: 'featured' | 'technical' | 'experimental'
@@ -41,7 +42,7 @@ export type Project = {
 }
 
 /** A recognised result tied to a named project (hackathons, summer school). */
-export type Honor = { project: string; award: Field<string>; event: string; year: Field<string>; detail: Field<string>; areas: Area[] }
+export type Honor = { project: string; award: Field<string>; event: string; year?: Field<string>; detail: Field<string>; areas: Area[] }
 
 export type Publication = { citation: Field<string>; url?: Field<string> }
 

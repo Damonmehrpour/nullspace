@@ -1,7 +1,7 @@
 // Merged from the author's three CVs and game portfolio, with the author's review decisions
-// (docs/cv-merge-review.md). Only confirmed facts are `confirmed`; anything still open is `pending`.
+// (docs/cv-merge-review.md). Only confirmed facts are included; anything no source states is omitted.
 // The 3D world and the panels read this file only.
-import { confirmed, pending, type CV } from './schema'
+import { confirmed, type CV } from './schema'
 
 const c = confirmed
 
@@ -114,7 +114,7 @@ export const cv: CV = {
 
   projects: {
     id: 'projects',
-    status: 'partial',
+    status: 'real',
     title: 'Projects',
     projects: [
       {
@@ -132,12 +132,12 @@ export const cv: CV = {
       },
       {
         id: 'project-02',
-        status: 'partial',
+        status: 'real',
         name: c('LLM-Driven AI Avatars'),
         context: c('MSc thesis, University of Oulu (2025), and an HHAI 2025 demo'),
         summary: c('A framework for emotionally adaptive interaction with LLM-driven AI avatars in virtual reality. A preliminary demo of a meta-cognitive 3D AI avatar in VR was presented in the HHAI 2025 Demo Track.'),
         role: c('Thesis author; co-author of the HHAI 2025 demo (Mehrpour Moghadam, S.M., Chen, H.).'),
-        tech: pending('technology stack to be documented'),
+        // No source states this project's tech stack, so it is omitted rather than guessed.
         media: [],
         links: [{ kind: 'external', label: 'Read the thesis', url: c('https://oulurepo.oulu.fi/handle/10024/56921') }],
         appearance: 'technical',
@@ -145,7 +145,7 @@ export const cv: CV = {
       },
       {
         id: 'project-03',
-        status: 'partial',
+        status: 'real',
         name: c('Mobile games at Medrick'),
         context: c('Game Developer, Medrick mobile game studio (08/2020 – 12/2021)'),
         summary: c('Worked on 7+ mobile game projects, four of which reached release: Monster Squish, Baby Musk, Arrow and Color Finch.'),
@@ -177,7 +177,8 @@ export const cv: CV = {
             caption: 'Color Finch: guide the bird through obstacles via the part that matches its colour. The wrong colour ends the run.',
           },
         ],
-        links: [{ kind: 'external', label: 'Gameplay video', url: pending('link to be provided') }],
+        // No public gameplay video is known for these titles (the CV's GamePlay link is the XR Meditation demo).
+        links: [],
         appearance: 'experimental',
         areas: ['game'],
       },
@@ -195,7 +196,7 @@ export const cv: CV = {
         project: 'WasteGo',
         award: c('4th place'),
         event: 'ScaleHack AI Hackathon',
-        year: pending(),
+        // The year isn't stated in any source, so it is omitted.
         detail: c('A Pokémon GO-inspired gamified recycling experience that encourages players to sort garbage and waste into the correct bins.'),
         areas: ['game'],
       },

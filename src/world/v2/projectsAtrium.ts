@@ -8,6 +8,6 @@ export type Plaque = { title: string; award: string; event: string }
  */
 export function honorPlaques(honors: Honor[]): Plaque[] {
   return honors.flatMap((h) =>
-    h.award.state === 'confirmed' ? [{ title: h.project, award: h.award.value, event: h.year.state === 'confirmed' ? `${h.event} ${h.year.value}` : h.event }] : [],
+    h.award.state === 'confirmed' ? [{ title: h.project, award: h.award.value, event: h.year?.state === 'confirmed' ? `${h.event} ${h.year.value}` : h.event }] : [],
   )
 }

@@ -19,10 +19,8 @@ export function MediaItem({ media }: { media: Media }) {
   const [playing, setPlaying] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  if (media.src.state === 'pending') {
-    const fallback = media.kind === 'image' ? 'image coming soon' : 'video coming soon'
-    return <Unavailable media={media} why={media.src.note ?? fallback} />
-  }
+  // Media without a confirmed source is simply not shown.
+  if (media.src.state === 'pending') return null
   if (failed) return <Unavailable media={media} why="media unavailable" />
 
   const src = media.src.value
