@@ -14,7 +14,7 @@ export function ContactView({ section }: { section: ContactSection }) {
         {section.channels.map((c) => (
           <Entry key={c.label} heading={c.label}>
             {c.value.state === 'confirmed' && c.url?.state === 'confirmed' ? (
-              <a href={c.url.value} className="font-semibold underline underline-offset-4" {...(c.kind === 'email' ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
+              <a href={c.url.value} className="font-semibold underline underline-offset-4" {...(c.kind === 'email' || c.kind === 'phone' ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
                 {c.value.value}
               </a>
             ) : (

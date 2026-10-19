@@ -29,3 +29,14 @@ test('portfolio has no horizontal scroll', async ({ page }) => {
   }))
   expect(scrollWidth).toBeLessThanOrEqual(innerWidth)
 })
+
+// Runs on desktop and on the touch (mobile) project: the public phone number is a dialable tel: link.
+test('portfolio contact offers the phone number as a tel: link', async ({ page }) => {
+  await gotoEntry(page)
+  await page.getByRole('button', { name: 'VIEW PORTFOLIO' }).click()
+  const phone = page.getByRole('link', { name: '+358 45 8629910' })
+  await phone.scrollIntoViewIfNeeded()
+  await expect(phone).toBeVisible()
+  await expect(phone).toHaveAttribute('href', 'tel:+358458629910')
+  await expect(phone).not.toHaveAttribute('target', '_blank')
+})

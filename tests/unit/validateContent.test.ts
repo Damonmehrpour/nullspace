@@ -111,6 +111,30 @@ describe('validateContent', () => {
     expect(rules(cv)).toEqual([])
   })
 
+  it('accepts a dialable tel: url on a phone channel', () => {
+    const cv = validCV()
+    cv.contact.status = 'partial'
+    cv.contact.channels.push({ kind: 'phone', label: 'Phone', value: confirmed('+358 45 0000000'), url: confirmed('tel:+358450000000') })
+    expect(rules(cv)).toEqual([])
+  })
+
+  it('flags a phone channel url that is not a dialable tel: link', () => {
+    for (const url of ['https://example.com', 'tel:+358 45 0000000', 'tel:0450000000x']) {
+      const cv = validCV()
+      cv.contact.status = 'partial'
+      cv.contact.channels.push({ kind: 'phone', label: 'Phone', value: confirmed('+358 45 0000000'), url: confirmed(url) })
+      expect(rules(cv), url).toContain('bad-url')
+    }
+  })
+
+  it('flags a tel: url on a channel that is not a phone', () => {
+    const cv = validCV()
+    cv.contact.status = 'partial'
+    cv.contact.channels[0].value = confirmed('me@example.com')
+    cv.contact.channels[0].url = confirmed('tel:+358450000000')
+    expect(rules(cv)).toContain('bad-url')
+  })
+
   it('flags claims the author has corrected', () => {
     const cv = validCV()
     cv.projects.projects[0].summary = confirmed('Shipped more than seven mobile games')

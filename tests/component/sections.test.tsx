@@ -38,12 +38,14 @@ describe('section views', () => {
     expect(screen.getByText('English (C1, IELTS Academic 7.0)')).toBeInTheDocument()
   })
 
-  it('contact lists email, GitHub, LinkedIn and availability without a phone number', () => {
+  it('contact lists email, a dialable phone number, GitHub, LinkedIn and availability', () => {
     render(<ContactView section={cv.contact} />)
     expect(screen.getByRole('link', { name: 'github.com/Damonmehrpour' })).toHaveAttribute('href', 'https://github.com/Damonmehrpour')
+    const phone = screen.getByRole('link', { name: '+358 45 8629910' })
+    expect(phone).toHaveAttribute('href', 'tel:+358458629910')
+    expect(phone).not.toHaveAttribute('target') // dials in place, no new tab
     expect(screen.getByText('Oulu, Finland')).toBeInTheDocument()
     expect(screen.getByText('Open to remote work and relocation opportunities')).toBeInTheDocument()
-    expect(document.body.textContent).not.toMatch(/\+358/)
   })
 
   it('projects view lists the honors with their projects', () => {

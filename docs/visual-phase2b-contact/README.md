@@ -16,7 +16,7 @@
 
 **Discovery:** the first time on a visit you approach a stone, **a pulse of light climbs its cable to the tower**, the cable stays lit, and the kokedama reacts (hop, glow, perked leaves). The **first-visit reveal** lights the slab tips one by one from the bottom up, then the beacon ignites.
 
-**All contact facts come from the CV content** (`contactStones()` and `contactBase()`, unit-tested). Pending channels or lines are never engraved. **The approved phone number isn't added yet**, because adding it to the content, the panel and the 2D portfolio is the planned Phase 3 work. Once it's in the content, it will automatically get its own stone and cable here. Discord and the personal YouTube channel stay excluded.
+**All contact facts come from the CV content** (`contactStones()` and `contactBase()`, unit-tested). Pending channels or lines are never engraved. **Update (Phase 3):** the approved phone number is now in the content, so it has its own stone and cable here (see `docs/visual-phase3/`). Discord and the personal YouTube channel stay excluded.
 
 **Unchanged:** the Contact panel and its links (it still opens at the arrival ring), accessibility, the 2D portfolio, Low quality and reduced motion. The tower fades for the camera like the other tall structures.
 

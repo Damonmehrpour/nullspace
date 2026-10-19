@@ -25,3 +25,15 @@ export const dialogue: DialogueTable = {
   'revisit:skills': { lines: ['The cubes stay where you left them.'], cooldownMs: 45 * S, probability: 0.5 },
   'revisit:contact': { lines: ['Ready to say hello?'], cooldownMs: 45 * S, probability: 0.5 },
 }
+
+/**
+ * Story moments: short exchanges tied to a project artifact, played the first time per visit the
+ * player comes within its interaction range. Wording by the author; keep it exactly as written.
+ */
+export const storyMoments: Record<string, { lines: string[]; pauseMs: number }> = {
+  // XR Meditation System: where the idea of the kokedama began.
+  'project-01': {
+    lines: ['Oh… this is actually where I was first born.', 'Well, not exactly me. But the idea that became me started here.'],
+    pauseMs: 1500,
+  },
+}

@@ -21,7 +21,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { GUIDE } from '../../core/config'
 import { useRenderBudget } from '../quality'
 import { reducedMotion, sim } from '../sim'
-import { guideCue } from './cues'
+import { guideCue, guideLook } from './cues'
 import { NOISE_GLSL } from './glsl'
 import { leafShape } from './shapes'
 import { radialShadowTexture } from './textures'
@@ -275,7 +275,9 @@ export function GuideBodyV2() {
     const speed = Math.min(mo.vel.length(), 5)
     mo.swing.lerp(mo.vel.clone().multiplyScalar(-0.09 * calm), 1 - Math.exp(-dt * 4))
 
-    const targetYaw = -pose.facing
+    // While telling a story the kokedama turns toward what it is talking about.
+    const looking = performance.now() < guideLook.untilMs
+    const targetYaw = looking ? -Math.atan2(guideLook.z - pose.position.z, guideLook.x - pose.position.x) : -pose.facing
     r.rotation.y += Math.atan2(Math.sin(targetYaw - r.rotation.y), Math.cos(targetYaw - r.rotation.y)) * 0.12
 
     // The player: lean toward them while waiting; ruffle when they brush past.

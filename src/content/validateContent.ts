@@ -68,8 +68,8 @@ function checkItem(item: unknown, status: ItemStatus, path: string, issues: Cont
     if (status === 'pending-content' && field.state === 'confirmed') {
       issues.push({ path: p, rule: 'pending-content-has-confirmed', message: 'Pending-content item has a confirmed field' })
     }
-    if (key === 'url' && field.state === 'confirmed' && typeof field.value === 'string' && !/^(https:|mailto:)/.test(field.value)) {
-      issues.push({ path: p, rule: 'bad-url', message: 'Urls must use https: (or mailto: for email)' })
+    if (key === 'url' && field.state === 'confirmed' && typeof field.value === 'string' && !/^(https:|mailto:|tel:)/.test(field.value)) {
+      issues.push({ path: p, rule: 'bad-url', message: 'Urls must use https: (or mailto: for email, tel: for phone)' })
     }
     if (ADDRESS_KEYS.has(key)) continue
     for (const text of textValues(field)) {
@@ -116,9 +116,11 @@ export function validateContent(cv: CV, worldSectionIds: readonly SectionId[]): 
   cv.contact.channels.forEach((c, i) => {
     const url = confirmedValue(c.url)
     if (url === null) return
-    const ok = c.kind === 'email' ? url.startsWith('mailto:') : url.startsWith('https:')
+    // Email must be mailto:, a phone a dialable tel: (digits only, optional leading +), anything else https:.
+    const ok = c.kind === 'email' ? url.startsWith('mailto:') : c.kind === 'phone' ? /^tel:\+?\d+$/.test(url) : url.startsWith('https:')
     if (!ok) {
-      issues.push({ path: `contact.channels[${i}].url`, rule: 'bad-url', message: c.kind === 'email' ? 'Email url must be mailto:' : 'Url must use https:' })
+      const message = c.kind === 'email' ? 'Email url must be mailto:' : c.kind === 'phone' ? 'Phone url must be tel: with digits only' : 'Url must use https:'
+      issues.push({ path: `contact.channels[${i}].url`, rule: 'bad-url', message })
     }
   })
 

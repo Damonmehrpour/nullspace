@@ -1,6 +1,6 @@
 # Visual Rebirth: audit and plan
 
-Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture): Experience, Projects and Skills approved; Contact (`docs/visual-phase2b-contact/`) awaiting review.** Later phases haven't started.
+Status: **Phases 0 and 2A approved; Phase 1 delivered. Phase 2B (island architecture) approved on all islands; Phase 3 (story and contact, `docs/visual-phase3/`) awaiting review.** The UI/UX and final passes haven't started.
 
 Constraints carried over: preserve gameplay, CV content, accessibility, navigation and fallbacks. Protect real-device performance (author baseline: 45–55 fps). No bloom, grain or post-processing as a substitute for art direction. Avoid excessive geometry.
 
@@ -80,9 +80,9 @@ Add the public number **+358 45 8629910**, linked as `tel:+358458629910`, in the
 | 0. Proof of concept | Material, lighting, void, Education, first kokedama, camera | Accepted |
 | 1. Global look | Walkways, bridge, chamfers, contact shadows across the world | Delivered |
 | 2A. Character prototype | Hooded wanderer plus the upgraded kokedama | **Approved** (faceless wanderer and kokedama are the character baseline) |
-| **2B. Island architecture** | Per your direction, after 2A approval: one island at a time, each stopping for review. Experience (Monumental Corridor of Portals) **approved** (`docs/visual-phase2b/`). Projects (sunken atrium under a floating ring) **approved** (`docs/visual-phase2b-projects/`). Skills (the Data City) **approved** (`docs/visual-phase2b-skills/`). **Contact (the Signal Tower) delivered** (`docs/visual-phase2b-contact/`) | **Contact: awaiting review** |
+| **2B. Island architecture** | Per your direction, after 2A approval: one island at a time, each stopping for review. Experience (Monumental Corridor of Portals) **approved** (`docs/visual-phase2b/`). Projects (sunken atrium under a floating ring) **approved** (`docs/visual-phase2b-projects/`). Skills (the Data City) **approved** (`docs/visual-phase2b-skills/`). Contact (the Signal Tower) **approved** (`docs/visual-phase2b-contact/`) | **Approved** |
 | 2C. Character finish | Polish from feedback; the kokedama's environmental reactions across the world; Low-quality variants; reduced-motion review | Later |
-| 3. Story and contact | XR Meditation dialogue moment; contact number in the panel, the 2D portfolio and mobile | After 2B |
+| **3. Story and contact** | XR Meditation story moment; phone number in the content, panel, 2D portfolio and mobile (and the Signal Tower) (`docs/visual-phase3/`) | **Delivered: awaiting review** |
 | 5. UI/UX | Prompts, navigation, panels, typography and spacing, transitions, mobile and keyboard | After the islands (can run alongside them if you prefer) |
 | 6. Atmosphere and final pass | Light shafts, fog and camera polish, final performance pass, full screenshot set, final review | Last |
 

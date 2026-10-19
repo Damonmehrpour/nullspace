@@ -60,7 +60,8 @@ type Placed = { x: number; z: number; theta: number }
 /** The stones fan out in front of the tower, toward the plaza. */
 function stonePlaces(n: number): Placed[] {
   return Array.from({ length: n }, (_, k) => {
-    const theta = deg(180 + (k - (n - 1) / 2) * STONE.spread)
+    // Mirrored so that, seen from the arrival ring, the stones read left to right in CV order.
+    const theta = deg(180 - (k - (n - 1) / 2) * STONE.spread)
     return { x: T.x + STONE.r * Math.cos(theta), z: T.z + STONE.r * Math.sin(theta), theta }
   })
 }

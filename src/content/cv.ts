@@ -249,6 +249,8 @@ export const cv: CV = {
     availability: c('Open to remote work and relocation opportunities'),
     channels: [
       { kind: 'email', label: 'Email', value: c('damons3m@gmail.com'), url: c('mailto:damons3m@gmail.com') },
+      // Public number approved by the author (supersedes the earlier no-phone rule).
+      { kind: 'phone', label: 'Phone', value: c('+358 45 8629910'), url: c('tel:+358458629910') },
       { kind: 'github', label: 'GitHub', value: c('github.com/Damonmehrpour'), url: c('https://github.com/Damonmehrpour') },
       { kind: 'linkedin', label: 'LinkedIn', value: c('linkedin.com/in/damon-mehrpour-128079250'), url: c('https://www.linkedin.com/in/damon-mehrpour-128079250/') },
     ],

@@ -71,7 +71,7 @@ test('island views', async ({ page }, info) => {
   }
   if (island === 'contact') {
     // In front of each channel stone (fanned around the tower toward the plaza), facing it.
-    for (const [name, deg] of [['stone-left', -46], ['stone-centre', 0], ['stone-right', 46]] as const) {
+    for (const [name, deg] of [['stone-1', -69], ['stone-2', -23], ['stone-3', 23], ['stone-4', 69]] as const) {
       const t = ((180 + deg) * Math.PI) / 180
       await play(name, 2.4 + 5.0 * Math.cos(t), 5.0 * Math.sin(t), t + Math.PI)
     }

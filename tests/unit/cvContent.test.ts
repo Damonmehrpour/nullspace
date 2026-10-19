@@ -69,12 +69,17 @@ describe('merged CV content', () => {
     expect(allText).not.toMatch(/neural network/i)
   })
 
-  it('contact shows email, GitHub, LinkedIn and availability, but no phone and no résumé download', () => {
+  it('contact shows email, phone, GitHub, LinkedIn and availability, but no Discord, personal YouTube or résumé download', () => {
     const kinds = cv.contact.channels.map((c) => c.kind)
-    expect(kinds).toEqual(['email', 'github', 'linkedin'])
+    expect(kinds).toEqual(['email', 'phone', 'github', 'linkedin'])
+    // The public number the author approved (it replaced the earlier no-phone rule), dialable as tel:.
+    const phone = cv.contact.channels.find((c) => c.kind === 'phone')!
+    expect(value(phone.value)).toBe('+358 45 8629910')
+    expect(phone.url && value(phone.url)).toBe('tel:+358458629910')
+    expect(allText).not.toMatch(/discord/i)
     expect(value(cv.contact.location)).toBe('Oulu, Finland')
     expect(value(cv.contact.availability)).toBe('Open to remote work and relocation opportunities')
-    expect(allText).not.toMatch(/\+358|tel:|resume|résumé\.pdf/i)
+    expect(allText).not.toMatch(/resume|résumé\.pdf/i)
     expect('resumePdf' in cv.contact).toBe(false)
   })
 

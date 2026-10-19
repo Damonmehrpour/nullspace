@@ -4,3 +4,6 @@
  * small hop and a brief glow. Purely visual; it doesn't touch the guide's brain or dialogue.
  */
 export const guideCue = { seq: 0 }
+
+/** Where the kokedama should look while it tells a story (world x/z), until `untilMs` (performance.now()). */
+export const guideLook = { x: 0, z: 0, untilMs: 0 }

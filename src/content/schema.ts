@@ -64,7 +64,7 @@ export type ExperienceEntry = {
 }
 export type SkillGroup = { label: string; items: Field<string[]>; areas?: Area[] }
 export type ContactChannel = {
-  kind: 'email' | 'linkedin' | 'github' | 'website' | 'other'
+  kind: 'email' | 'phone' | 'linkedin' | 'github' | 'website' | 'other'
   label: string
   value: Field<string>
   url?: Field<string>

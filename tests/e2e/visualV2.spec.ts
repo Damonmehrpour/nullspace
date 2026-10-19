@@ -239,7 +239,7 @@ test('v2: approaching each contact stone discovers it once', async ({ page }, in
   const a = ((90 - 4 * 72) * Math.PI) / 180 // Contact: fifth island on the ring
   const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
   const local = (x: number, z: number) => ({ x: c.x + x * Math.cos(a) - z * Math.sin(a), z: c.z + x * Math.sin(a) + z * Math.cos(a) })
-  // Stones fan around the tower (2.4, 0) at 3.15 m, at 180° and ±46°; stand 1 m in front of each.
+  // Stones fan around the tower (2.4, 0) at 3.15 m, 46° apart around 180° (four channels: ±23°, ±69°); stand 1 m in front of each.
   const front = (deg: number) => {
     const t = ((180 + deg) * Math.PI) / 180
     return local(2.4 + 4.15 * Math.cos(t), 4.15 * Math.sin(t))
@@ -249,11 +249,11 @@ test('v2: approaching each contact stone discovers it once', async ({ page }, in
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
   for (const pass of [1, 2]) {
-    for (const deg of [-46, 0, 46]) {
+    for (const deg of [-69, -23, 23, 69]) {
       await ns('setView', front(deg), a)
       await page.waitForTimeout(200)
     }
-    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 3)
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 4)
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })

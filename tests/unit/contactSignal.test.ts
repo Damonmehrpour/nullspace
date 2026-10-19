@@ -6,6 +6,7 @@ describe('Contact signal tower (data)', () => {
   it('gives each public channel its own stone, with the CV label and value, in order', () => {
     expect(contactStones(cv.contact.channels)).toEqual([
       { label: 'Email', value: 'damons3m@gmail.com' },
+      { label: 'Phone', value: '+358 45 8629910' },
       { label: 'GitHub', value: 'github.com/Damonmehrpour' },
       { label: 'LinkedIn', value: 'linkedin.com/in/damon-mehrpour-128079250' },
     ])
