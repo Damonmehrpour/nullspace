@@ -175,8 +175,9 @@ const FROND_LEAVES = 3
 const BUDS = 5
 
 export function GuideBodyV2() {
-  const { playerLight } = useRenderBudget()
-  const fullDetail = playerLight // Low quality drops the fuzz shells and buds
+  const { detail } = useRenderBudget()
+  const fullDetail = detail !== 'low' // Low drops the fuzz shells
+  const showBuds = detail === 'high' // Medium and Low hide the buds
   const root = useRef<Group>(null)
   const body = useRef<Group>(null)
   const leaves = useRef<InstancedMesh>(null)
@@ -346,7 +347,7 @@ export function GuideBodyV2() {
             </instancedMesh>
           </group>
           {/* Hidden (not unmounted) on Low: unmounting disposes its material and returning to High would recompile. */}
-          <instancedMesh name="v2-buds" ref={buds} args={[budGeo, undefined, BUDS]} visible={fullDetail}>
+          <instancedMesh name="v2-buds" ref={buds} args={[budGeo, undefined, BUDS]} visible={showBuds}>
             <meshLambertMaterial color="#f3ecd6" emissive="#3a3526" emissiveIntensity={0.6} />
           </instancedMesh>
           {roots.map((rt, i) => (

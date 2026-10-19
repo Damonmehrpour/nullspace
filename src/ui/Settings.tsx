@@ -22,7 +22,7 @@ function Radio<K extends keyof SettingsData>({ name, value, label, field }: { na
   )
 }
 
-function Check({ field, label, hint }: { field: 'typing' | 'subtitles'; label: string; hint: string }) {
+function Check({ field, label, hint }: { field: 'typing' | 'subtitles' | 'invertLook'; label: string; hint: string }) {
   const checked = useStore((s) => s.settings[field])
   const update = useStore((s) => s.updateSettings)
   const hintId = useId()
@@ -55,10 +55,21 @@ export function Settings({ onClose }: { onClose: () => void }) {
         <Radio name="reduced-motion" field="reducedMotion" value="off" label="Off" />
       </Group>
       <Group legend="Quality">
+        <Radio name="quality" field="quality" value="auto" label="Auto" />
         <Radio name="quality" field="quality" value="high" label="High" />
+        <Radio name="quality" field="quality" value="medium" label="Medium" />
         <Radio name="quality" field="quality" value="low" label="Low" />
-        <p className="m-0 w-full text-sm text-graphite">High lowers itself automatically if the frame rate drops. Low is lighter for older devices.</p>
+        <p className="m-0 w-full text-sm text-graphite">Auto picks a level for this device. Every level lowers itself if the frame rate drops, and never rises above your choice. Low is lightest for older devices.</p>
       </Group>
+      <Group legend="Camera">
+        <Radio name="look-sensitivity" field="lookSensitivity" value="low" label="Slow" />
+        <Radio name="look-sensitivity" field="lookSensitivity" value="normal" label="Normal" />
+        <Radio name="look-sensitivity" field="lookSensitivity" value="high" label="Fast" />
+        <p className="m-0 w-full text-sm text-graphite">How fast dragging turns the camera.</p>
+      </Group>
+      <div className="border-t-2 border-slab py-2">
+        <Check field="invertLook" label="Invert vertical look" hint="Drag up (or press K) to look down instead of up." />
+      </div>
     </Panel>
   )
 }

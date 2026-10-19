@@ -1,7 +1,8 @@
 import { PerformanceMonitor } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createQuality, onDecline, onIncline, renderBudget } from '../core/quality'
+import { capabilities } from '../core/capabilities'
+import { createQuality, detectQualityTier, onDecline, onIncline, renderBudget, type DeviceHints, type QualityLevel } from '../core/quality'
 import { useStore } from '../state/store'
 import { ARROW_ID } from './guide/OffscreenArrow'
 import { Precompile } from './Precompile'
@@ -15,6 +16,17 @@ import { markContextLost, registerWorldContext, type WorldProps } from '../ui/wo
 
 const CONTEXT_RESTORE_MS = 3000
 
+/** What the browser tells us about this device (renderer filled in once the GL context exists). */
+function deviceHints(renderer = ''): DeviceHints {
+  const nav = navigator as Navigator & { deviceMemory?: number }
+  return { renderer, cores: nav.hardwareConcurrency || undefined, memory: nav.deviceMemory, touch: capabilities.isTouchFirst() }
+}
+
+function rendererName(gl: WebGLRenderingContext | WebGL2RenderingContext): string {
+  const ext = gl.getExtension('WEBGL_debug_renderer_info')
+  return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? '')
+}
+
 /** The lazily loaded 3D world. The only module tree that imports three.js. */
 export default function WorldRoot({ onFailure }: WorldProps) {
   const lostTimer = useRef<number | null>(null)
@@ -27,11 +39,13 @@ export default function WorldRoot({ onFailure }: WorldProps) {
     useStore.getState().setPhase('world')
   }, [])
   const chosen = useStore((s) => s.settings.quality)
-  const [quality, setQuality] = useState(() => createQuality(chosen))
+  // Auto: a conservative level for this device, refined with the GPU's name once the context exists.
+  const [detected, setDetected] = useState<QualityLevel>(() => detectQualityTier(deviceHints()))
+  const [quality, setQuality] = useState(() => createQuality(chosen, detected))
   const budget = useMemo(() => renderBudget(quality), [quality])
 
-  // The visitor's choice is the ceiling; a new choice restarts adaptation from it.
-  useEffect(() => setQuality(createQuality(chosen)), [chosen])
+  // The visitor's choice (or the detected level on Auto) is the ceiling; a change restarts adaptation.
+  useEffect(() => setQuality(createQuality(chosen, detected)), [chosen, detected])
   useEffect(() => {
     sim.quality = quality
     // v2: adaptive Low also drops the per-pixel concrete detail, not just the moss fuzz.
@@ -45,12 +59,14 @@ export default function WorldRoot({ onFailure }: WorldProps) {
   return (
     <div id="world-canvas" tabIndex={-1} className="fixed inset-0 outline-none" aria-label="3D world">
       <Canvas
-        dpr={budget.dpr}
+        // Never render more pixels than the screen has: a 1x display stays at 1x even on High.
+        dpr={[1, budget.dpr]}
         frameloop={contextLost || !compiled ? 'never' : 'always'}
         camera={{ fov: V2 ? 42 : 50, near: 0.1, far: V2 ? 900 : 200, position: [0, 4, -6] }}
         onCreated={({ gl }) => {
           const canvas = gl.domElement
           registerWorldContext(gl.getContext())
+          setDetected(detectQualityTier(deviceHints(rendererName(gl.getContext()))))
           canvas.addEventListener('webglcontextlost', (e) => {
             e.preventDefault()
             markContextLost()

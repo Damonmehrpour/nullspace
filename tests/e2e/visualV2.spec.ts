@@ -54,23 +54,28 @@ test('the clean URL shows the finished (v2) world; ?visual=v1 keeps the original
   expect(await wanderer()).toBe(0)
 })
 
-// Dropping to Low quality (by hand or adaptively) must not recompile shaders: a recompile cascade
-// froze slow machines for seconds right when they most needed relief.
+// Changing quality (by hand or adaptively) must not recompile shaders: a recompile cascade froze
+// slow machines for seconds right when they most needed relief. Starts from High, then steps down.
 for (const variant of ['v1', 'v2'] as const) {
-  test(`${variant}: switching to Low quality compiles no new shader programs`, async ({ page }, info) => {
+  test(`${variant}: stepping from High to Medium to Low compiles no new shader programs`, async ({ page }, info) => {
     test.skip(isTouchProject(info.project.name), 'desktop only')
     await gotoEntry(page)
-    if (variant === 'v2') await page.goto('/?visual=v2')
+    if (variant === 'v1') await page.goto('/?visual=v1')
     await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
     await expect(page.locator('#world-canvas canvas')).toBeVisible({ timeout: 15_000 })
     await page.waitForFunction(() => '__nullspace' in window)
     const programs = () => page.evaluate(() => (window as unknown as { __nullspace: { listPrograms(): string[] } }).__nullspace.listPrograms().length)
-    await page.waitForTimeout(800)
+    const choose = async (label: string) => {
+      await page.getByRole('button', { name: 'Settings' }).click()
+      await page.getByRole('dialog', { name: 'Settings' }).getByRole('radio', { name: label, exact: true }).click()
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(800)
+    }
+    await choose('High')
     const before = await programs()
-    await page.getByRole('button', { name: 'Settings' }).click()
-    await page.getByRole('dialog', { name: 'Settings' }).getByRole('radio', { name: 'Low', exact: true }).click()
-    await page.keyboard.press('Escape')
-    await page.waitForTimeout(800)
+    await choose('Medium')
+    expect(await programs()).toBe(before)
+    await choose('Low')
     expect(await programs()).toBe(before)
   })
 }

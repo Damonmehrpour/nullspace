@@ -42,7 +42,10 @@ export type NullspaceHooks = {
   look(yaw: number, pitch: number, zoom: number): void
   getCameraInfo(): { position: [number, number, number]; forward: [number, number, number]; yaw: number; pitch: number; zoom: number; facing: number }
   materialsUnder(name: string): { mesh: string; type: string; color: string; emissive: string | null }[]
-  lockQuality(): void
+  /** Pins the quality (High by default) and stops adaptation: deterministic screenshots and profiles. */
+  lockQuality(level?: 'high' | 'medium' | 'low'): void
+  /** Stops adaptive quality without changing the visitor's setting. */
+  holdQuality(): void
   startTimeline(): void
   /** Ablation: hide/show every object whose name starts with prefix; returns how many matched. */
   setVisibleByName(prefix: string, visible: boolean): number
@@ -134,7 +137,11 @@ export function installTestHooks(): void {
       sim.timeline = []
     },
     getTimeline: () => sim.timeline ?? [],
-    lockQuality: () => {
+    holdQuality: () => {
+      sim.qualityLocked = true
+    },
+    lockQuality: (level = 'high') => {
+      useStore.getState().updateSettings({ quality: level })
       sim.qualityLocked = true
     },
     getPlayer: () => ({ pos: sim.player.pos, facing: sim.player.facing }),

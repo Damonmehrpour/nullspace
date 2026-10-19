@@ -96,10 +96,9 @@ function Megastructures() {
   )
 }
 
-/** Slow drifting dust in the space around the ring. GPU-animated; fewer motes on Low. */
+/** Slow drifting dust in the space around the ring. GPU-animated; fewer motes at lower quality. */
 function Dust() {
-  const { spores } = useRenderBudget()
-  const count = spores > 30 ? 420 : 140
+  const { dust: count } = useRenderBudget()
   const gl = useThree((s) => s.gl)
   const { geo, mat } = useMemo(() => {
     const g = new BufferGeometry()

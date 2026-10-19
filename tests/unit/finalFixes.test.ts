@@ -67,9 +67,10 @@ describe('M6: touch "Guide me there" brings the guide along', () => {
 describe('M7: adaptive quality stops flip-flopping', () => {
   it('locks to Low after three down/up cycles', () => {
     let q = createQuality('high')
-    for (let i = 0; i < 3; i++) q = onIncline(onIncline(onDecline(onDecline(q))))
-    q = onDecline(onDecline(q))
+    // Three steps down from High (pixel ratio, Medium, Low) and three back up, three times.
+    for (let i = 0; i < 3; i++) q = onIncline(onIncline(onIncline(onDecline(onDecline(onDecline(q))))))
+    q = onDecline(onDecline(onDecline(q)))
     expect(q.effective).toBe('low')
-    expect(onIncline(onIncline(q)).effective).toBe('low')
+    expect(onIncline(onIncline(onIncline(q))).effective).toBe('low')
   })
 })

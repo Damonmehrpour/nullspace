@@ -1,10 +1,12 @@
+import type { QualityChoice } from '../core/quality'
 import { readJSON, writeJSON } from '../core/safeStorage'
 
 export type Settings = {
   typing: boolean
   reducedMotion: 'system' | 'on' | 'off'
   subtitles: boolean
-  quality: 'high' | 'low'
+  /** Auto picks a level for this device; an explicit level is the ceiling. */
+  quality: QualityChoice
   /** How fast dragging turns the camera. */
   lookSensitivity: 'low' | 'normal' | 'high'
   /** Drag up to look down instead (and I/K swapped). */
@@ -19,7 +21,7 @@ export const STORAGE_KEYS = {
   booted: 'nullspace.booted',
 } as const
 
-export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'high', lookSensitivity: 'normal', invertLook: false }
+export const DEFAULT_SETTINGS: Settings = { typing: true, reducedMotion: 'system', subtitles: true, quality: 'auto', lookSensitivity: 'normal', invertLook: false }
 
 export function loadSettings(): Settings {
   return { ...DEFAULT_SETTINGS, ...readJSON<Partial<Settings>>(STORAGE_KEYS.settings, {}) }
