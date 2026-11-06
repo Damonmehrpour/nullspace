@@ -59,6 +59,7 @@ test('the clean URL shows the finished (v2) world; ?visual=v1 keeps the original
 for (const variant of ['v1', 'v2'] as const) {
   test(`${variant}: stepping from High to Medium to Low compiles no new shader programs`, async ({ page }, info) => {
     test.skip(isTouchProject(info.project.name), 'desktop only')
+    test.setTimeout(90_000) // three quality levels of a full 3D scene on software WebGL
     await gotoEntry(page)
     if (variant === 'v1') await page.goto('/?visual=v1')
     await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
@@ -151,6 +152,7 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
 // compile a new shader (a late compile is a visible hitch on slower machines).
 test('v2: visiting every island compiles no new shader programs', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // five islands brought into view on software WebGL
   await gotoEntry(page)
   await page.goto('/?visual=v2')
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()

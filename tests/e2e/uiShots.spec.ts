@@ -37,7 +37,7 @@ for (const [name, size] of [['desktop', { width: 1366, height: 768 }], ['mobile'
       await page.screenshot({ path: `${dir}/08-settings.png` })
       await page.keyboard.press('Escape')
       await page.getByRole('button', { name: 'Sections' }).click()
-      await page.getByRole('button', { name: /^Experience/ }).first().click()
+      await page.getByRole('button', { name: 'Open', exact: true }).nth(1).click() // the Experience row
       await page.waitForTimeout(600)
       await page.screenshot({ path: `${dir}/09-panel-experience.png` })
     }

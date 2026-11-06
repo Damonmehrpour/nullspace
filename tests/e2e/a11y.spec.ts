@@ -23,6 +23,7 @@ test('2D portfolio (desktop and mobile)', async ({ page }) => {
 
 test('world HUD, settings and a project panel', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
+  test.setTimeout(90_000) // a full 3D load plus four axe scans; slow when the whole suite shares the CPU
   await gotoEntry(page)
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.getByRole('region', { name: 'Controls' }).waitFor()

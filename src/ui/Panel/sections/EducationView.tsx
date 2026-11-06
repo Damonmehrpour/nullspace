@@ -1,6 +1,9 @@
 import type { EducationSection } from '../../../content/schema'
 import { FieldText } from '../../FieldText'
+import { Dates, MetaLine } from '../../MetaLine'
 import { Entry, EntryList } from './EntryList'
+
+const val = (f: { state: string; value?: unknown } | undefined) => (f && f.state === 'confirmed' ? (f.value as string) : null)
 
 export function EducationView({ section }: { section: EducationSection }) {
   return (
@@ -10,11 +13,7 @@ export function EducationView({ section }: { section: EducationSection }) {
           <Entry
             key={i}
             heading={<FieldText field={e.degree} />}
-            meta={
-              <>
-                <FieldText field={e.institution} /> · <FieldText field={e.dates} />
-              </>
-            }
+            meta={<MetaLine parts={[val(e.institution), val(e.dates) && <Dates key="dates">{val(e.dates)}</Dates>]} />}
           >
             {e.notes && <FieldText field={e.notes} as="p" />}
             {e.thesis && (
@@ -39,17 +38,17 @@ export function EducationView({ section }: { section: EducationSection }) {
         ))}
       </EntryList>
       {section.research && (
-        <div className="mt-6 border-t-4 border-current pt-4">
-          <h3 className="m-0 text-xl font-bold">Publications</h3>
-          <ul className="mt-2 mb-0 list-none space-y-2 p-0">
+        <div className="mt-8 border-t-4 border-current pt-6">
+          <h3 className="m-0 text-xl leading-snug font-bold">Publications</h3>
+          <ul className="mt-3 mb-0 list-none space-y-3 p-0">
             {section.research.publications.map((p, i) => (
               <li key={i}>
                 <FieldText field={p.citation} />
               </li>
             ))}
           </ul>
-          <h3 className="mt-5 mb-0 text-xl font-bold">Research interests</h3>
-          <div className="mt-2">
+          <h3 className="mt-8 mb-0 text-xl leading-snug font-bold">Research interests</h3>
+          <div className="mt-3">
             <FieldText field={section.research.interests} />
           </div>
         </div>

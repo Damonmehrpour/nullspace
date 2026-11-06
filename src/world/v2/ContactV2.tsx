@@ -14,6 +14,7 @@ import { TITLE_FONT } from '../space'
 import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
 import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { contactBase, contactStones } from './contactSignal'
+import { CORE, deg, HOUSE, SLAB, SLABS, STONE, stonePlaces, T, type Placed } from './contactLayout'
 import { guideCue } from './cues'
 
 // Contact: the signal tower. Offset slabs spiral up a slender core to a dish aimed at the void, with a
@@ -22,23 +23,12 @@ import { guideCue } from './cues'
 // Approaching a stone sends a pulse up its cable. Location and availability are engraved on the
 // station house at the tower's foot. Island-local space: +x points outward.
 
-const T = { x: 2.4, z: 0 } // tower axis
-const SLABS = 6
-const SLAB = { len: 1.7, t: 0.3, d: 1.0, off: 0.45, y0: 0.95, step: 1.05, turn: 55 }
-const CORE = { w: 0.55, h: 7.0 }
-const HOUSE = { w: 1.5, h: 1.7, d: 0.9 } // the station house at the tower's foot
-// Stones lean back so their faces catch the sky light and face the camera (upright faces sat in shade).
-const STONE = { w: 1.25, h: 1.3, d: 0.22, r: 3.15, spread: 46, lean: deg(30) }
 const DISH = { y: 7.25, r: 1.05, tilt: deg(55) }
 const FIND_RANGE = 1.8
 const PULSE_S = 1.2
 const TEXT_RANGE = 16
 const DIM = new Color('#34383d')
 const LIT = new Color('#eef6e4')
-
-function deg(d: number) {
-  return (d * Math.PI) / 180
-}
 
 type Light = { matrix: Matrix4; base: number; stone?: number; reveal?: number; cable?: { from: Vector3; to: Vector3 } }
 
@@ -55,16 +45,6 @@ function chamfered(w: number, h: number, d: number, x: number, y: number, z: num
   return g.toNonIndexed()
 }
 
-type Placed = { x: number; z: number; theta: number }
-
-/** The stones fan out in front of the tower, toward the plaza. */
-function stonePlaces(n: number): Placed[] {
-  return Array.from({ length: n }, (_, k) => {
-    // Mirrored so that, seen from the arrival ring, the stones read left to right in CV order.
-    const theta = deg(180 - (k - (n - 1) / 2) * STONE.spread)
-    return { x: T.x + STONE.r * Math.cos(theta), z: T.z + STONE.r * Math.sin(theta), theta }
-  })
-}
 
 function buildTower(stones: Placed[], lights: Light[]) {
   const tower: BufferGeometry[] = []

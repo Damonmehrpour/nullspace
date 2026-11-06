@@ -8,10 +8,10 @@ export function EntryList({ children }: { children: ReactNode }) {
 /** One entry. `minor` entries (e.g. freelance work beside industry roles) are set smaller and quieter. */
 export function Entry({ heading, meta, children, minor }: { heading: ReactNode; meta?: ReactNode; children?: ReactNode; minor?: boolean }) {
   return (
-    <li data-minor={minor ? '' : undefined} className={`border-t-2 border-current py-4 first:border-t-0 first:pt-0 ${minor ? 'text-sm opacity-80' : ''}`}>
-      <div className={minor ? 'text-base font-bold' : 'text-xl font-bold'}>{heading}</div>
-      {meta && <div className="mt-1 opacity-75">{meta}</div>}
-      {children && <div className="mt-2">{children}</div>}
+    <li data-minor={minor ? '' : undefined} className={`border-t-2 border-current py-6 first:border-t-0 first:pt-0 last:pb-0 ${minor ? 'text-sm opacity-80' : ''}`}>
+      <h3 className={`m-0 leading-snug ${minor ? 'text-base font-bold' : 'text-xl font-bold'}`}>{heading}</h3>
+      {meta && <div className="mt-1.5 leading-normal opacity-75">{meta}</div>}
+      {children && <div className="mt-3">{children}</div>}
     </li>
   )
 }

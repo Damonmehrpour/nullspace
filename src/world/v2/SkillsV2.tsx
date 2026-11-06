@@ -14,7 +14,8 @@ import { TITLE_FONT } from '../space'
 import { BlockShadows } from './BlockShadows'
 import { fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
-import { skillDistricts, splitLanguage, type District, type DistrictStyle } from './skillDistricts'
+import { skillDistricts, splitLanguage, type District } from './skillDistricts'
+import { deg, PLACES, placeBuildings, PLATE, plateWidth, SIGN, SIGN_R, TABLET, type Building, type Spot } from './skillsCity'
 
 // Skills: the Data City. A miniature brutalist skyline around an open plaza, one district per CV skill
 // group and one building per skill, each labelled on its plaza-facing side with the skill's exact
@@ -23,43 +24,14 @@ import { skillDistricts, splitLanguage, type District, type DistrictStyle } from
 // plaza to each district's name stone. Height shapes the skyline; it never rates a skill.
 // Island-local space: +x points outward; angles are measured from +x toward +z.
 
-const deg = (d: number) => (d * Math.PI) / 180
-type Place = { centre: number; span: number; r: number }
-const PLACES: Record<DistrictStyle, Place> = {
-  game: { centre: -62, span: 68, r: 4.75 },
-  xr: { centre: 0, span: 44, r: 4.95 },
-  ai: { centre: 62, span: 68, r: 4.75 },
-  // Both supporting districts sit between the walkway entrances (126° ± 20° either side).
-  tools: { centre: 157, span: 22, r: 4.6 },
-  languages: { centre: 190, span: 30, r: 4.85 },
-}
-type Size = { w: number; d: number; base: number; peak: number }
-const SIZES: Record<DistrictStyle, Size> = {
-  game: { w: 0.66, d: 0.7, base: 1.5, peak: 1.3 },
-  xr: { w: 0.52, d: 0.55, base: 2.4, peak: 1.7 },
-  ai: { w: 0.62, d: 0.66, base: 2.0, peak: 1.4 },
-  tools: { w: 0.8, d: 0.6, base: 0.75, peak: 0 },
-  languages: { w: 0.5, d: 0.16, base: 1.35, peak: 0 },
-}
 // Tighter grounding pads than elsewhere: 22 overlapping full-size pads cost ~6.6 ms of overdraw.
 const PAD_SPREAD = 0.28
-const SIGN_R = 2.55 // name stones stand on this circle, at the plaza's edge
-const STAGGER = 0.38 // alternate buildings step back, so each district layers into a skyline
-const PLATE = { w: 0.92, h: 0.56, tilt: deg(50), gap: 0.42 } // slanted label plate in front of each building
-/** Plate width per district: the two tools plates stand close together, so theirs are narrower. */
-const plateWidth = (style: DistrictStyle) => (style === 'tools' ? 0.78 : PLATE.w)
-/** Languages share one wide tablet (a cell per language) instead of crowded plates per stone. */
-const TABLET = { w: 2.6, h: 1.05, tilt: deg(55), r: 4.0, y: 0.6 }
-/** District name plaques lie low and slanted, so they never hide the skill plates behind them. */
-const SIGN = { w: 1.75, h: 0.42, tilt: deg(60), y: 0.3 }
 const FIND_RANGE = 2.4
 const TEXT_RANGE = 16
 const DIM = new Color('#34383d')
 const LIT = new Color('#eef6e4')
 
-type Building = { x: number; z: number; yaw: number; theta: number; w: number; d: number; h: number; label: string }
 type Light = { matrix: Matrix4; district: number; base: number }
-type Spot = { x: number; z: number; theta: number }
 type Built = { geo: BufferGeometry; proxy: BufferGeometry; buildings: Building[]; sign: Spot; tablet: Spot | null }
 
 const tmp = new Object3D()
@@ -85,18 +57,9 @@ function block(b: { x: number; z: number; yaw: number }, w: number, h: number, d
 /** One district: its buildings (styled by kind), its name stone, and its lights (windows, frames, floor line). */
 function buildDistrict(dist: District, index: number, lights: Light[]): Built {
   const place = PLACES[dist.style]
-  const size = SIZES[dist.style]
-  const n = dist.items.length
   const parts: BufferGeometry[] = []
   const proxies: BufferGeometry[] = []
-  const buildings: Building[] = dist.items.map((label, k) => {
-    const theta = deg(place.centre - place.span / 2 + (place.span * (k + 0.5)) / n)
-    const off = n > 1 ? ((k + 0.5) / n) * 2 - 1 : 0
-    // The skyline rises toward each district's middle; a small alternating step keeps it lively.
-    const h = size.base + size.peak * (1 - Math.abs(off) ** 1.5) + (size.peak > 0 ? (k % 2 ? -0.18 : 0.18) : 0)
-    const r = place.r + (size.peak > 0 && k % 2 ? STAGGER : 0)
-    return { x: r * Math.cos(theta), z: r * Math.sin(theta), yaw: -(theta + Math.PI), theta, w: size.w, d: size.d, h, label }
-  })
+  const buildings = placeBuildings(dist)
   buildings.forEach((b, k) => {
     const window = (ox: number, y: number, oz: number, base: number) => lights.push({ matrix: lightBox(b.x, b.z, b.yaw, ox, y, oz, 0.02, 0.17, 0.11), district: index, base })
     if (dist.style === 'game') {

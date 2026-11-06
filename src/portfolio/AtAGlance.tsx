@@ -1,5 +1,6 @@
 import type { CV, Field } from '../content/schema'
 import { SECTION_IDS } from '../content/schema'
+import { Dates, MetaLine } from '../ui/MetaLine'
 import { experienceChapters } from '../world/v2/experienceChapters'
 
 const value = (f: Field<string> | undefined) => (f && f.state === 'confirmed' ? f.value : null)
@@ -27,24 +28,20 @@ export function AtAGlance({ cv }: { cv: CV }) {
       {latest && latestEntry && (
         <div>
           <p className="m-0 text-sm text-ash">Most recent role</p>
-          <p className="m-0 mt-1 text-lg font-semibold">{latest.role}</p>
-          <p className="m-0">
-            {value(latestEntry.org)} · {latest.dates}
-          </p>
+          <p className="m-0 mt-1 text-lg leading-snug font-semibold">{latest.role}</p>
+          <MetaLine parts={[value(latestEntry.org), <Dates key="dates">{latest.dates}</Dates>]} />
         </div>
       )}
       {degree && (
         <div>
           <p className="m-0 text-sm text-ash">Education</p>
-          <p className="m-0 mt-1 text-lg font-semibold">{value(degree.degree)}</p>
-          <p className="m-0">
-            {value(degree.institution)} · {value(degree.dates)}
-          </p>
+          <p className="m-0 mt-1 text-lg leading-snug font-semibold">{value(degree.degree)}</p>
+          <MetaLine parts={[value(degree.institution), value(degree.dates) && <Dates key="dates">{value(degree.dates)}</Dates>]} />
         </div>
       )}
       <div>
         <p className="m-0 text-sm text-ash">Based in</p>
-        {location && <p className="m-0 mt-1 text-lg font-semibold">{location}</p>}
+        {location && <p className="m-0 mt-1 text-lg leading-snug font-semibold">{location}</p>}
         {availability && <p className="m-0">{availability}</p>}
       </div>
       <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0 md:col-span-3">

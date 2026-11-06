@@ -26,6 +26,8 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
+  /* Long words and URLs wrap instead of overflowing a narrow screen. */
+  overflow-wrap: break-word;
 }
 
 /* Expanded headline cut: the type itself is the architecture. */
@@ -63,9 +65,49 @@ body {
   font-style: italic;
 }
 
+/* Lists from the CV (highlights, skills, interests): real markers and a little air between items. */
 .field-list {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 1.15rem;
+  list-style: square;
+}
+
+.field-list > li {
+  padding-left: 0.25rem;
+}
+
+.field-list > li + li {
+  margin-top: 0.4rem;
+}
+
+.field-list > li::marker {
+  color: var(--color-ash);
+}
+
+/* Portfolio section titles: fluid when stacked, then sized to fit the title column beside the content. */
+.section-title {
+  font-size: clamp(2.25rem, 8.5vw, 3.5rem);
+  /* The expanded cut's glyphs stand taller than 1em: wrapped titles need this much to clear each other. */
+  line-height: 1.12;
+}
+
+@media (min-width: 64rem) {
+  .section-title {
+    font-size: 2.5rem;
+    line-height: 1.12;
+  }
+}
+
+@media (min-width: 80rem) {
+  .section-title {
+    font-size: 2.75rem;
+  }
+}
+
+/* Portfolio body copy: a comfortable reading measure and leading. */
+.cv-body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
 }
 
 .sr-only {

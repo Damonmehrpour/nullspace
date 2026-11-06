@@ -15,20 +15,12 @@ import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
 import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { experienceChapters, type Chapter, type PortalStyle } from './experienceChapters'
+import { LINTEL, SPECS, STELE, type Spec } from './experienceLayout'
 
 // Experience: a monumental corridor of portals, one per career chapter, oldest nearest the arrival
 // point and the newest at the island's edge, framing the open void ahead. Island-local space: +x
 // points outward (away from the monolith), the path runs along +x, z is across it.
 
-type Spec = { x: number; H: number; W: number; jw: number; D: number }
-const SPECS: Record<Exclude<PortalStyle, 'generic'>, Spec> = {
-  medrick: { x: -0.7, H: 3.6, W: 1.8, jw: 0.6, D: 0.7 },
-  ubicomp: { x: 1.15, H: 4.1, W: 2.0, jw: 0.62, D: 0.6 },
-  oasis: { x: 3.0, H: 4.6, W: 2.9, jw: 0.35, D: 0.8 },
-  arvo: { x: 4.95, H: 5.3, W: 2.3, jw: 0.7, D: 0.75 },
-}
-const LINTEL = 0.75
-const STELE = { x: 0.22, z: 1.85 }
 const DIM = new Color('#34383d')
 const LIT = new Color('#eef6e4')
 const TEXT_RANGE = 16 // engravings render only when the player is near (they're unreadable from afar)

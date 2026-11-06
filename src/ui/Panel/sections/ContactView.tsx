@@ -5,7 +5,7 @@ import { Entry, EntryList } from './EntryList'
 export function ContactView({ section }: { section: ContactSection }) {
   return (
     <>
-      <p className="mt-0 mb-4 text-lg">
+      <p className="mt-0 mb-6 text-lg leading-relaxed">
         <FieldText field={section.location} />
         <br />
         <FieldText field={section.availability} className="font-semibold" />
@@ -14,7 +14,7 @@ export function ContactView({ section }: { section: ContactSection }) {
         {section.channels.map((c) => (
           <Entry key={c.label} heading={c.label}>
             {c.value.state === 'confirmed' && c.url?.state === 'confirmed' ? (
-              <a href={c.url.value} className="font-semibold underline underline-offset-4" {...(c.kind === 'email' || c.kind === 'phone' ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
+              <a href={c.url.value} className="font-semibold break-words underline underline-offset-4" {...(c.kind === 'email' || c.kind === 'phone' ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
                 {c.value.value}
               </a>
             ) : (

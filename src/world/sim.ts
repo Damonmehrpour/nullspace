@@ -13,10 +13,13 @@ import { buildRouteGraph } from '../core/routeGraph'
 import { createQuality, type QualityState } from '../core/quality'
 import { createZoneTracker, updateZones, type ZoneTracker } from '../core/tour'
 import { createWalkable } from '../core/walkable'
+import { worldColliders } from './v2/colliders'
+import { V2 } from './visual'
 import { isReducedMotion } from '../state/reducedMotion'
 import { isGameplayPaused, useStore } from '../state/store'
 
-export const walk = createWalkable(WORLD)
+// The v2 world's structures are solid; the legacy look (?visual=v1) keeps its original walk-through layout.
+export const walk = createWalkable(WORLD, V2 ? worldColliders(WORLD) : [])
 export const graph = buildRouteGraph(WORLD)
 
 export type SimEvent = 'boundary' | 'firstMeet' | 'greet' | 'wait' | 'idle'

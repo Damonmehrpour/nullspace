@@ -35,7 +35,7 @@ import { reducedMotion, sim } from '../sim'
 import { TITLE_FONT } from '../space'
 import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
-import { honorPlaques } from './projectsAtrium'
+import { ARCS, deg, PLAQUE_ANGLES, PLAQUE_R, PLINTH_H, RING, SLOT_ANGLES, SLOT_R, TIERS, WALL, honorPlaques } from './projectsAtrium'
 
 // Projects: a sunken atrium beneath a monumental floating ring. Stepped terraces rise around the
 // island's rim (so the floor reads as sunk into the stone), opening toward the walkways and toward the
@@ -43,26 +43,6 @@ import { honorPlaques } from './projectsAtrium'
 // the three projects. One terrace rises into an honour wall engraved with the hackathon and immersive
 // work. Island-local space: +x points outward, angles measured from +x toward +z.
 
-const deg = (d: number) => (d * Math.PI) / 180
-const ARCS: [number, number][] = [
-  [22, 104], // honour side
-  [-104, -22],
-  [146, 214], // behind the arrival ring
-]
-const TIERS: [number, number, number][] = [
-  [4.3, 5.95, 0.3],
-  [4.8, 5.95, 0.6],
-  [5.3, 5.95, 0.9],
-]
-const WALL = { a0: 50, a1: 96, r0: 5.5, r1: 5.95, h: 2.2 }
-const PLAQUE_ANGLES = [59, 73, 87]
-const PLAQUE_R = 5.4
-// Just above the gameplay camera's view from inside, so it frames the island from afar and its threads
-// of light descend into view up close, instead of a slab filling the top of the screen.
-const RING = { r0: 3.25, r1: 4.15, h: 0.5, y: 5.7, drop: 2.6 }
-const SLOT_R = 3
-const SLOT_ANGLES = [-40, 0, 40] // matches the layout's artifact slots
-const PLINTH_H = 0.7
 const DIM = new Color('#34383d')
 const LIT = new Color('#eef6e4')
 const TEXT_RANGE = 16

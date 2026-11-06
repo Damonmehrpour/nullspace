@@ -18,6 +18,8 @@ export const PLAYER = {
   accelTime: 0.15,
   boundaryPushS: 0.6,
   height: 0.5,
+  /** Body radius for collisions with solid structures (m). */
+  radius: 0.3,
 } as const
 
 export const CAMERA = {

@@ -35,16 +35,18 @@ function PortfolioSection({ id }: { id: SectionId }) {
   const section = cv[id]
   const headingId = `portfolio-${id}`
   return (
-    <section ref={ref} aria-labelledby={headingId} className="slab border-t-4 border-concrete py-12 md:grid md:grid-cols-[minmax(12rem,1fr)_3fr] md:gap-12">
-      <header className="mb-6 md:mb-0">
-        <h2 id={headingId} className="display m-0 scroll-mt-24 text-4xl md:text-5xl">
+    // Stacked below 1024 px; beside the content from there, in a title column sized for the longest
+    // title word ("Experience" sets at ≈ 6.9 × the font size in the expanded display cut).
+    <section ref={ref} aria-labelledby={headingId} className="slab border-t-4 border-concrete py-14 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12 lg:py-20 xl:grid-cols-[20rem_minmax(0,1fr)] xl:gap-16">
+      <header className="mb-8 lg:mb-0">
+        <h2 id={headingId} className="section-title display m-0 scroll-mt-28">
           {section.title}
         </h2>
         <div className="mt-3">
           <StatusBadge status={section.status} />
         </div>
       </header>
-      <div className="max-w-[65ch]">
+      <div className="cv-body max-w-[68ch] min-w-0">
         <SectionView id={id} source="portfolio" />
       </div>
     </section>

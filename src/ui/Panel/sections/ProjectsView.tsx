@@ -2,6 +2,7 @@ import { AREA_LABEL, type Project, type ProjectsSection } from '../../../content
 import { useStore, type OpenSource } from '../../../state/store'
 import { AreaTags } from '../../AreaTags'
 import { FieldText } from '../../FieldText'
+import { MetaLine } from '../../MetaLine'
 import { rememberOpener } from '../../focusReturn'
 import { StatusBadge } from '../../StatusBadge'
 
@@ -25,8 +26,8 @@ export function ProjectsView({ section, source }: { section: ProjectsSection; so
                 }}
                 className="project-card w-full border-4 border-current p-4 text-left transition-colors hover:bg-current/10"
               >
-                <span className="block text-sm opacity-75">{areaLine(p)}</span>
-                <span className="mt-1 block text-2xl font-bold">
+                <span className="block text-sm leading-normal opacity-75">{areaLine(p)}</span>
+                <span className="mt-1.5 block text-2xl leading-tight font-bold">
                   <FieldText field={p.name} />
                 </span>
                 <span className="mt-2 block">
@@ -38,17 +39,14 @@ export function ProjectsView({ section, source }: { section: ProjectsSection; so
         })}
       </ul>
       {section.honors.length > 0 && (
-        <div className="mt-6 border-t-4 border-current pt-4">
-          <h3 className="m-0 text-xl font-bold">Honors</h3>
-          <ul className="mt-2 mb-0 list-none space-y-4 p-0">
+        <div className="mt-8 border-t-4 border-current pt-6">
+          <h3 className="m-0 text-xl leading-snug font-bold">Honors</h3>
+          <ul className="mt-4 mb-0 list-none space-y-6 p-0">
             {section.honors.map((h) => (
               <li key={h.project}>
-                <div className="font-bold">{h.project}</div>
-                <div className="opacity-80">
-                  <FieldText field={h.award} /> · {h.event}
-                  {h.year?.state === 'confirmed' && <> · {h.year.value}</>}
-                </div>
-                <FieldText field={h.detail} as="p" className="mt-1 mb-1" />
+                <h4 className="m-0 text-lg leading-snug font-bold">{h.project}</h4>
+                <MetaLine className="mt-1 leading-normal opacity-80" parts={[h.award.state === 'confirmed' && h.award.value, h.event, h.year?.state === 'confirmed' && h.year.value]} />
+                <FieldText field={h.detail} as="p" className="mt-2 mb-3" />
                 <AreaTags areas={h.areas} />
               </li>
             ))}
