@@ -10,7 +10,8 @@ const value = (f: Field<string> | undefined) => (f && f.state === 'confirmed' ? 
  * where and how to work together, every contact channel, and a jump to each section. All from the CV.
  */
 export function AtAGlance({ cv }: { cv: CV }) {
-  const latest = experienceChapters(cv.experience.entries).filter((c) => !c.minor).at(-1)
+  const roles = experienceChapters(cv.experience.entries).filter((c) => !c.minor)
+  const latest = roles[roles.length - 1] as (typeof roles)[number] | undefined // not .at(-1): Safari before 15.4 lacks it
   const latestEntry = latest && cv.experience.entries.find((e) => value(e.role) === latest.role && value(e.dates) === latest.dates)
   const degree = cv.education.entries[0]
   const location = value(cv.contact.location)

@@ -27,4 +27,16 @@ describe('portfolio at a glance (for a recruiter in a hurry)', () => {
     for (const [name, href] of [['Education & Research', '#portfolio-education'], ['Experience', '#portfolio-experience'], ['Projects', '#portfolio-projects'], ['Skills', '#portfolio-skills'], ['Contact', '#portfolio-contact']])
       expect(within(jump).getByRole('link', { name })).toHaveAttribute('href', href)
   })
+
+  it('renders on older browsers without Array.prototype.at (Safari before 15.4)', () => {
+    const at = Array.prototype.at
+    // Simulating an engine that predates .at().
+    delete (Array.prototype as { at?: unknown }).at
+    try {
+      render(<AtAGlance cv={cv} />)
+      expect(screen.getByText('Lead XR Engineer')).toBeInTheDocument()
+    } finally {
+      Array.prototype.at = at
+    }
+  })
 })

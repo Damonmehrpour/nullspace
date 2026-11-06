@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "lint": "oxlint",
+    "probe:live": "node scripts/probe-entry.mjs",
     "test:smoke": "playwright test boot recruiter portfolio touchEntry keyboard world settings"
   },
   "dependencies": {
