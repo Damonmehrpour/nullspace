@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cv } from '../../src/content/cv'
-import { skillDistricts } from '../../src/world/v2/skillDistricts'
+import { skillDistricts, splitLanguage } from '../../src/world/v2/skillDistricts'
 
 describe('Data City districts (Skills island)', () => {
   const districts = skillDistricts(cv.skills.groups)
@@ -30,5 +30,13 @@ describe('Data City districts (Skills island)', () => {
 
   it('leaves out a group whose items are still pending', () => {
     expect(skillDistricts([{ label: 'X', items: { state: 'pending' } }])).toEqual([])
+  })
+})
+
+describe('language tablet cells', () => {
+  it('splits each language into its name and its level, keeping every word', () => {
+    expect(splitLanguage('English (C1, IELTS Academic 7.0)')).toEqual({ name: 'English', detail: 'C1, IELTS Academic 7.0' })
+    expect(splitLanguage('Persian (native)')).toEqual({ name: 'Persian', detail: 'native' })
+    expect(splitLanguage('Klingon')).toEqual({ name: 'Klingon', detail: null })
   })
 })

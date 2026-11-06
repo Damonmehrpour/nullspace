@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { BackSide, BufferAttribute, BufferGeometry, Color, FogExp2, Object3D, ShaderMaterial, type InstancedMesh } from 'three'
 import { useRenderBudget } from '../quality'
 import { softPointsMaterial } from './softPoints'
+import { Starfield } from './Starfield'
 
 const FOG = '#070a12'
 
@@ -121,7 +122,7 @@ function Dust() {
   return <points name="v2-dust" geometry={geo} material={mat} frustumCulled={false} />
 }
 
-/** The v2 void: background, fog, dome, megastructures and dust. */
+/** The v2 void: background, fog, dome, stars, megastructures and dust. */
 export function VoidV2() {
   const scene = useThree((s) => s.scene)
   useEffect(() => {
@@ -131,6 +132,7 @@ export function VoidV2() {
   return (
     <>
       <SkyDome />
+      <Starfield />
       <Megastructures />
       <Dust />
     </>

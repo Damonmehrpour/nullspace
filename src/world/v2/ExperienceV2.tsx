@@ -66,8 +66,7 @@ function portalGeometry(style: Exclude<PortalStyle, 'generic'>, s: Spec, portal:
     }
     for (let i = 0; i < 4; i++) parts.push(box(-D / 2 - 0.05, -D / 2 + 0.02, 0.75 + i * 0.5, 1.05 + i * 0.5, -W / 2 - jw + 0.15, -W / 2 - 0.15, 0.015))
   } else if (style === 'ubicomp') {
-    // Research: jambs open into a lattice of fins (controlled environments), and a sensing waveform
-    // across the lintel face that lights on discovery.
+    // Research: jambs open into a lattice of fins (controlled environments).
     for (const side of [-1, 1]) {
       for (let f = 0; f < 3; f++) {
         const z = side * (W / 2 + 0.07 + f * 0.24)
@@ -75,13 +74,6 @@ function portalGeometry(style: Exclude<PortalStyle, 'generic'>, s: Spec, portal:
       }
     }
     parts.push(box(-D / 2 - 0.05, D / 2 + 0.05, top, H, -W / 2 - jw - 0.12, W / 2 + jw + 0.12))
-    const bars = 23
-    for (let i = 0; i < bars; i++) {
-      const u = i / (bars - 1)
-      const spike = Math.exp(-((u - 0.62) ** 2) / 0.002) * 0.9 + Math.exp(-((u - 0.55) ** 2) / 0.001) * -0.35
-      const h = 0.06 + Math.abs(Math.sin(u * 17) * 0.06) + Math.max(0, spike) * 0.3
-      lightAt(-D / 2 - 0.06, top + LINTEL * 0.3, (u - 0.5) * (W + 0.6), 0.02, h, 0.035)
-    }
   } else if (style === 'oasis') {
     // XR meditation: a moon gate. A thick slab pierced by a round opening that reaches the floor,
     // ringed by points of light, with a small patch of moss at its foot.

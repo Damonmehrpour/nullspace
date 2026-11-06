@@ -14,7 +14,7 @@ import { TITLE_FONT } from '../space'
 import { BlockShadows } from './BlockShadows'
 import { fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
-import { skillDistricts, type District, type DistrictStyle } from './skillDistricts'
+import { skillDistricts, splitLanguage, type District, type DistrictStyle } from './skillDistricts'
 
 // Skills: the Data City. A miniature brutalist skyline around an open plaza, one district per CV skill
 // group and one building per skill, each labelled on its plaza-facing side with the skill's exact
@@ -29,15 +29,16 @@ const PLACES: Record<DistrictStyle, Place> = {
   game: { centre: -62, span: 68, r: 4.75 },
   xr: { centre: 0, span: 44, r: 4.95 },
   ai: { centre: 62, span: 68, r: 4.75 },
-  tools: { centre: 160, span: 24, r: 4.6 },
-  languages: { centre: 200, span: 34, r: 4.7 },
+  // Both supporting districts sit between the walkway entrances (126° ± 20° either side).
+  tools: { centre: 157, span: 22, r: 4.6 },
+  languages: { centre: 190, span: 30, r: 4.85 },
 }
 type Size = { w: number; d: number; base: number; peak: number }
 const SIZES: Record<DistrictStyle, Size> = {
   game: { w: 0.66, d: 0.7, base: 1.5, peak: 1.3 },
   xr: { w: 0.52, d: 0.55, base: 2.4, peak: 1.7 },
   ai: { w: 0.62, d: 0.66, base: 2.0, peak: 1.4 },
-  tools: { w: 0.95, d: 0.6, base: 0.75, peak: 0 },
+  tools: { w: 0.8, d: 0.6, base: 0.75, peak: 0 },
   languages: { w: 0.5, d: 0.16, base: 1.35, peak: 0 },
 }
 // Tighter grounding pads than elsewhere: 22 overlapping full-size pads cost ~6.6 ms of overdraw.
@@ -45,6 +46,12 @@ const PAD_SPREAD = 0.28
 const SIGN_R = 2.55 // name stones stand on this circle, at the plaza's edge
 const STAGGER = 0.38 // alternate buildings step back, so each district layers into a skyline
 const PLATE = { w: 0.92, h: 0.56, tilt: deg(50), gap: 0.42 } // slanted label plate in front of each building
+/** Plate width per district: the two tools plates stand close together, so theirs are narrower. */
+const plateWidth = (style: DistrictStyle) => (style === 'tools' ? 0.78 : PLATE.w)
+/** Languages share one wide tablet (a cell per language) instead of crowded plates per stone. */
+const TABLET = { w: 2.6, h: 1.05, tilt: deg(55), r: 4.0, y: 0.6 }
+/** District name plaques lie low and slanted, so they never hide the skill plates behind them. */
+const SIGN = { w: 1.75, h: 0.42, tilt: deg(60), y: 0.3 }
 const FIND_RANGE = 2.4
 const TEXT_RANGE = 16
 const DIM = new Color('#34383d')
@@ -52,7 +59,8 @@ const LIT = new Color('#eef6e4')
 
 type Building = { x: number; z: number; yaw: number; theta: number; w: number; d: number; h: number; label: string }
 type Light = { matrix: Matrix4; district: number; base: number }
-type Built = { geo: BufferGeometry; proxy: BufferGeometry; buildings: Building[]; sign: { x: number; z: number; theta: number } }
+type Spot = { x: number; z: number; theta: number }
+type Built = { geo: BufferGeometry; proxy: BufferGeometry; buildings: Building[]; sign: Spot; tablet: Spot | null }
 
 const tmp = new Object3D()
 /** A light box in a building's frame: placed at (cx, y, cz), turned by yaw, offset (ox, oz), sized (sx, sy, sz). */
@@ -92,15 +100,36 @@ function buildDistrict(dist: District, index: number, lights: Light[]): Built {
   buildings.forEach((b, k) => {
     const window = (ox: number, y: number, oz: number, base: number) => lights.push({ matrix: lightBox(b.x, b.z, b.yaw, ox, y, oz, 0.02, 0.17, 0.11), district: index, base })
     if (dist.style === 'game') {
-      // Game development: stacked, offset "pixel" blocks.
-      const h1 = b.h * 0.55
-      parts.push(block(b, b.w, h1, b.d, 0))
-      parts.push(block(b, b.w * 0.78, b.h * 0.3, b.d * 0.78, h1, -0.06, k % 2 ? 0.07 : -0.07))
-      parts.push(block(b, b.w * 0.5, b.h * 0.15, b.d * 0.5, h1 + b.h * 0.3, 0.04, k % 2 ? -0.05 : 0.05))
+      // Game development: a stepped keep. Plinth; a lower shaft whose corner pilasters frame a recessed
+      // window channel; a cornice; a set-back upper shaft; a second cornice; and a stepped "pixel" crown
+      // with corner merlons.
+      const h1 = b.h * 0.5
+      const top = b.h * 0.82
+      const uw = b.w * 0.72
+      const ud = b.d * 0.72
+      parts.push(block(b, b.w + 0.14, 0.16, b.d + 0.14, 0, 0, 0, 0.03))
+      for (const side of [-1, 1]) parts.push(block(b, 0.13, h1 - 0.16, b.d, 0.16, 0, side * (b.w / 2 - 0.065)))
+      parts.push(block(b, b.w - 0.26, h1 - 0.16, b.d - 0.08, 0.16, -0.04, 0))
+      parts.push(block(b, b.w + 0.08, 0.06, b.d + 0.08, h1, 0, 0, 0.02))
+      parts.push(block(b, uw, top - h1 - 0.06, ud, h1 + 0.06))
+      parts.push(block(b, uw + 0.07, 0.05, ud + 0.07, top, 0, 0, 0.015))
+      for (const [mx, mz] of [
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ])
+        parts.push(block(b, 0.11, 0.12, 0.11, top + 0.05, mx * (ud / 2 - 0.055), mz * (uw / 2 - 0.055), 0.015))
+      parts.push(block(b, 0.26, 0.1, 0.26, top + 0.05, 0, 0, 0.02))
+      parts.push(block(b, 0.13, 0.08, 0.13, top + 0.15, 0, 0, 0.015))
     } else if (dist.style === 'xr') {
-      // XR: slender towers, each wearing a floating frame of light near its top.
-      parts.push(block(b, b.w, b.h, b.d, 0))
-      const fy = b.h * 0.78
+      // XR: slender towers on a plinth, set back near the top into a narrow crown with a spire, each
+      // wearing a floating frame of light (an augmented layer).
+      parts.push(block(b, b.w + 0.1, 0.14, b.d + 0.1, 0, 0, 0, 0.03))
+      parts.push(block(b, b.w, b.h * 0.86 - 0.14, b.d, 0.14))
+      parts.push(block(b, b.w * 0.6, b.h * 0.14, b.d * 0.6, b.h * 0.86))
+      parts.push(block(b, 0.045, 0.45, 0.045, b.h, 0, 0, 0.01))
+      const fy = b.h * 0.72
       const half = b.w / 2 + 0.1
       const hd = b.d / 2 + 0.1
       for (const [ox, oz, sx, sz] of [
@@ -111,31 +140,48 @@ function buildDistrict(dist: District, index: number, lights: Light[]): Built {
       ])
         lights.push({ matrix: lightBox(b.x, b.z, b.yaw, ox, fy, oz, sx, 0.035, sz), district: index, base: 0.45 })
     } else if (dist.style === 'ai') {
-      // AI / HCI research: ribbed towers, vertical fins on the plaza face.
-      parts.push(block(b, b.w, b.h, b.d, 0))
-      for (const oz of [-0.25, 0, 0.25]) parts.push(block(b, 0.05, b.h - 0.5, 0.12, 1.35, b.d / 2 + 0.05, oz, 0.015))
+      // AI / HCI research: ribbed towers on a plinth, vertical fins on the plaza face, a cornice cap.
+      parts.push(block(b, b.w + 0.1, 0.14, b.d + 0.1, 0, 0, 0, 0.03))
+      parts.push(block(b, b.w, b.h - 0.14, b.d, 0.14))
+      parts.push(block(b, b.w + 0.08, 0.07, b.d + 0.08, b.h, 0, 0, 0.02))
+      parts.push(block(b, b.w * 0.66, 0.2, b.d * 0.6, b.h + 0.07, -0.04, 0))
+      // The fins rise from above the label plate to just past the cornice.
+      for (const oz of [-0.25, 0, 0.25]) parts.push(block(b, 0.05, b.h - 0.75, 0.12, 0.95, b.d / 2 + 0.05, oz, 0.015))
     } else if (dist.style === 'tools') {
-      // Programming and tools: low, long infrastructure blocks with a line of light along the top edge.
-      parts.push(block(b, b.w, b.h, b.d, 0))
-      lights.push({ matrix: lightBox(b.x, b.z, b.yaw, b.d / 2 + 0.005, b.h - 0.08, 0, 0.015, 0.03, b.w - 0.2), district: index, base: 0.15 })
+      // Programming and tools: low two-tier infrastructure blocks, a line of light along the lower tier.
+      parts.push(block(b, b.w + 0.08, 0.1, b.d + 0.08, 0, 0, 0, 0.02))
+      parts.push(block(b, b.w, b.h * 0.62 - 0.1, b.d, 0.1))
+      parts.push(block(b, b.w * 0.78, b.h * 0.38, b.d * 0.7, b.h * 0.62, -0.05, 0))
+      lights.push({ matrix: lightBox(b.x, b.z, b.yaw, b.d / 2 + 0.005, b.h * 0.62 - 0.08, 0, 0.015, 0.03, b.w - 0.2), district: index, base: 0.15 })
     } else {
-      // Languages: standing stones, one per language.
-      parts.push(block(b, b.w, b.h, b.d, 0, 0, 0, 0.02))
+      // Languages: standing stones on low plinths, one per language.
+      parts.push(block(b, b.w + 0.1, 0.08, b.d + 0.1, 0, 0, 0, 0.02))
+      parts.push(block(b, b.w, b.h - 0.08, b.d, 0.08, 0, 0, 0.02))
     }
     proxies.push(new BoxGeometry(b.d, b.h, b.w).translate(0, b.h / 2, 0).rotateY(b.yaw).translate(b.x, 0, b.z))
     // The skill's label plate: a slanted slab on a low stand in front of the building, tilted up
     // toward the camera so its words read comfortably from the plaza.
-    const plate = new RoundedBoxGeometry(0.06, PLATE.h, PLATE.w, 1, 0.015).rotateZ(PLATE.tilt).translate(b.d / 2 + PLATE.gap, 0.42, 0)
-    const stand = new RoundedBoxGeometry(0.22, 0.24, PLATE.w * 0.7, 1, 0.02).translate(b.d / 2 + PLATE.gap + 0.04, 0.12, 0)
-    for (const g of [plate, stand]) {
+    const plate = new RoundedBoxGeometry(0.06, PLATE.h, plateWidth(dist.style), 1, 0.015).rotateZ(PLATE.tilt).translate(b.d / 2 + PLATE.gap, 0.42, 0)
+    const stand = new RoundedBoxGeometry(0.22, 0.24, plateWidth(dist.style) * 0.7, 1, 0.02).translate(b.d / 2 + PLATE.gap + 0.04, 0.12, 0)
+    for (const g of dist.style === 'languages' ? [] : [plate, stand]) {
       g.rotateY(b.yaw).translate(b.x, 0, b.z)
       g.deleteAttribute('uv')
       parts.push(g.toNonIndexed())
     }
     // Windows above the label on the skyline towers: a deterministic scatter, faint until discovered.
-    if (dist.style === 'game' || dist.style === 'xr' || dist.style === 'ai') {
-      const front = (dist.style === 'game' ? b.d * 0.78 : b.d) / 2 + 0.012
-      for (let y = 1.55; y < b.h * (dist.style === 'game' ? 0.82 : 0.95) - 0.2; y += 0.34) {
+    if (dist.style === 'game') {
+      // Lit slots in the lower shaft's recessed channel and on the set-back upper shaft.
+      const slots: [number, number, number][] = []
+      for (let y = 0.8; y < b.h * 0.5 - 0.15; y += 0.3) for (const oz of [-0.09, 0.09]) slots.push([b.d / 2 - 0.068, y, oz])
+      for (let y = b.h * 0.5 + 0.28; y < b.h * 0.82 - 0.15; y += 0.3) for (const oz of [-0.11, 0.11]) slots.push([(b.d * 0.72) / 2 + 0.012, y, oz])
+      slots.forEach(([fx, y, oz], j) => {
+        const hsh = Math.sin(k * 12.9 + j * 7.3 + index * 3.7) * 43758.5
+        if (hsh - Math.floor(hsh) > 0.4) window(fx, y, oz, 0.12)
+      })
+    }
+    if (dist.style === 'xr' || dist.style === 'ai') {
+      const front = b.d / 2 + 0.012
+      for (let y = 1.55; y < b.h * 0.86 - 0.2; y += 0.34) {
         for (const oz of [-0.17, 0.17]) {
           const hsh = Math.sin(k * 12.9 + y * 7.3 + oz * 31 + index * 3.7) * 43758.5
           if (hsh - Math.floor(hsh) > 0.42) window(front, y, oz, 0.12)
@@ -147,14 +193,56 @@ function buildDistrict(dist: District, index: number, lights: Light[]): Built {
   const sr = SIGN_R
   const st = deg(place.centre)
   const sign = { x: sr * Math.cos(st), z: sr * Math.sin(st), theta: st }
-  parts.push(block({ x: sign.x, z: sign.z, yaw: -(st + Math.PI) }, 1.9, 0.5, 0.16, 0))
+  const placeAt = (g: BufferGeometry, at: Spot) => {
+    g.rotateY(-(at.theta + Math.PI)).translate(at.x, 0, at.z)
+    g.deleteAttribute('uv')
+    parts.push(g.toNonIndexed())
+  }
+  // Name plaque: low and slanted toward the plaza, on a short stand.
+  placeAt(new RoundedBoxGeometry(0.06, SIGN.h, SIGN.w, 1, 0.015).rotateZ(SIGN.tilt).translate(0, SIGN.y, 0), sign)
+  placeAt(new RoundedBoxGeometry(0.2, SIGN.y * 0.5, SIGN.w * 0.8, 1, 0.02).translate(0.02, SIGN.y * 0.25, 0), sign)
+  // Languages: one wide tablet in front of the stones, a cell per language.
+  const tablet = dist.style === 'languages' ? { x: TABLET.r * Math.cos(st), z: TABLET.r * Math.sin(st), theta: st } : null
+  if (tablet) {
+    placeAt(new RoundedBoxGeometry(0.07, TABLET.h, TABLET.w, 1, 0.02).rotateZ(TABLET.tilt).translate(0, TABLET.y, 0), tablet)
+    placeAt(new RoundedBoxGeometry(0.26, TABLET.y * 0.5, TABLET.w * 0.8, 1, 0.02).translate(0.03, TABLET.y * 0.25, 0), tablet)
+  }
   const lineLen = sr - 1.0
   lights.push({ matrix: lightBox(((1.0 + sr - 0.2) / 2) * Math.cos(st), ((1.0 + sr - 0.2) / 2) * Math.sin(st), -st, 0, 0.012, 0, lineLen - 0.2, 0.02, 0.06), district: index, base: 0.14 })
-  return { geo: mergeGeometries(parts, false)!, proxy: mergeGeometries(proxies.map((p) => (p.deleteAttribute('uv'), p.toNonIndexed())), false)!, buildings, sign }
+  return { geo: mergeGeometries(parts, false)!, proxy: mergeGeometries(proxies.map((p) => (p.deleteAttribute('uv'), p.toNonIndexed())), false)!, buildings, sign, tablet }
 }
 
-/** Text rotation that turns its +z face toward the plaza from bearing theta. */
-const facePlaza = (theta: number) => Math.atan2(-Math.cos(theta), -Math.sin(theta))
+/** The Languages tablet: a grid of cells, two per row, each language's name with its level beneath. */
+function LanguageTablet({ at, items, textRef }: { at: Spot; items: string[]; textRef: (o: Object3D | null) => void }) {
+  const cols = 2
+  const cellW = (TABLET.w - 0.2) / cols
+  const rows = Math.ceil(items.length / cols)
+  const rowH = (TABLET.h - 0.14) / rows
+  return (
+    <group position={[at.x, 0, at.z]} rotation={[0, -(at.theta + Math.PI), 0]}>
+      <group position={[0, TABLET.y, 0]} rotation={[0, 0, TABLET.tilt]}>
+        {items.map((item, k) => {
+          const { name, detail } = splitLanguage(item)
+          // Text's +x runs toward -z here (the viewer's right), so the first column sits at +z.
+          const z = (cols / 2 - (k % cols) - 0.5) * cellW
+          const y = ((rows - 1) / 2 - Math.floor(k / cols)) * rowH + 0.08
+          return (
+            <group key={item} position={[0.04, y, z]} rotation={[0, Math.PI / 2, 0]}>
+              <Text name="v2-engraving" ref={textRef} font={TITLE_FONT} fontSize={0.17} color="#43403a" anchorX="center" anchorY="bottom" maxWidth={cellW - 0.12} textAlign="center">
+                {name}
+              </Text>
+              {detail && (
+                <Text name="v2-engraving" ref={textRef} font={TITLE_FONT} position={[0, -0.03, 0]} fontSize={0.1} lineHeight={1.2} color="#57534c" anchorX="center" anchorY="top" maxWidth={cellW - 0.12} textAlign="center">
+                  {detail}
+                </Text>
+              )}
+            </group>
+          )
+        })}
+      </group>
+    </group>
+  )
+}
 
 export function SkillsV2({ island }: { island: IslandDef }) {
   const progress = useReveal(island.id)
@@ -277,22 +365,27 @@ export function SkillsV2({ island }: { island: IslandDef }) {
             </group>
             <mesh ref={(m) => void (proxies.current[i] = m)} geometry={d.proxy} material={built.mats[i]} visible={false} userData={{ blocksCamera: true, fadeOnBlock: true }} />
             {/* The district's name, engraved on its stone. */}
-            <Text
-              name="v2-engraving"
-              ref={textRef(i)}
-              font={TITLE_FONT}
-              position={[d.sign.x - Math.cos(d.sign.theta) * 0.085, 0.27, d.sign.z - Math.sin(d.sign.theta) * 0.085]}
-              rotation={[0, facePlaza(d.sign.theta), 0]}
-              fontSize={dist.label.length > 16 ? 0.17 : 0.2}
-              color="#4b4842"
-              anchorX="center"
-              anchorY="middle"
-              maxWidth={1.8}
-            >
-              {dist.label}
-            </Text>
+            <group position={[d.sign.x, 0, d.sign.z]} rotation={[0, -(d.sign.theta + Math.PI), 0]}>
+              <group position={[0, SIGN.y, 0]} rotation={[0, 0, SIGN.tilt]}>
+                <Text
+                  name="v2-engraving"
+                  ref={textRef(i)}
+                  font={TITLE_FONT}
+                  position={[0.034, 0, 0]}
+                  rotation={[0, Math.PI / 2, 0]}
+                  fontSize={dist.label.length > 16 ? 0.15 : 0.17}
+                  color="#4b4842"
+                  anchorX="center"
+                  anchorY="middle"
+                  maxWidth={SIGN.w - 0.1}
+                >
+                  {dist.label}
+                </Text>
+              </group>
+            </group>
+            {d.tablet && <LanguageTablet at={d.tablet} items={dist.items} textRef={textRef(i)} />}
             {/* Each building's skill, in the CV's exact words, on its slanted plate facing the plaza. */}
-            {d.buildings.map((b) => (
+            {!d.tablet && d.buildings.map((b) => (
               <group key={b.label} position={[b.x, 0, b.z]} rotation={[0, b.yaw, 0]}>
                 <group position={[b.d / 2 + PLATE.gap, 0.42, 0]} rotation={[0, 0, PLATE.tilt]}>
                   <Text
@@ -307,7 +400,7 @@ export function SkillsV2({ island }: { island: IslandDef }) {
                     anchorX="center"
                     anchorY="middle"
                     textAlign="center"
-                    maxWidth={PLATE.w - 0.1}
+                    maxWidth={plateWidth(dist.style) - 0.1}
                   >
                     {b.label}
                   </Text>

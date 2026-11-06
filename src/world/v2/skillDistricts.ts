@@ -16,3 +16,9 @@ export function skillDistricts(groups: SkillGroup[]): District[] {
     return [{ label: g.label, style, items: g.items.value, skyline: area !== undefined }]
   })
 }
+
+/** "English (C1, IELTS Academic 7.0)" → name "English", detail "C1, IELTS Academic 7.0"; no brackets → name only. */
+export function splitLanguage(item: string): { name: string; detail: string | null } {
+  const m = /^(.*?)\s*\((.*)\)\s*$/.exec(item)
+  return m ? { name: m[1], detail: m[2] } : { name: item, detail: null }
+}

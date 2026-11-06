@@ -63,8 +63,8 @@ test('island views', async ({ page }, info) => {
     }
   }
   if (island === 'skills') {
-    // Standing in the plaza facing each district (game −58°, XR 0°, AI +58°, tools 160°, languages 200°).
-    for (const [name, deg] of [['district-game', -58], ['district-xr', 0], ['district-ai', 58], ['district-tools', 160], ['district-languages', 200]] as const) {
+    // Standing in the plaza facing each district (game −58°, XR 0°, AI +58°, tools 157°, languages 190°).
+    for (const [name, deg] of [['district-game', -58], ['district-xr', 0], ['district-ai', 58], ['district-tools', 157], ['district-languages', 190]] as const) {
       const o = (deg * Math.PI) / 180
       await play(name, 1.1 * Math.cos(o), 1.1 * Math.sin(o), o)
     }
