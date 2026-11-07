@@ -7,8 +7,8 @@
 ## The finished experience
 
 - **The world:** five floating white-concrete islands in a black void, joined by ribbed walkways. Each island is built from your CV:
-  - **Education:** the archive ziggurat.
-  - **Experience:** a corridor of gates, Medrick to Sämmi Studios.
+  - **Education:** the observatory academy.
+  - **Experience:** a corridor of gates, Medrick to ARVO, with the Sämmi Studios workshop beside it.
   - **Projects:** a sunken atrium under a floating ring, with an honours wall.
   - **Skills:** the Data City.
   - **Contact:** the Signal Tower.

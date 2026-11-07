@@ -10,14 +10,14 @@ import type { Obstacle } from '../../core/obstacles'
 import { contactStones } from './contactSignal'
 import { STONE, stonePlaces, T } from './contactLayout'
 import { experienceChapters } from './experienceChapters'
-import { SPECS, STELE } from './experienceLayout'
+import { SPECS, STELE, STUDIO, studioPoint } from './experienceLayout'
+import { ACADEMY } from './educationLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
+import { studioSolids } from './sammiStudio'
 import { EXHIBIT } from './sanaSauna'
 import { skillDistricts } from './skillDistricts'
 import { placeBuildings, PLATE, plateWidth, TABLET, tabletSpot } from './skillsCity'
 
-// Kept in step with EducationV2's archive mass (stair, cheeks, back wall) and its sliding spines.
-export const ARCHIVE = { x0: 0.4, x1: 6.3, z: 2.8 }
 // Kept in step with MonolithV2: a 3.2 × 1.3 m slab turned by π/5, standing just above the plinth.
 export const MONOLITH = { hx: 1.6, hz: 0.65, yaw: Math.PI / 5 }
 /** The moon gate's round opening, at walking height: free across |z| below this. */
@@ -37,7 +37,9 @@ function islandFrame(island: IslandDef): Local {
 const span = (x0: number, x1: number, z0: number, z1: number): Obstacle => ({ kind: 'box', c: { x: (x0 + x1) / 2, z: (z0 + z1) / 2 }, hx: (x1 - x0) / 2, hz: (z1 - z0) / 2, yaw: 0 })
 
 function education(): Obstacle[] {
-  return [span(ARCHIVE.x0, ARCHIVE.x1, -ARCHIVE.z, ARCHIVE.z)]
+  // The academy's stepped podium carries everything else (portico, hall, dome, book stacks).
+  const { podium, stacks } = ACADEMY
+  return [span(podium.x0, podium.x1, -stacks.z1, stacks.z1)]
 }
 
 function experience(): Obstacle[] {
@@ -45,6 +47,14 @@ function experience(): Obstacle[] {
   const chapters = experienceChapters(cv.experience.entries)
   for (const c of chapters) {
     if (c.minor || c.style === 'generic') continue
+    if (c.style === 'sammi') {
+      // The studio: its walls around the open doorway, and the loft with its crate terrace.
+      for (const [u0, u1, v0, v1] of studioSolids()) {
+        const centre = studioPoint((u0 + u1) / 2, (v0 + v1) / 2)
+        out.push({ kind: 'box', c: centre, hx: (u1 - u0) / 2, hz: (v1 - v0) / 2, yaw: STUDIO.facing })
+      }
+      continue
+    }
     const s = SPECS[c.style]
     const half = s.W / 2 + s.jw
     const open = c.style === 'oasis' ? MOON_OPENING : s.W / 2

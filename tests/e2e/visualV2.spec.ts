@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { cv } from '../../src/content/cv'
 import { PROJECT_SLOTS } from '../../src/content/world'
 import { experienceChapters } from '../../src/world/v2/experienceChapters'
+import { STUDIO, studioPoint } from '../../src/world/v2/experienceLayout'
 import { gotoEntry, isTouchProject } from './helpers'
 
 // The Phase 0 look is opt-in via ?visual=v2; gameplay, panels and fallbacks must behave exactly as in v1.
@@ -143,13 +144,30 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
   await walk(-1.6, -1.5)
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
-  // One discovery per gate (every non-minor career chapter, the newest Sämmi Studios gate included).
-  const gates = experienceChapters(cv.experience.entries).filter((c) => !c.minor).length
-  expect(gates).toBe(5)
+  // One discovery per corridor gate, then one for stepping into the Sämmi Studios doorway beside it.
+  const gates = experienceChapters(cv.experience.entries).filter((c) => !c.minor && c.style !== 'sammi').length
+  expect(gates).toBe(4)
   await walk(-1.5, 5.6)
   expect((await ns('getGuideCue')) as number).toBe(before + gates)
   await walk(5.6, -1.5)
   expect((await ns('getGuideCue')) as number).toBe(before + gates)
+  const { hall, door } = STUDIO
+  const dv = (door.v0 + door.v1) / 2
+  const studio = (u: number) => {
+    const p = studioPoint(u, dv)
+    return { x: 22 * Math.cos(a) + p.x * Math.cos(a) - p.z * Math.sin(a), z: 22 * Math.sin(a) + p.x * Math.sin(a) + p.z * Math.cos(a) }
+  }
+  const face = a + STUDIO.facing + Math.PI
+  for (const u of [1.6, 1.3, 1.0, 0.85, hall.u1 - 0.1, hall.u1 - 0.15]) {
+    await ns('setView', studio(u), face)
+    await page.waitForTimeout(60)
+  }
+  expect((await ns('getGuideCue')) as number).toBe(before + gates + 1)
+  for (const u of [1.0, 1.6, hall.u1 - 0.15, 1.6]) {
+    await ns('setView', studio(u), face)
+    await page.waitForTimeout(60)
+  }
+  expect((await ns('getGuideCue')) as number).toBe(before + gates + 1)
   // Portals fading for the camera along the way switch to an already-compiled variant.
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })

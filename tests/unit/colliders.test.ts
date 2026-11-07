@@ -8,7 +8,8 @@ import { worldColliders } from '../../src/world/v2/colliders'
 import { contactStones } from '../../src/world/v2/contactSignal'
 import { stonePlaces } from '../../src/world/v2/contactLayout'
 import { experienceChapters } from '../../src/world/v2/experienceChapters'
-import { SPECS } from '../../src/world/v2/experienceLayout'
+import { STUDIO, studioPoint, studioSpan, threshold } from '../../src/world/v2/experienceLayout'
+import { ACADEMY } from '../../src/world/v2/educationLayout'
 import { skillDistricts } from '../../src/world/v2/skillDistricts'
 import { signSpot } from '../../src/world/v2/skillsCity'
 
@@ -82,7 +83,41 @@ describe('world colliders', () => {
 
   it('let the player walk through every Experience gate, from the arrival ring to the far edge', () => {
     for (let x = -2; x <= 5.6; x += 0.05) expect(walk.free(toWorld('experience', { x, z: 0 })), `x = ${x.toFixed(2)}`).toBe(true)
-    for (const c of experienceChapters(cv.experience.entries)) if (!c.minor && c.style !== 'generic') expect(reachableNear(toWorld('experience', { x: SPECS[c.style].x, z: 0 }), 0.05)).toBe(true)
+    for (const c of experienceChapters(cv.experience.entries)) if (!c.minor && c.style !== 'generic') expect(reachableNear(toWorld('experience', threshold(c.style).o), 0.05), c.style).toBe(true)
+  })
+
+  it('let the player step into the Sämmi Studios doorway, past its threshold, but not through its walls', () => {
+    const { hall, door } = STUDIO
+    const dv = (door.v0 + door.v1) / 2
+    // From well in front of the studio up to the back of the doorway recess, less the body's radius.
+    for (let u = 1.9; u >= hall.u1 - door.depth + 0.32; u -= 0.05) expect(walk.free(toWorld('experience', studioPoint(u, dv))), `u = ${u.toFixed(2)}`).toBe(true)
+    expect(reachableNear(toWorld('experience', studioPoint(hall.u1 - 0.2, dv)), 0.1)).toBe(true)
+    expect(walk.free(toWorld('experience', studioPoint(-0.4, STUDIO.loft.slit)))).toBe(false) // the loft
+    expect(walk.free(toWorld('experience', studioPoint(0, STUDIO.window.v0)))).toBe(false) // the hall
+  })
+
+  it('keep the studio clear of the corridor gates and inside the island', () => {
+    const { hall, plinth } = STUDIO
+    const [lo, hi] = studioSpan()
+    const corners = [
+      [hall.u0 - plinth, lo - plinth],
+      [hall.u1 + plinth, lo - plinth],
+      [hall.u1 + plinth, hi + plinth],
+      [hall.u0 - plinth, hi + plinth],
+    ].map(([u, vv]) => studioPoint(u, vv))
+    for (const c of corners) {
+      expect(Math.hypot(c.x, c.z), 'inside the island').toBeLessThan(5.6)
+      // Every gate stands within |z| ≤ 1.85 of the corridor's axis: keep a walkable gap beside them.
+      expect(c.z, 'beside the corridor').toBeLessThan(-1.85 - 0.9)
+    }
+  })
+
+  it('keep the academy on its podium, clear of the arrival ring and inside the island', () => {
+    const { podium, stacks } = ACADEMY
+    expect(walk.free(toWorld('education', { x: podium.x0 - 0.35, z: 0 }))).toBe(true)
+    expect(walk.free(toWorld('education', { x: podium.x0 + 0.05, z: 0 }))).toBe(false)
+    expect(Math.hypot(podium.x1, stacks.z1)).toBeLessThan(5.7)
+    expect(podium.x0 - 0.3 - (-2 + 1.25)).toBeGreaterThan(0.8) // the arrival ring (at x = -2, r 1.25) stays open
   })
 
   it('make the Data City towers, the archive and the monolith solid', () => {

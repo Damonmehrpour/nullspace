@@ -82,6 +82,21 @@ test('island views', async ({ page }, info) => {
     await play('wordgame-close', 0.1, -1.55, -Math.PI / 2)
     await play('wordgame-from-arrival', -2, 0, -0.9)
   }
+  if (island === 'experience') {
+    // The Sämmi Studios workshop beside the corridor: from the other walkway, the arrival ring, between
+    // the gates, and at its door.
+    await play('approach-other', -5.2, 3.6, -0.55)
+    await play('studio-from-arrival', -2, 0, -0.4)
+    await play('studio-approach', -1.6, -1.6, -0.73)
+    await play('studio-from-walkway', -3.2, -3.9, 0.15)
+    await play('studio-close', 0.14, -2.76, -1.29)
+  }
+  if (island === 'education') {
+    // The academy from the arrival ring's sides, and close to its portico.
+    await play('academy-near', -0.6, 0)
+    await play('academy-side-a', -1.5, 3.4, -0.75)
+    await play('academy-side-b', -1.5, -3.4, 0.75)
+  }
   if (island === 'contact') {
     // In front of each channel stone (fanned around the tower toward the plaza), facing it.
     for (const [name, deg] of [['stone-1', -69], ['stone-2', -23], ['stone-3', 23], ['stone-4', 69]] as const) {

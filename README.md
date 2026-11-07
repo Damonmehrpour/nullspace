@@ -8,8 +8,8 @@ Damon Mehrpour's portfolio as a surreal 3D journey: a hooded wanderer crosses fi
 
 | Island | What it is |
 |---|---|
-| Education & Research | An archive ziggurat: a stair carved into a monolith, with archive slabs that slide out |
-| Experience | A corridor of monumental gates, one per career chapter in time order, engraved with role and dates |
+| Education & Research | An observatory academy: a stepped portico under a pediment, an arched doorway, a domed observatory with a telescope, and book-spine stacks that slide out |
+| Experience | A corridor of monumental gates, one per career chapter in time order, engraved with role and dates; the newest chapter, Sämmi Studios, is a small game workshop beside it with its sign facing the arrival ring |
 | Projects | A sunken atrium under a floating ring, with threads of light to three projects, the SanaSauna word-game exhibit and an honours wall |
 | Skills | The Data City: one district per skill group, one building per skill, each labelled with the skill |
 | Contact | The Signal Tower: one transmitter stone per contact channel, wired to a beaconed dish |
