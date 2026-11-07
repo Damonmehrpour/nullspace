@@ -221,9 +221,15 @@ export function PortalV2({ layout }: { layout: WorldLayout }) {
       <group rotation={[0, yawFor(PORTAL.facing), 0]}>
         <ContactShadow position={[-0.4, 0, 0]} size={[3.4, 8.4]} opacity={0.45} />
         <group onClick={activate} onPointerOver={() => (document.body.style.cursor = 'pointer')} onPointerOut={() => (document.body.style.cursor = '')}>
-          <mesh name="v2-monolith" geometry={stone} material={stoneMat} userData={{ blocksCamera: true, fadeOnBlock: true }} />
+          <mesh name="v2-monolith" geometry={stone} material={stoneMat} />
           <mesh name="v2-portal-void" geometry={void_} material={voidMat} />
         </group>
+        {/* Invisible stand-in across the whole ring, aperture included, for the camera's blocker ray: the
+            ray from behind the portal to the player passes through the open aperture, so without it the
+            portal never faded and its dark aperture filled the opening view. */}
+        <mesh position={[0, (cy + ring.rOut) / 2, 0]} material={stoneMat} visible={false} userData={{ blocksCamera: true, fadeOnBlock: true }}>
+          <boxGeometry args={[ring.depth + 0.3, cy + ring.rOut, ring.rOut * 2]} />
+        </mesh>
         <mesh name="v2-portal-accents" geometry={accents} material={accentMat} />
         <group ref={irisRef} position={[0, cy, 0]}>
           <mesh name="v2-portal-iris" geometry={iris} material={irisMat} />
