@@ -16,8 +16,10 @@ export function PortalPrompt() {
   const touch = useMemo(() => capabilities.isTouchFirst(), [])
   if (!near || busy) return null
   return (
-    <div data-testid="portal-prompt" className="fixed bottom-24 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 border-2 border-moss bg-void/85 py-1 pr-1 pl-3 text-sm text-concrete">
-      <span aria-live="polite">{touch ? 'Tap the portal' : 'E or Enter'} to open the 2D Portfolio</span>
+    <div data-testid="portal-prompt" className="fixed top-36 left-1/2 z-10 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border-2 border-moss bg-void/85 py-1 pr-1 pl-3 text-sm text-concrete sm:top-auto sm:bottom-24">
+      <span aria-live="polite">
+        {touch ? 'Tap the portal' : 'E or Enter'}<span className="hidden sm:inline"> to open the 2D Portfolio</span>
+      </span>
       <button type="button" className="border border-concrete/40 px-2 py-0.5 text-concrete hover:border-moss focus-visible:border-moss" onClick={enter}>
         Enter the Portfolio
       </button>
