@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { cv } from '../../src/content/cv'
-import { PROJECT_SLOTS } from '../../src/content/world'
+import { DEFAULT_LAYOUT_PARAMS, PROJECT_SLOTS, SPREAD } from '../../src/content/world'
 import { experienceChapters } from '../../src/world/v2/experienceChapters'
 import { STUDIO, studioPoint } from '../../src/world/v2/experienceLayout'
 import { gotoEntry, isTouchProject } from './helpers'
+
+const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
 
 // The Phase 0 look is opt-in via ?visual=v2; gameplay, panels and fallbacks must behave exactly as in v1.
 
@@ -133,7 +135,7 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
     page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
   await ns('freezeClock')
   const a = ((90 - 72) * Math.PI) / 180
-  const at = (lx: number) => ({ x: (22 + lx) * Math.cos(a), z: (22 + lx) * Math.sin(a) })
+  const at = (lx: number) => ({ x: (RING + lx) * Math.cos(a), z: (RING + lx) * Math.sin(a) })
   const walk = async (from: number, to: number) => {
     const step = from < to ? 0.35 : -0.35
     for (let lx = from; step > 0 ? lx <= to : lx >= to; lx += step) {
@@ -147,15 +149,15 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
   // One discovery per corridor gate, then one for stepping into the Sämmi Studios doorway beside it.
   const gates = experienceChapters(cv.experience.entries).filter((c) => !c.minor && c.style !== 'sammi').length
   expect(gates).toBe(4)
-  await walk(-1.5, 5.6)
+  await walk(-1.5, 6.6)
   expect((await ns('getGuideCue')) as number).toBe(before + gates)
-  await walk(5.6, -1.5)
+  await walk(6.6, -1.5)
   expect((await ns('getGuideCue')) as number).toBe(before + gates)
   const { hall, door } = STUDIO
   const dv = (door.v0 + door.v1) / 2
   const studio = (u: number) => {
     const p = studioPoint(u, dv)
-    return { x: 22 * Math.cos(a) + p.x * Math.cos(a) - p.z * Math.sin(a), z: 22 * Math.sin(a) + p.x * Math.sin(a) + p.z * Math.cos(a) }
+    return { x: RING * Math.cos(a) + p.x * Math.cos(a) - p.z * Math.sin(a), z: RING * Math.sin(a) + p.x * Math.sin(a) + p.z * Math.cos(a) }
   }
   const face = a + STUDIO.facing + Math.PI
   for (const u of [1.6, 1.3, 1.0, 0.85, hall.u1 - 0.1, hall.u1 - 0.15]) {
@@ -208,15 +210,16 @@ test('v2: approaching each project in the atrium discovers it once', async ({ pa
     page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
   await ns('freezeClock')
   const a = ((90 - 2 * 72) * Math.PI) / 180 // Projects: third island on the ring
-  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
-  const near = (off: number) => ({ x: c.x + 2 * Math.cos(a + (off * Math.PI) / 180), z: c.z + 2 * Math.sin(a + (off * Math.PI) / 180) })
+  const c = { x: RING * Math.cos(a), z: RING * Math.sin(a) }
+  // 1 m short of each slot, on its bearing from the atrium's centre (within the 1.5 m range).
+  const near = (off: number, r: number) => ({ x: c.x + (r - 1) * Math.cos(a + (off * Math.PI) / 180), z: c.z + (r - 1) * Math.sin(a + (off * Math.PI) / 180) })
   await ns('setView', c, a)
   await page.waitForTimeout(300)
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
   for (const pass of [1, 2]) {
-    for (const off of PROJECT_SLOTS.map((s) => s.angle)) {
-      await ns('setView', near(off), a + (off * Math.PI) / 180)
+    for (const { angle: off, r } of PROJECT_SLOTS) {
+      await ns('setView', near(off, r), a + (off * Math.PI) / 180)
       await page.waitForTimeout(150)
       await ns('setView', c, a)
       await page.waitForTimeout(100)
@@ -240,7 +243,7 @@ test('v2: visiting each Data City district discovers it once', async ({ page }, 
   await ns('freezeClock')
   await ns('markAllRevealed')
   const a = ((90 - 3 * 72) * Math.PI) / 180 // Skills: fourth island on the ring
-  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const c = { x: RING * Math.cos(a), z: RING * Math.sin(a) }
   const local = (r: number, deg: number) => {
     const t = (deg * Math.PI) / 180
     const x = r * Math.cos(t)
@@ -253,7 +256,7 @@ test('v2: visiting each Data City district discovers it once', async ({ page }, 
   const programs = ((await ns('listPrograms')) as string[]).length
   for (const pass of [1, 2]) {
     for (const deg of [-62, 0, 62, 155, 195]) {
-      await ns('setView', local(1.6, deg), a + (deg * Math.PI) / 180)
+      await ns('setView', local(1.6 * SPREAD, deg), a + (deg * Math.PI) / 180)
       await page.waitForTimeout(150)
     }
     expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 5)
@@ -275,12 +278,12 @@ test('v2: approaching each contact stone discovers it once', async ({ page }, in
   await ns('freezeClock')
   await ns('markAllRevealed')
   const a = ((90 - 4 * 72) * Math.PI) / 180 // Contact: fifth island on the ring
-  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const c = { x: RING * Math.cos(a), z: RING * Math.sin(a) }
   const local = (x: number, z: number) => ({ x: c.x + x * Math.cos(a) - z * Math.sin(a), z: c.z + x * Math.sin(a) + z * Math.cos(a) })
-  // Stones fan around the tower (2.4, 0) at 3.15 m, 46° apart around 180° (four channels: ±23°, ±69°); stand 1 m in front of each.
+  // Stones fan around the tower (2.4 m out, scaled with the island) at 3.15 m (scaled), 46° apart around 180° (four channels: ±23°, ±69°); stand 1 m in front of each.
   const front = (deg: number) => {
     const t = ((180 + deg) * Math.PI) / 180
-    return local(2.4 + 4.15 * Math.cos(t), 4.15 * Math.sin(t))
+    return local(2.4 * SPREAD + (3.15 * SPREAD + 1) * Math.cos(t), (3.15 * SPREAD + 1) * Math.sin(t))
   }
   await ns('setView', local(-3.5, 0), a)
   await page.waitForTimeout(500)

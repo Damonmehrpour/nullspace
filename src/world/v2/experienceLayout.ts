@@ -1,3 +1,4 @@
+import { SPREAD } from '../../content/world'
 import type { Vec2 } from '../../core/geometry'
 import type { PortalStyle } from './experienceChapters'
 
@@ -7,14 +8,22 @@ import type { PortalStyle } from './experienceChapters'
 export type Spec = { x: number; H: number; W: number; jw: number; D: number }
 /** The corridor gates, oldest nearest the arrival ring, the tallest (ARVO) framing the void. */
 export type CorridorStyle = Exclude<PortalStyle, 'generic' | 'sammi'>
+// Positions along the corridor follow the island's size (SPREAD), so the gates stand further apart.
 export const SPECS: Record<CorridorStyle, Spec> = {
-  medrick: { x: -0.7, H: 3.6, W: 1.8, jw: 0.6, D: 0.7 },
-  ubicomp: { x: 1.15, H: 4.1, W: 2.0, jw: 0.62, D: 0.6 },
-  oasis: { x: 3.0, H: 4.6, W: 2.9, jw: 0.35, D: 0.8 },
-  arvo: { x: 4.95, H: 5.3, W: 2.3, jw: 0.7, D: 0.75 },
+  medrick: { x: -0.7 * SPREAD, H: 3.6, W: 1.8, jw: 0.6, D: 0.7 },
+  ubicomp: { x: 1.15 * SPREAD, H: 4.1, W: 2.0, jw: 0.62, D: 0.6 },
+  oasis: { x: 3.0 * SPREAD, H: 4.6, W: 2.9, jw: 0.35, D: 0.8 },
+  arvo: { x: 4.95 * SPREAD, H: 4.8, W: 2.3, jw: 0.7, D: 0.75 },
 }
 export const LINTEL = 0.75
-export const STELE = { x: 0.22, z: 1.85 }
+/** ARVO's details: fin width and gap beside each pier, the mast above the lintel, the cantilever, and the inner frame. */
+export const ARVO = { fin: 0.16, gap: 0.08, mast: 0.9, cantilever: 1.3, inset: 0.45, frameIn: 0.22 }
+/** The inner frame's posts (island-local x and |z|), for the colliders. */
+export function arvoPosts(): { x: number; z: number } {
+  const s = SPECS.arvo
+  return { x: s.x + s.D / 2 + ARVO.inset, z: s.W / 2 - ARVO.frameIn }
+}
+export const STELE = { x: 0.22 * SPREAD, z: 1.85 }
 
 const deg = (d: number) => (d * Math.PI) / 180
 
@@ -25,8 +34,8 @@ const deg = (d: number) => (d * Math.PI) / 180
  */
 export const STUDIO = {
   /** Footprint centre (island-local) and the direction its front faces (island-local angle). */
-  x: 0.6,
-  z: -4.0,
+  x: 0.6 * SPREAD,
+  z: -4.0 * SPREAD,
   facing: deg(106),
   /** The workshop hall under its sawtooth roof (+v is the viewer's left, away from the corridor). */
   hall: { u0: -0.95, u1: 0.75, v0: -0.6, v1: 1.7, h: 3.0 },

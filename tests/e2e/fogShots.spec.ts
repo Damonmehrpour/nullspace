@@ -1,5 +1,8 @@
 import { test } from '@playwright/test'
 import { gotoEntry } from './helpers'
+import { DEFAULT_LAYOUT_PARAMS } from '../../src/content/world'
+
+const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
 
 // Manual visual review only: SHOTS=1 npx playwright test fogShots --project=desktop
 // Saves screenshots from spawn, each walkway midpoint and in front of each island to test-results/shots.
@@ -23,7 +26,7 @@ test('fog and island readability shots', async ({ page }, info) => {
     const deg = (d: number) => (d * Math.PI) / 180
     const ids = ['education', 'experience', 'projects', 'skills', 'contact']
     const out: { name: string; pos: V; yaw: number }[] = []
-    const centre = (i: number) => ({ x: 22 * Math.cos(deg(90 - i * 72)), z: 22 * Math.sin(deg(90 - i * 72)) })
+    const centre = (i: number) => ({ x: RING * Math.cos(deg(90 - i * 72)), z: RING * Math.sin(deg(90 - i * 72)) })
     const entry = { x: (centre(4).x + centre(0).x) / 2, z: (centre(4).z + centre(0).z) / 2 }
     const len = Math.hypot(entry.x, entry.z)
     out.push({ name: 'spawn', pos: { x: (entry.x / len) * 2, z: (entry.z / len) * 2 }, yaw: Math.atan2(entry.z, entry.x) })

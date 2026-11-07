@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { gotoEntry } from './helpers'
+import { DEFAULT_LAYOUT_PARAMS } from '../../src/content/world'
+
+const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
 
 // Manual review shots for Phase 3: SHOTS=1 npx playwright test phase3Shots --project=desktop
 // The XR Meditation story moment (v2), the phone number in the contact panel and the 2D portfolio
@@ -27,7 +30,7 @@ test('phase 3 review shots', async ({ page }, info) => {
   // Stand beside the XR Meditation System (slot 0 of Projects) with the kokedama nearby.
   const a = ((90 - 2 * 72) * Math.PI) / 180
   const o = a - (40 * Math.PI) / 180
-  const c = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const c = { x: RING * Math.cos(a), z: RING * Math.sin(a) }
   const slot = { x: c.x + 3 * Math.cos(o), z: c.z + 3 * Math.sin(o) }
   const stand = { x: slot.x - 1.3 * Math.cos(o) + 0.4 * Math.sin(o), z: slot.z - 1.3 * Math.sin(o) - 0.4 * Math.cos(o) }
   await ns('placeGuide', { x: stand.x - 0.9 * Math.sin(o) - 0.3 * Math.cos(o), z: stand.z + 0.9 * Math.cos(o) - 0.3 * Math.sin(o) }, o)

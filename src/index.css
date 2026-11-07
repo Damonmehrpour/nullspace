@@ -147,3 +147,44 @@ body {
     transform: translateY(47px);
   }
 }
+
+/* The portfolio portal's transition: a pale iris opens from the centre and closes the world to black,
+   then the veil fades off the Portfolio. Short by design; reduced motion never shows it. */
+.portal-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgb(233 246 220 / 0.85) 0%, rgb(111 174 60 / 0.28) 16%, #000 46%);
+}
+.portal-veil-in {
+  animation: portal-in 420ms cubic-bezier(0.55, 0, 0.8, 0.2) forwards;
+}
+.portal-veil-out {
+  background: #000;
+  animation: portal-out 320ms ease-out forwards;
+}
+@keyframes portal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  to {
+    opacity: 1;
+    transform: scale(3);
+  }
+}
+@keyframes portal-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-veil-in,
+  .portal-veil-out {
+    animation-duration: 1ms;
+  }
+}

@@ -14,6 +14,7 @@ import { createQuality, type QualityState } from '../core/quality'
 import { createZoneTracker, updateZones, type ZoneTracker } from '../core/tour'
 import { createWalkable } from '../core/walkable'
 import { worldColliders } from './v2/colliders'
+import { portalInRange } from './v2/portalLayout'
 import { V2 } from './visual'
 import { isReducedMotion } from '../state/reducedMotion'
 import { isGameplayPaused, useStore } from '../state/store'
@@ -30,7 +31,7 @@ export type Sim = {
   guide: GuideState
   guidePose: GuidePose
   zones: ZoneTracker
-  input: { state: InputState; clear(): void; dispose(): void } | null
+  input: { state: InputState; clear(): void; dispose(): void; takeInteract?(): boolean } | null
   listeners: Set<(events: SimEvent[], entered: SectionId | null) => void>
   /** Test clock: when frozen, only advance() moves the simulation. */
   frozen: boolean
@@ -138,10 +139,17 @@ export function simulate(dt: number): void {
 
   const near = paused ? null : artifactInRange(sim.player.pos, PROJECTS.artifactSlots)
   store.setNearArtifact(near)
-  const interact = !paused && (sim.input?.state.interact ?? false)
-  if (interact && !sim.interactHeld) {
+  // The portfolio portal (v2 only): in reach of its front or back.
+  const nearPortal = !paused && V2 && portalInRange(sim.player.pos)
+  store.setNearPortal(nearPortal)
+  const held = sim.input?.state.interact ?? false
+  // A press is latched by the input until read here, so a quick tap between two slow frames still counts.
+  const pressed = sim.input?.takeInteract?.() ?? false
+  const interact = !paused && held
+  if (!paused && (pressed || (interact && !sim.interactHeld))) {
     const slot = near
     if (slot !== null) store.openProject(cv.projects.projects[slot].id, { source: 'artifact' })
+    else if (nearPortal) store.enterPortal()
   }
   sim.interactHeld = interact
 

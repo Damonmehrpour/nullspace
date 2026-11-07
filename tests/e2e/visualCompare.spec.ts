@@ -1,5 +1,8 @@
 import { test, type Page } from '@playwright/test'
 import { gotoEntry } from './helpers'
+import { DEFAULT_LAYOUT_PARAMS } from '../../src/content/world'
+
+const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
 
 // Manual visual review only: SHOTS=1 npx playwright test visualCompare --project=desktop
 // Writes matched before/after pairs to test-results/compare/{v1,v2}-<view>.png
@@ -16,7 +19,7 @@ type NS = {
 }
 
 const deg = (d: number) => (d * Math.PI) / 180
-const centre = (i: number): V => ({ x: 22 * Math.cos(deg(90 - i * 72)), z: 22 * Math.sin(deg(90 - i * 72)) })
+const centre = (i: number): V => ({ x: RING * Math.cos(deg(90 - i * 72)), z: RING * Math.sin(deg(90 - i * 72)) })
 const EDU = centre(0)
 const CONTACT = centre(4)
 const ENTRY = { x: (EDU.x + CONTACT.x) / 2, z: (EDU.z + CONTACT.z) / 2 }

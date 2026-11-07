@@ -21,11 +21,21 @@ const KEYMAP: Record<string, keyof InputState> = {
   Enter: 'interact',
 }
 
+export type KeyboardInput = {
+  state: InputState
+  clear(): void
+  dispose(): void
+  /** Whether E/Enter was pressed since the last call: a tap shorter than a frame still counts once. */
+  takeInteract(): boolean
+}
+
 /** Held-key state for movement. Clears itself whenever focus leaves, so keys never stick. */
-export function createKeyboardInput(target: Window): { state: InputState; clear(): void; dispose(): void } {
+export function createKeyboardInput(target: Window): KeyboardInput {
   const state: InputState = { up: false, down: false, left: false, right: false, interact: false }
+  let pressed = false
   const clear = () => {
     for (const k of Object.keys(state) as (keyof InputState)[]) state[k] = false
+    pressed = false
   }
   const set = (e: KeyboardEvent, down: boolean) => {
     const key = KEYMAP[e.code]
@@ -33,6 +43,7 @@ export function createKeyboardInput(target: Window): { state: InputState; clear(
     if (down && (isTypingTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey)) return
     // Enter/E on a focused control belongs to that control, not to the world.
     if (down && key === 'interact' && e.target instanceof Element && e.target.closest('button, a, [role="button"]')) return
+    if (down && key === 'interact' && !e.repeat) pressed = true
     state[key] = down
   }
   const onDown = (e: KeyboardEvent) => set(e, true)
@@ -47,6 +58,11 @@ export function createKeyboardInput(target: Window): { state: InputState; clear(
   return {
     state,
     clear,
+    takeInteract() {
+      const p = pressed
+      pressed = false
+      return p
+    },
     dispose() {
       target.removeEventListener('keydown', onDown)
       target.removeEventListener('keyup', onUp)

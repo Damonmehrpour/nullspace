@@ -85,8 +85,9 @@ test('the monolith and the archive are solid; the Experience gates stay open', a
   const eduOut = Math.atan2(edu.centre.z, edu.centre.x)
   const atArchive = await walk(page, ns, toWorld('education', { x: -3.6, z: 0 }), eduOut, 3)
   const local = (p: V) => (p.x - edu.centre.x) * Math.cos(eduOut) + (p.z - edu.centre.z) * Math.sin(eduOut)
-  expect(local(atArchive)).toBeGreaterThan(-0.5) // walked all the way up to it
-  expect(local(atArchive)).toBeLessThan(0.4) // and no further
+  // The academy's podium starts 1.1 m out (it moved out with the larger island); the body stops 0.3 m short.
+  expect(local(atArchive)).toBeGreaterThan(0.3) // walked all the way up to it
+  expect(local(atArchive)).toBeLessThan(1.0) // and no further
   // Experience: from the arrival ring outward through all four gates to the far edge.
   const exp = island('experience')
   const expOut = Math.atan2(exp.centre.z, exp.centre.x)

@@ -8,6 +8,7 @@ Damon Mehrpour's portfolio as a surreal 3D journey: a hooded wanderer crosses fi
 
 | Island | What it is |
 |---|---|
+| Centre (spawn) | The portfolio portal: a twelve-sided gateway between two pylons; E, Enter, a click or a tap goes through to the 2D Portfolio with a short transition (instant with reduced motion) |
 | Education & Research | An observatory academy: a stepped portico under a pediment, an arched doorway, a domed observatory with a telescope, and book-spine stacks that slide out |
 | Experience | A corridor of monumental gates, one per career chapter in time order, engraved with role and dates; the newest chapter, Sämmi Studios, is a small game workshop beside it with its sign facing the arrival ring |
 | Projects | A sunken atrium under a floating ring, with threads of light to three projects, the SanaSauna word-game exhibit and an honours wall |

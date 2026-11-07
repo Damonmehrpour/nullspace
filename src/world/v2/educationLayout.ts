@@ -3,6 +3,8 @@
 // entrance faces the arrival ring at -x), z runs across, y is up.
 
 export const ACADEMY = {
+  /** The whole academy sits this far outward (it was drawn for the 6 m island; the arrival ring moved back with the larger one). */
+  shift: 0.6,
   /** The podium: three steps up from x0, then the platform everything stands on, to x1. */
   podium: { x0: 0.5, x1: 4.95, z: 2.55, steps: 3, rise: 0.12, run: 0.24 },
   /** The portico's six columns, the centre bay as wide as the arched doorway behind it. */

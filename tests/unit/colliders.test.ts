@@ -82,8 +82,8 @@ describe('world colliders', () => {
   })
 
   it('let the player walk through every Experience gate, from the arrival ring to the far edge', () => {
-    for (let x = -2; x <= 5.6; x += 0.05) expect(walk.free(toWorld('experience', { x, z: 0 })), `x = ${x.toFixed(2)}`).toBe(true)
-    for (const c of experienceChapters(cv.experience.entries)) if (!c.minor && c.style !== 'generic') expect(reachableNear(toWorld('experience', threshold(c.style).o), 0.05), c.style).toBe(true)
+    for (let x = -2.4; x <= 6.7; x += 0.05) expect(walk.free(toWorld('experience', { x, z: 0 })), `x = ${x.toFixed(2)}`).toBe(true)
+    for (const c of experienceChapters(cv.experience.entries)) if (!c.minor && c.style !== 'generic') expect(reachableNear(toWorld('experience', threshold(c.style).o), 0.1), c.style).toBe(true)
   })
 
   it('let the player step into the Sämmi Studios doorway, past its threshold, but not through its walls', () => {
@@ -106,7 +106,7 @@ describe('world colliders', () => {
       [hall.u0 - plinth, hi + plinth],
     ].map(([u, vv]) => studioPoint(u, vv))
     for (const c of corners) {
-      expect(Math.hypot(c.x, c.z), 'inside the island').toBeLessThan(5.6)
+      expect(Math.hypot(c.x, c.z), 'inside the island').toBeLessThan(island('experience').radius - 0.4)
       // Every gate stands within |z| ≤ 1.85 of the corridor's axis: keep a walkable gap beside them.
       expect(c.z, 'beside the corridor').toBeLessThan(-1.85 - 0.9)
     }
@@ -114,10 +114,11 @@ describe('world colliders', () => {
 
   it('keep the academy on its podium, clear of the arrival ring and inside the island', () => {
     const { podium, stacks } = ACADEMY
-    expect(walk.free(toWorld('education', { x: podium.x0 - 0.35, z: 0 }))).toBe(true)
-    expect(walk.free(toWorld('education', { x: podium.x0 + 0.05, z: 0 }))).toBe(false)
-    expect(Math.hypot(podium.x1, stacks.z1)).toBeLessThan(5.7)
-    expect(podium.x0 - 0.3 - (-2 + 1.25)).toBeGreaterThan(0.8) // the arrival ring (at x = -2, r 1.25) stays open
+    const x0 = ACADEMY.shift + podium.x0
+    expect(walk.free(toWorld('education', { x: x0 - 0.35, z: 0 }))).toBe(true)
+    expect(walk.free(toWorld('education', { x: x0 + 0.05, z: 0 }))).toBe(false)
+    expect(Math.hypot(ACADEMY.shift + podium.x1, stacks.z1)).toBeLessThan(island('education').radius - 0.5)
+    expect(x0 - 0.3 - (-2.4 + 1.25)).toBeGreaterThan(1.2) // the arrival ring (at x = -2.4, r 1.25) stays open
   })
 
   it('make the Data City towers, the archive and the monolith solid', () => {

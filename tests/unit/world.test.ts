@@ -10,10 +10,13 @@ describe('world layout', () => {
     expect(WORLD.tourOrder).toEqual([...SECTION_IDS])
   })
 
-  it('places adjacent islands about 25.86 m apart on a 22 m ring', () => {
+  it('places adjacent islands about 28.2 m apart on a 24 m ring, each 7.2 m across its platform', () => {
     const [a, b] = WORLD.islands
-    expect(v.dist(a.centre, b.centre)).toBeCloseTo(25.86, 1)
-    for (const i of WORLD.islands) expect(v.len(i.centre)).toBeCloseTo(22, 5)
+    expect(v.dist(a.centre, b.centre)).toBeCloseTo(28.21, 1)
+    for (const i of WORLD.islands) expect(v.len(i.centre)).toBeCloseTo(24, 5)
+    for (const i of WORLD.islands) expect(i.radius).toBe(7.2)
+    // Walkways between the larger platforms stay a comfortable length.
+    for (const w of WORLD.walkways) expect(v.dist(w.a, w.b)).toBeGreaterThan(14)
   })
 
   it('gives Projects one artifact slot per project and the others none', () => {
@@ -36,10 +39,10 @@ describe('world layout', () => {
     expect(v.dist(WORLD.bridge.b, WORLD.ringEntry)).toBeLessThan(1e-9)
   })
 
-  it('places each arrival point 2 m from its island centre towards the monolith', () => {
+  it('places each arrival point 2.4 m from its island centre towards the monolith', () => {
     for (const i of WORLD.islands) {
-      expect(v.dist(i.arrivalPoint, i.centre)).toBeCloseTo(2)
-      expect(v.len(i.arrivalPoint)).toBeCloseTo(20)
+      expect(v.dist(i.arrivalPoint, i.centre)).toBeCloseTo(2.4)
+      expect(v.len(i.arrivalPoint)).toBeCloseTo(21.6)
     }
   })
 

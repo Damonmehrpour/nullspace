@@ -1,6 +1,9 @@
 import { test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { gotoEntry } from './helpers'
+import { DEFAULT_LAYOUT_PARAMS } from '../../src/content/world'
+
+const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
 
 // Manual character review: SHOTS=1 SHOTS_VARIANT=v1|v2 npx playwright test characterShots --project=desktop
 // Close-ups of the player and the kokedama (front three-quarter, side, back, mid-stride, kokedama,
@@ -29,7 +32,7 @@ test('character close-ups', async ({ page }, info) => {
 
   // Stage on the Contact–Education walkway: open deck, nothing between the camera and the pair.
   const deg = (d: number) => (d * Math.PI) / 180
-  const centre = (i: number): V => ({ x: 22 * Math.cos(deg(90 - i * 72)), z: 22 * Math.sin(deg(90 - i * 72)) })
+  const centre = (i: number): V => ({ x: RING * Math.cos(deg(90 - i * 72)), z: RING * Math.sin(deg(90 - i * 72)) })
   const edu = centre(0)
   const con = centre(4)
   const stage = { x: con.x * 0.42 + edu.x * 0.58, z: con.z * 0.42 + edu.z * 0.58 }

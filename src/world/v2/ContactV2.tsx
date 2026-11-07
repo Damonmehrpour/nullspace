@@ -5,7 +5,7 @@ import { BoxGeometry, Color, CylinderGeometry, Matrix4, MeshBasicMaterial, Quate
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { cv } from '../../content/cv'
-import type { IslandDef } from '../../content/world'
+import { SPREAD, type IslandDef } from '../../content/world'
 import { v } from '../../core/geometry'
 import { IslandBase } from '../islands/IslandBase'
 import { easeOutCubic, useReveal } from '../reveals/useReveal'
@@ -77,7 +77,7 @@ function buildTower(stones: Placed[], lights: Light[]) {
     lights.push({ matrix: new Matrix4().makeScale(1e-4, 1e-4, 1e-4), base: 1, stone: k, cable: { from, to } }) // its travelling pulse
   })
   for (const a of [-50, 0, 50]) {
-    const edge = new Vector3(5.75 * Math.cos(deg(a)), 0.05, 5.75 * Math.sin(deg(a)))
+    const edge = new Vector3(5.75 * SPREAD * Math.cos(deg(a)), 0.05, 5.75 * SPREAD * Math.sin(deg(a)))
     lights.push({ matrix: slanted(new Vector3(T.x, 6.55, T.z), edge, 0.008), base: 0.1 })
   }
   return { tower: mergeGeometries(tower, false)!, proxy: mergeGeometries(proxy.map((p) => (p.deleteAttribute('uv'), p.toNonIndexed())), false)! }

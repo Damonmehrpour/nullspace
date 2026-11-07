@@ -10,16 +10,15 @@ import type { Obstacle } from '../../core/obstacles'
 import { contactStones } from './contactSignal'
 import { STONE, stonePlaces, T } from './contactLayout'
 import { experienceChapters } from './experienceChapters'
-import { SPECS, STELE, STUDIO, studioPoint } from './experienceLayout'
+import { arvoPosts, SPECS, STELE, STUDIO, studioPoint } from './experienceLayout'
 import { ACADEMY } from './educationLayout'
+import { portalPoint, portalSolids, PORTAL } from './portalLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
 import { studioSolids } from './sammiStudio'
 import { EXHIBIT } from './sanaSauna'
 import { skillDistricts } from './skillDistricts'
 import { placeBuildings, PLATE, plateWidth, TABLET, tabletSpot } from './skillsCity'
 
-// Kept in step with MonolithV2: a 3.2 × 1.3 m slab turned by π/5, standing just above the plinth.
-export const MONOLITH = { hx: 1.6, hz: 0.65, yaw: Math.PI / 5 }
 /** The moon gate's round opening, at walking height: free across |z| below this. */
 const MOON_OPENING = 0.9
 const PLINTH_R = 0.62
@@ -39,7 +38,7 @@ const span = (x0: number, x1: number, z0: number, z1: number): Obstacle => ({ ki
 function education(): Obstacle[] {
   // The academy's stepped podium carries everything else (portico, hall, dome, book stacks).
   const { podium, stacks } = ACADEMY
-  return [span(podium.x0, podium.x1, -stacks.z1, stacks.z1)]
+  return [span(ACADEMY.shift + podium.x0, ACADEMY.shift + podium.x1, -stacks.z1, stacks.z1)]
 }
 
 function experience(): Obstacle[] {
@@ -60,6 +59,11 @@ function experience(): Obstacle[] {
     const open = c.style === 'oasis' ? MOON_OPENING : s.W / 2
     // The two jambs (or the moon gate's sides); the opening between them stays clear.
     out.push(span(s.x - s.D / 2, s.x + s.D / 2, open, half), span(s.x - s.D / 2, s.x + s.D / 2, -half, -open))
+    if (c.style === 'arvo') {
+      // The inner frame's two posts behind the opening.
+      const p = arvoPosts()
+      for (const z of [-p.z, p.z]) out.push(span(p.x - 0.06, p.x + 0.06, z - 0.06, z + 0.06))
+    }
   }
   if (chapters.some((c) => c.minor)) out.push(span(STELE.x - 0.13, STELE.x + 0.13, STELE.z - 0.45, STELE.z + 0.45))
   return out
@@ -115,7 +119,8 @@ const BY_ISLAND = { education, experience, projects, skills, contact }
 
 /** Every solid structure in the world, in world space. */
 export function worldColliders(layout: WorldLayout): Obstacle[] {
-  const out: Obstacle[] = [{ kind: 'box', c: layout.monolith.centre, hx: MONOLITH.hx, hz: MONOLITH.hz, yaw: -MONOLITH.yaw }]
+  // The portfolio portal on the central plinth: its rings and sill, and the two pylons.
+  const out: Obstacle[] = portalSolids().map(([x0, x1, z0, z1]): Obstacle => ({ kind: 'box', c: portalPoint((x0 + x1) / 2, (z0 + z1) / 2), hx: (x1 - x0) / 2, hz: (z1 - z0) / 2, yaw: PORTAL.facing }))
   for (const island of layout.islands) out.push(...BY_ISLAND[island.id]().map(islandFrame(island)))
   return out
 }

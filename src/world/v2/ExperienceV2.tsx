@@ -15,7 +15,7 @@ import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
 import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { experienceChapters, type Chapter, type PortalStyle } from './experienceChapters'
-import { LINTEL, SPECS, STELE, STUDIO, threshold, type CorridorStyle, type Spec } from './experienceLayout'
+import { ARVO, LINTEL, SPECS, STELE, STUDIO, threshold, type CorridorStyle, type Spec } from './experienceLayout'
 import { studioGeometry, studioProxy, studioShadow } from './sammiStudio'
 
 // Experience: a monumental corridor of portals, one per career chapter, oldest nearest the arrival
@@ -95,17 +95,44 @@ function portalGeometry(style: CorridorStyle, s: Spec, portal: number, lights: L
       lightAt(-D / 2 - 0.045, y, Math.cos(a) * (r + 0.2), 0.02, 0.05, 0.05)
     }
   } else {
-    // Lead XR engineer: the tallest gate. The lintel cantilevers past one jamb, and a thin floating
-    // frame of light hangs in front of it, like an augmented layer over the real one.
-    parts.push(box(-D / 2, D / 2, 0, H, -W / 2 - jw, -W / 2), box(-D / 2, D / 2, 0, H, W / 2, W / 2 + jw))
-    parts.push(box(-D / 2 - 0.05, D / 2 + 0.05, top, H, -W / 2 - jw - 0.1, W / 2 + jw + 1.3))
-    const gx = -D / 2 - 0.5
-    const gw = W / 2 + 0.2
-    const gh = top - 0.35
-    // The augmented layer is always faintly present; discovery brings it fully up.
-    lightAt(gx, 0.15 + (gh - 0.15) / 2, -gw, 0.04, gh - 0.15, 0.04, 'discover', 0.5)
-    lightAt(gx, 0.15 + (gh - 0.15) / 2, gw, 0.04, gh - 0.15, 0.04, 'discover', 0.5)
-    lightAt(gx, gh, 0, 0.04, 0.04, gw * 2 + 0.04, 'discover', 0.5)
+    // Lead XR engineer: the last gate, framing the void. Each jamb is a pier with a slender fin beside
+    // it; the left fin rises through the lintel as a mast. The lintel cantilevers past the right jamb
+    // on a diagonal brace. Behind the opening stands a second, finer frame bracketed to the piers, an
+    // augmented layer over the real one, whose inner edges light up when you walk through.
+    const half = W / 2 + jw
+    const fin = ARVO.fin
+    for (const side of [-1, 1]) {
+      const inner = side * (W / 2)
+      const outer = side * half
+      parts.push(box(-D / 2 - 0.08, D / 2 + 0.08, 0, 0.26, Math.min(inner, outer + side * 0.08), Math.max(inner, outer + side * 0.08), 0.03)) // stepped base
+      const pierOuter = outer - side * (fin + ARVO.gap)
+      parts.push(box(-D / 2, D / 2, 0.26, top, Math.min(inner, pierOuter), Math.max(inner, pierOuter)))
+      const finTop = side < 0 ? H + ARVO.mast : top
+      parts.push(box(-D / 2 + 0.12, D / 2 - 0.12, 0.26, finTop, Math.min(outer, outer - side * fin), Math.max(outer, outer - side * fin), 0.03))
+      for (const y of [1.2, 2.3, 3.4]) parts.push(box(-D / 2 + 0.2, D / 2 - 0.2, y, y + 0.14, Math.min(pierOuter, outer - side * fin), Math.max(pierOuter, outer - side * fin), 0.01))
+    }
+    // The mast's light groove, faintly present always, fully up once discovered.
+    lightAt(-D / 2 + 0.11, (0.8 + H + ARVO.mast - 0.3) / 2, -half + fin / 2, 0.02, H + ARVO.mast - 1.1, 0.035, 'discover', 0.35)
+    // Lintel with its cantilever, and the brace under the cantilever.
+    parts.push(box(-D / 2 - 0.05, D / 2 + 0.05, top, H, -half - 0.1, half + ARVO.cantilever))
+    const b0 = { z: half, y: top - 1.5 }
+    const b1 = { z: half + ARVO.cantilever - 0.2, y: top }
+    const len = Math.hypot(b1.z - b0.z, b1.y - b0.y)
+    const brace = new RoundedBoxGeometry(D - 0.3, 0.14, len, 1, 0.03)
+    brace.rotateX(-Math.atan2(b1.y - b0.y, b1.z - b0.z))
+    parts.push(brace.translate(0, (b0.y + b1.y) / 2, (b0.z + b1.z) / 2).toNonIndexed())
+    // The inner frame, set back toward the void, and the brackets tying it to the piers.
+    const fx = D / 2 + ARVO.inset
+    const pz = W / 2 - ARVO.frameIn
+    const ft = top - 0.4
+    for (const side of [-1, 1]) {
+      parts.push(box(fx - 0.06, fx + 0.06, 0, ft, side * pz - 0.06, side * pz + 0.06, 0.02))
+      for (const y of [0.9, 2.1, 3.2]) parts.push(box(D / 2 - 0.1, fx + 0.04, y, y + 0.08, Math.min(side * (pz - 0.04), side * (W / 2 + 0.1)), Math.max(side * (pz - 0.04), side * (W / 2 + 0.1)), 0.01))
+      lightAt(fx, ft / 2, side * (pz - 0.065), 0.04, ft - 0.1, 0.012, 'discover', 0.15)
+    }
+    parts.push(box(fx - 0.06, fx + 0.06, ft, ft + 0.12, -pz - 0.06, pz + 0.06, 0.02))
+    parts.push(box(D / 2 - 0.1, fx + 0.04, ft + 0.02, top, -0.08, 0.08, 0.01)) // hanger from the lintel
+    lightAt(fx, ft - 0.007, 0, 0.04, 0.012, pz * 2 - 0.12, 'discover', 0.15)
   }
   const merged = mergeGeometries(parts.map((p) => (p.getAttribute('uv') ? (p.deleteAttribute('uv'), p) : p)), false)!
   return merged.translate(x, 0, 0)
@@ -126,7 +153,7 @@ function proxyGeometry(style: CorridorStyle, s: Spec): BufferGeometry {
     style === 'oasis'
       ? [plain(-D / 2, D / 2, 2.95, H, -half, half), plain(-D / 2, D / 2, 0, 2.95, -half, -1.1), plain(-D / 2, D / 2, 0, 2.95, 1.1, half)]
       : [
-          plain(-D / 2, D / 2, top, H, -half, half + (style === 'arvo' ? 1.2 : 0)),
+          plain(-D / 2, D / 2, top, H, -half, half + (style === 'arvo' ? ARVO.cantilever : 0)),
           plain(-D / 2, D / 2, 0, top, -half, -W / 2),
           plain(-D / 2, D / 2, 0, top, W / 2, half),
         ]

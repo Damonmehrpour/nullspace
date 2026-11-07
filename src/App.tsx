@@ -11,6 +11,7 @@ import { PanelHost } from './ui/Panel/PanelHost'
 import { TopBar } from './ui/TopBar'
 import { A11yStatus } from './ui/A11yStatus'
 import { ArtifactPrompt } from './ui/ArtifactPrompt'
+import { PortalPrompt, PortalTransition } from './ui/Portal'
 import { ControlsHint } from './ui/ControlsHint'
 import { Subtitles } from './ui/Subtitles'
 import { useGlobalShortcuts } from './ui/useGlobalShortcuts'
@@ -43,6 +44,7 @@ export default function App() {
             <A11yStatus />
             <ControlsHint />
             <ArtifactPrompt />
+            <PortalPrompt />
           </>
         )}
         <TopBar
@@ -51,6 +53,7 @@ export default function App() {
         />
       </div>
       <PanelHost />
+      <PortalTransition />
       <AudioBridge />
     </>
   )

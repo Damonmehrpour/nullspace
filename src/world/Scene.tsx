@@ -22,7 +22,7 @@ import { ProjectsIslandV2 } from './v2/ProjectsV2'
 import { SkillsV2 } from './v2/SkillsV2'
 import { ContactV2 } from './v2/ContactV2'
 import { GuideBodyV2 } from './v2/GuideBodyV2'
-import { MonolithV2 } from './v2/MonolithV2'
+import { PortalV2 } from './v2/PortalV2'
 import { Wanderer } from './v2/Wanderer'
 import { WalkwaysV2 } from './v2/WalkwaysV2'
 import { V2 } from './visual'
@@ -41,7 +41,7 @@ export function Scene() {
         <>
           <VoidV2 />
           <LightingV2 />
-          <MonolithV2 layout={WORLD} />
+          <PortalV2 layout={WORLD} />
         </>
       ) : (
         <>

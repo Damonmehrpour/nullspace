@@ -1,6 +1,7 @@
 import { test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { gotoEntry } from './helpers'
+import { WORLD } from '../../src/content/world'
 
 // Manual review of one island: SHOTS=1 SHOTS_VARIANT=v1|v2 ISLAND=experience|projects|… npx playwright test islandShots --project=desktop
 // Gameplay-camera views across the island plus fixed views, into test-results/<island>-<variant>.
@@ -10,6 +11,7 @@ type V = { x: number; z: number }
 type Hooks = Record<string, (...a: unknown[]) => unknown>
 
 const ISLANDS = ['education', 'experience', 'projects', 'skills', 'contact']
+const RING = Math.hypot(WORLD.islands[0].centre.x, WORLD.islands[0].centre.z)
 
 test('island views', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
@@ -30,9 +32,31 @@ test('island views', async ({ page }, info) => {
   await ns('freezeClock')
   await ns('markAllRevealed')
 
+  if (island === 'spawn') {
+    // The central plinth: what the player sees first, and the monolith (portal) from the spawn, the bridge and the side.
+    const f = WORLD.spawn.facing
+    const u = { x: Math.cos(f), z: Math.sin(f) }
+    const shot = async (name: string, d: number, side: number, yaw: number) => {
+      await ns('setCamera', null)
+      const p = { x: u.x * d - u.z * side, z: u.z * d + u.x * side }
+      await ns('setView', p, yaw)
+      await ns('setPlayerFacing', yaw)
+      await page.waitForTimeout(1300)
+      await page.screenshot({ path: `${dir}/${name}.png` })
+    }
+    await shot('spawn-start', 2, 0, f)
+    await shot('portal-front', 2, 0, f + Math.PI)
+    await shot('portal-near', 1.2, 0, f + Math.PI)
+    await shot('portal-bridge', 8, 0, f + Math.PI)
+    await shot('portal-side', 0, 3.6, f - Math.PI / 2)
+    await ns('setCamera', [u.x * 14 + u.z * 6, 6, u.z * 14 - u.x * 6], [0, 3, 0])
+    await page.waitForTimeout(1000)
+    await page.screenshot({ path: `${dir}/portal-far.png` })
+    return
+  }
   // Islands sit on the ring at 90° − 72°·index. Local +x points outward.
   const a = ((90 - 72 * index) * Math.PI) / 180
-  const c: V = { x: 22 * Math.cos(a), z: 22 * Math.sin(a) }
+  const c: V = { x: RING * Math.cos(a), z: RING * Math.sin(a) }
   const local = (lx: number, lz: number): V => ({ x: c.x + lx * Math.cos(a) - lz * Math.sin(a), z: c.z + lx * Math.sin(a) + lz * Math.cos(a) })
   const world3 = (lx: number, y: number, lz: number): [number, number, number] => {
     const p = local(lx, lz)
@@ -86,10 +110,14 @@ test('island views', async ({ page }, info) => {
     // The Sämmi Studios workshop beside the corridor: from the other walkway, the arrival ring, between
     // the gates, and at its door.
     await play('approach-other', -5.2, 3.6, -0.55)
-    await play('studio-from-arrival', -2, 0, -0.4)
-    await play('studio-approach', -1.6, -1.6, -0.73)
-    await play('studio-from-walkway', -3.2, -3.9, 0.15)
-    await play('studio-close', 0.14, -2.76, -1.29)
+    await play('studio-from-arrival', -2.4, 0, -0.4)
+    await play('studio-approach', -1.9, -1.9, -0.73)
+    await play('studio-from-walkway', -3.8, -4.7, 0.15)
+    await play('studio-close', 0.17, -3.3, -1.29)
+    // ARVO: down the corridor past OASIS, beside it, and from the void side.
+    await play('arvo-approach', 4.3, 0)
+    await play('arvo-oblique', 4.4, 1.9, -0.45)
+    await play('arvo-behind', 7.0, -0.4, Math.PI)
   }
   if (island === 'education') {
     // The academy from the arrival ring's sides, and close to its portico.

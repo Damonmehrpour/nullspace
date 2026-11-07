@@ -31,6 +31,10 @@ type Data = {
   subtitle: { text: string; id: number } | null
   /** Index of the project artifact the player stands next to (drives the "E to open" prompt). */
   nearArtifact: number | null
+  /** The player stands in front of the portfolio portal (drives its prompt). */
+  nearPortal: boolean
+  /** The portal's short transition into the 2D Portfolio is playing. */
+  portalTransit: boolean
   /** A non-section dialog (Settings) is open; pauses the world like a panel. */
   overlay: 'settings' | null
   /** The controls card (shown on entering the world; reopened from the top bar). */
@@ -60,6 +64,10 @@ type Actions = {
   clearTeleport(): void
   say(text: string): void
   setNearArtifact(i: number | null): void
+  setNearPortal(near: boolean): void
+  /** Activates the portfolio portal: a short transition (none with reduced motion) into the 2D Portfolio. */
+  enterPortal(): void
+  finishPortal(): void
   setOverlay(o: 'settings' | null): void
   setControlsOpen(open: boolean): void
   /** Clears in-flight world state (reveal, teleport) when the world is left. */
@@ -88,6 +96,8 @@ export function initialState(): Data {
     overlay: null,
     controlsOpen: true,
     nearArtifact: null,
+    nearPortal: false,
+    portalTransit: false,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
   }
@@ -120,6 +130,7 @@ export const useStore = create<StoreState>()((set, get) => ({
       revealElapsed: 0,
       teleportRequest: null,
       nearArtifact: null,
+      nearPortal: false,
       ...(s.revealing ? { revealPlayed: withAdded(s.revealPlayed, s.revealing) } : {}),
     })),
   openSection: (id, o) => set((s) => ({ ...cancelReveal(s), panel: { kind: 'section', id }, viewed: withAdded(s.viewed, id), lastOpenSource: o.source })),
@@ -167,6 +178,20 @@ export const useStore = create<StoreState>()((set, get) => ({
   setNearArtifact: (nearArtifact) => {
     if (get().nearArtifact !== nearArtifact) set({ nearArtifact })
   },
+  setNearPortal: (nearPortal) => {
+    if (get().nearPortal !== nearPortal) set({ nearPortal })
+  },
+  enterPortal: () => {
+    const s = get()
+    if (s.phase !== 'world' || s.portalTransit) return
+    // Reduced motion: straight to the Portfolio. Otherwise PortalTransition covers the swap.
+    if (isReducedMotion(s.settings)) get().setPhase('portfolio')
+    else set({ portalTransit: true })
+  },
+  finishPortal: () => {
+    set({ portalTransit: false })
+    if (get().phase === 'world') get().setPhase('portfolio')
+  },
   say: (text) => set((s) => ({ subtitle: { text, id: (s.subtitle?.id ?? 0) + 1 } })),
   clearSubtitle: (id) => set((s) => (s.subtitle?.id === id ? { subtitle: null } : {})),
   updateSettings: (p) => {
@@ -180,4 +205,4 @@ export const useStore = create<StoreState>()((set, get) => ({
   },
 }))
 
-export const isGameplayPaused = (s: Pick<StoreState, 'panel' | 'overlay'>) => s.panel !== null || s.overlay !== null
+export const isGameplayPaused = (s: Pick<StoreState, 'panel' | 'overlay'> & { portalTransit?: boolean }) => s.panel !== null || s.overlay !== null || s.portalTransit === true

@@ -7,6 +7,7 @@ type Info = { position: [number, number, number]; forward: [number, number, numb
 type Hooks = Record<string, (...a: unknown[]) => unknown>
 
 async function enter(page: Page) {
+  test.setTimeout(90_000) // loading the world competes with parallel workers on the software renderer
   await gotoEntry(page)
   await page.getByRole('button', { name: 'ENTER SIMULATION' }).click()
   await page.waitForFunction(() => '__nullspace' in window)

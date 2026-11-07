@@ -25,7 +25,7 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { cv } from '../../content/cv'
-import type { IslandDef } from '../../content/world'
+import { SPREAD, type IslandDef } from '../../content/world'
 import { artifactInRange } from '../../core/arrival'
 import { v } from '../../core/geometry'
 import { Artifacts } from '../artifacts/Artifacts'
@@ -158,7 +158,7 @@ function ringProxy(): BufferGeometry {
  * terraces (fake ambient occlusion) and fading out at the rim. Vertex alpha, one transparent draw.
  */
 function floorWash(): BufferGeometry {
-  const radii = [0, 3.9, 4.15, 4.3, 4.6]
+  const radii = [0, 3.9, 4.15, 4.3, 4.6].map((r) => r * SPREAD)
   const alpha = [0.1, 0.1, 0.26, 0.3, 0]
   const seg = 72
   const pos: number[] = []

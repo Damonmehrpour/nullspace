@@ -6,9 +6,9 @@
 
 ## The finished experience
 
-- **The world:** five floating white-concrete islands in a black void, joined by ribbed walkways. Each island is built from your CV:
+- **The world:** five floating white-concrete islands (7.2 m platforms on a 24 m ring) in a black void, joined by ribbed walkways. At the centre, on the spawn plinth, the portfolio portal opens into the 2D Portfolio (E, Enter, a click or a tap). Each island is built from your CV:
   - **Education:** the observatory academy.
-  - **Experience:** a corridor of gates, Medrick to ARVO, with the Sämmi Studios workshop beside it.
+  - **Experience:** a corridor of gates, Medrick to ARVO (a braced gate with an inner frame and a mast), with the Sämmi Studios workshop beside it.
   - **Projects:** a sunken atrium under a floating ring, with an honours wall.
   - **Skills:** the Data City.
   - **Contact:** the Signal Tower.

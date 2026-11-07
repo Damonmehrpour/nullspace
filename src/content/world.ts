@@ -35,17 +35,26 @@ export type LayoutParams = {
   arrivalZoneRadius: number
   /** How far walkway/bridge ends reach into the shape they join, so strips overlap. */
   joinInset: number
+  /** How far each arrival point sits from its island's centre, toward the monolith. */
+  arrivalOffset: number
 }
 
 export const DEFAULT_LAYOUT_PARAMS: LayoutParams = {
-  ringRadius: 22,
-  islandRadius: 6,
-  plinthRadius: 5,
+  ringRadius: 24,
+  islandRadius: 7.2,
+  plinthRadius: 5.5,
   walkwayHalfWidth: 1,
   bridgeHalfWidth: 1.25,
   arrivalZoneRadius: 1.25,
   joinInset: 0.5,
+  arrivalOffset: 2.4,
 }
+
+/**
+ * How much roomier the islands are than the 6 m platforms their layouts were first drawn on. Island
+ * layouts multiply their placement radii (not their buildings) by this, so exhibits spread apart.
+ */
+export const SPREAD = DEFAULT_LAYOUT_PARAMS.islandRadius / 6
 
 const deg = (d: number) => (d * Math.PI) / 180
 
@@ -55,10 +64,10 @@ const deg = (d: number) => (d * Math.PI) / 180
  * exhibit on the atrium floor opposite the honour wall.
  */
 export const PROJECT_SLOTS: { angle: number; r: number }[] = [
-  { angle: -40, r: 3 },
-  { angle: 0, r: 3 },
-  { angle: 40, r: 3 },
-  { angle: -90, r: 2.75 },
+  { angle: -40, r: 3 * SPREAD },
+  { angle: 0, r: 3 * SPREAD },
+  { angle: 40, r: 3 * SPREAD },
+  { angle: -90, r: 2.75 * SPREAD },
 ]
 
 export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout {
@@ -75,7 +84,7 @@ export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout 
       id,
       centre,
       radius: p.islandRadius,
-      arrivalPoint: v.sub(centre, v.scale(outward, 2)),
+      arrivalPoint: v.sub(centre, v.scale(outward, p.arrivalOffset)),
       arrivalZoneRadius: p.arrivalZoneRadius,
       titleAnchor: v.add(centre, v.scale(outward, p.islandRadius + 0.5)),
       artifactSlots,

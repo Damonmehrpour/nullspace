@@ -22,3 +22,22 @@ describe('isTypingTarget', () => {
     expect(isTypingTarget(null)).toBe(false)
   })
 })
+
+describe('createKeyboardInput: interact', () => {
+  it('latches a quick E press until it is read, once', async () => {
+    const { createKeyboardInput } = await import('../../src/core/input')
+    const input = createKeyboardInput(window)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }))
+    expect(input.state.interact).toBe(false) // already released before any frame read it
+    expect(input.takeInteract()).toBe(true)
+    expect(input.takeInteract()).toBe(false)
+    // Key repeat while held does not count as new presses.
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }))
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', repeat: true }))
+    expect(input.takeInteract()).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', repeat: true }))
+    expect(input.takeInteract()).toBe(false)
+    input.dispose()
+  })
+})
