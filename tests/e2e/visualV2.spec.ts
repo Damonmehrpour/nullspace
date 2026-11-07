@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test'
+import { cv } from '../../src/content/cv'
+import { PROJECT_SLOTS } from '../../src/content/world'
+import { experienceChapters } from '../../src/world/v2/experienceChapters'
 import { gotoEntry, isTouchProject } from './helpers'
 
 // The Phase 0 look is opt-in via ?visual=v2; gameplay, panels and fallbacks must behave exactly as in v1.
@@ -140,10 +143,13 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
   await walk(-1.6, -1.5)
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
+  // One discovery per gate (every non-minor career chapter, the newest Sämmi Studios gate included).
+  const gates = experienceChapters(cv.experience.entries).filter((c) => !c.minor).length
+  expect(gates).toBe(5)
   await walk(-1.5, 5.6)
-  expect((await ns('getGuideCue')) as number).toBe(before + 4)
+  expect((await ns('getGuideCue')) as number).toBe(before + gates)
   await walk(5.6, -1.5)
-  expect((await ns('getGuideCue')) as number).toBe(before + 4)
+  expect((await ns('getGuideCue')) as number).toBe(before + gates)
   // Portals fading for the camera along the way switch to an already-compiled variant.
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })
@@ -191,13 +197,13 @@ test('v2: approaching each project in the atrium discovers it once', async ({ pa
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
   for (const pass of [1, 2]) {
-    for (const off of [-40, 0, 40]) {
+    for (const off of PROJECT_SLOTS.map((s) => s.angle)) {
       await ns('setView', near(off), a + (off * Math.PI) / 180)
       await page.waitForTimeout(150)
       await ns('setView', c, a)
       await page.waitForTimeout(100)
     }
-    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + 3)
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + PROJECT_SLOTS.length) // the three plinths and the SanaSauna exhibit
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })
@@ -228,7 +234,7 @@ test('v2: visiting each Data City district discovers it once', async ({ page }, 
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
   for (const pass of [1, 2]) {
-    for (const deg of [-62, 0, 62, 160, 200]) {
+    for (const deg of [-62, 0, 62, 155, 195]) {
       await ns('setView', local(1.6, deg), a + (deg * Math.PI) / 180)
       await page.waitForTimeout(150)
     }

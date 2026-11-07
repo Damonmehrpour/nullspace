@@ -55,7 +55,7 @@ describe('section views', () => {
     expect(screen.getByText('4th place', { exact: false })).toBeInTheDocument()
   })
 
-  it('projects view lists three projects that open their detail', async () => {
+  it('projects view lists every project, each opening its detail', async () => {
     render(
       <>
         <ProjectsView section={cv.projects} source="quicknav" />
@@ -63,7 +63,7 @@ describe('section views', () => {
       </>,
     )
     const cards = screen.getAllByRole('button', { name: /open project/i })
-    expect(cards).toHaveLength(3)
+    expect(cards).toHaveLength(cv.projects.projects.length)
     await userEvent.click(cards[0])
     expect(useStore.getState().panel).toEqual({ kind: 'project', id: 'project-01' })
   })

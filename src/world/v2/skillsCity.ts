@@ -9,9 +9,10 @@ export const PLACES: Record<DistrictStyle, Place> = {
   game: { centre: -62, span: 68, r: 4.75 },
   xr: { centre: 0, span: 44, r: 4.95 },
   ai: { centre: 62, span: 68, r: 4.75 },
-  // Both supporting districts sit between the walkway entrances (126° ± 20° either side).
-  tools: { centre: 157, span: 22, r: 4.6 },
-  languages: { centre: 190, span: 30, r: 4.85 },
+  // Both supporting districts sit between the walkway entrances (126° ± 20° either side), with clear
+  // floor between them: the tools plates end near 166°, the Languages tablet starts near 178°.
+  tools: { centre: 155, span: 22, r: 4.6 },
+  languages: { centre: 195, span: 30, r: 4.85 },
 }
 export type Size = { w: number; d: number; base: number; peak: number }
 export const SIZES: Record<DistrictStyle, Size> = {
@@ -27,9 +28,17 @@ export const PLATE = { w: 0.92, h: 0.56, tilt: deg(50), gap: 0.42 } // slanted l
 /** Plate width per district: the two tools plates stand close together, so theirs are narrower. */
 export const plateWidth = (style: DistrictStyle) => (style === 'tools' ? 0.78 : PLATE.w)
 /** Languages share one wide tablet (a cell per language) instead of crowded plates per stone. */
-export const TABLET = { w: 2.6, h: 1.05, tilt: deg(55), r: 4.0, y: 0.6 }
+export const TABLET = { w: 2.3, h: 1.05, tilt: deg(55), r: 4.0, y: 0.6 }
 /** District name plaques lie low and slanted, so they never hide the skill plates behind them. */
 export const SIGN = { w: 1.75, h: 0.42, tilt: deg(60), y: 0.3 }
+/**
+ * Where each district's plaque stands. The skyline districts' plaques ring the plaza; the two supporting
+ * districts' plaques stand right in front of their own displays, narrower, so they sit clear of the
+ * arrival ring and of each other (about 0.8 m apart) instead of crowding the entrance.
+ */
+export function signLayout(style: DistrictStyle): { r: number; w: number } {
+  return style === 'tools' || style === 'languages' ? { r: 3.35, w: 1.5 } : { r: SIGN_R, w: SIGN.w }
+}
 export type Spot = { x: number; z: number; theta: number }
 export type Building = { x: number; z: number; yaw: number; theta: number; w: number; d: number; h: number; label: string }
 
@@ -51,7 +60,8 @@ export function placeBuildings(dist: District): Building[] {
 /** The district's name plaque, at the plaza's edge on the district's centre bearing. */
 export function signSpot(style: DistrictStyle): Spot {
   const st = deg(PLACES[style].centre)
-  return { x: SIGN_R * Math.cos(st), z: SIGN_R * Math.sin(st), theta: st }
+  const { r } = signLayout(style)
+  return { x: r * Math.cos(st), z: r * Math.sin(st), theta: st }
 }
 
 /** The Languages tablet, in front of its standing stones. */

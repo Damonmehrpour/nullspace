@@ -15,7 +15,7 @@ import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
 import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { experienceChapters, type Chapter, type PortalStyle } from './experienceChapters'
-import { LINTEL, SPECS, STELE, type Spec } from './experienceLayout'
+import { GABLE, LINTEL, SPECS, STELE, type Spec } from './experienceLayout'
 
 // Experience: a monumental corridor of portals, one per career chapter, oldest nearest the arrival
 // point and the newest at the island's edge, framing the open void ahead. Island-local space: +x
@@ -92,6 +92,22 @@ function portalGeometry(style: Exclude<PortalStyle, 'generic'>, s: Spec, portal:
       if (y < 0.15) continue
       lightAt(-D / 2 - 0.045, y, Math.cos(a) * (r + 0.2), 0.02, 0.05, 0.05)
     }
+  } else if (style === 'sammi') {
+    // Founder, Sämmi Studios: an independent beginning at the edge of the island. Plain jambs and a
+    // lintel under a pitched gable (a sauna's roofline), open beneath, with a lantern under the ridge.
+    parts.push(box(-D / 2, D / 2, 0, H, -W / 2 - jw, -W / 2), box(-D / 2, D / 2, 0, H, W / 2, W / 2 + jw))
+    parts.push(box(-D / 2 - 0.05, D / 2 + 0.05, top, H, -W / 2 - jw - 0.08, W / 2 + jw + 0.08))
+    const half = W / 2 + jw + GABLE.overhang
+    const rise = Math.tan(GABLE.pitch) * half
+    for (const side of [-1, 1]) {
+      const g = new RoundedBoxGeometry(D + 0.14, GABLE.t, half / Math.cos(GABLE.pitch), 1, 0.03)
+      g.rotateX(side * GABLE.pitch)
+      g.translate(0, H + rise / 2 + GABLE.t / 2, (side * half) / 2)
+      parts.push(g.toNonIndexed())
+    }
+    // A short king post from the lintel to the ridge, and the lantern hanging beside it.
+    parts.push(box(-0.06, 0.06, H, H + rise * 0.82, -0.06, 0.06, 0.015))
+    lightAt(0, H + rise * 0.38, 0.22, 0.12, 0.16, 0.12, 'discover', 0.35)
   } else {
     // Lead XR engineer: the tallest gate. The lintel cantilevers past one jamb, and a thin floating
     // frame of light hangs in front of it, like an augmented layer over the real one.
@@ -123,7 +139,11 @@ function proxyGeometry(style: Exclude<PortalStyle, 'generic'>, s: Spec): BufferG
   const parts =
     style === 'oasis'
       ? [plain(-D / 2, D / 2, 2.95, H, -half, half), plain(-D / 2, D / 2, 0, 2.95, -half, -1.1), plain(-D / 2, D / 2, 0, 2.95, 1.1, half)]
-      : [plain(-D / 2, D / 2, top, H, -half, half + (style === 'arvo' ? 1.2 : 0)), plain(-D / 2, D / 2, 0, top, -half, -W / 2), plain(-D / 2, D / 2, 0, top, W / 2, half)]
+      : [
+          plain(-D / 2, D / 2, top, H + (style === 'sammi' ? Math.tan(GABLE.pitch) * (half + GABLE.overhang) : 0), -half, half + (style === 'arvo' ? 1.2 : 0)),
+          plain(-D / 2, D / 2, 0, top, -half, -W / 2),
+          plain(-D / 2, D / 2, 0, top, W / 2, half),
+        ]
   return mergeGeometries(parts.map((g) => (g.deleteAttribute('uv'), g)), false)!.translate(x, 0, 0)
 }
 

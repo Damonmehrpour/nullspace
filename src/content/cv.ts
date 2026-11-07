@@ -55,6 +55,21 @@ export const cv: CV = {
     title: 'Experience',
     entries: [
       {
+        // An independent studio (an initiative, not a registered company).
+        org: c('Sämmi Studios (independent game studio)'),
+        role: c('Founder & Indie Game Developer'),
+        dates: c('05/2026 – Present'),
+        location: c('Finland'),
+        areas: ['game'],
+        highlights: c([
+          'Founded an independent game development initiative focused on interactive, culturally inspired games; lead concept design, gameplay mechanics, UI/UX, technical implementation, testing and release preparation.',
+          'Develop cross-platform experiences with Flutter and Dart, targeting Android and web, with iOS support planned.',
+          'Manage Git/GitHub version control, testing, Android builds and release workflows.',
+          'Design progression, rewards, achievements and monetization strategies.',
+          'Coordinate AI-assisted development workflows and validate implementation outcomes.',
+        ]),
+      },
+      {
         org: c('ARVO – Augmented Reality Vision Ocular'),
         role: c('Lead XR Engineer'),
         dates: c('08/2025 – 11/2025'),
@@ -180,6 +195,32 @@ export const cv: CV = {
         // No public gameplay video is known for these titles (the CV's GamePlay link is the XR Meditation demo).
         links: [],
         appearance: 'experimental',
+        areas: ['game'],
+      },
+      {
+        id: 'project-04',
+        status: 'real',
+        name: c('SanaSauna'),
+        context: c('Finnish word puzzle game · Sämmi Studios'),
+        summary: c('A Finnish-language word puzzle game combining vocabulary challenges, progressive difficulty and Finnish cultural themes, designed for Finnish speakers and language learners.'),
+        role: c('Game developer and designer.'),
+        dates: c('09/2026 – present'),
+        release: { status: c('In development: Android release in preparation for Google Play') },
+        // To add as they become real: release.publishedOn: c('<date>'); a store link in `links`
+        // ({ kind: 'store', label: 'Get it on Google Play', url: c('https://play.google.com/…') });
+        // cover art and screenshots as image `media`, and the trailer as `youtube` media.
+        features: c([
+          'Grid-based word puzzles in multiple sizes, with progressive difficulty.',
+          '20 Finnish-inspired themed worlds, custom illustrations and a folk-art visual identity.',
+          'A virtual currency (vihtas), hints, achievements, daily rewards and a randomized reward wheel.',
+          'An Android build and release workflow: semantic versioning, validation, APK/AAB packaging and Git tagging.',
+          'Automated Flutter tests and static analysis: 61 passing tests in the latest development cycle.',
+          'In-app purchases and Google AdMob are planned, not live.',
+        ]),
+        tech: c(['Flutter', 'Dart', 'Android', 'Git', 'GitHub', 'Gradle', 'PowerShell']),
+        media: [],
+        links: [],
+        appearance: 'wordgame',
         areas: ['game'],
       },
     ],

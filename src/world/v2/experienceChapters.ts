@@ -1,6 +1,6 @@
 import type { ExperienceEntry } from '../../content/schema'
 
-export type PortalStyle = 'medrick' | 'ubicomp' | 'oasis' | 'arvo' | 'generic'
+export type PortalStyle = 'medrick' | 'ubicomp' | 'oasis' | 'arvo' | 'sammi' | 'generic'
 
 export type Chapter = {
   /** Short engraved name: the organisation up to its first qualifier ("OASIS, University of Oulu" → "OASIS"). */
@@ -13,7 +13,7 @@ export type Chapter = {
   start: number
 }
 
-const STYLES: Record<string, PortalStyle> = { medrick: 'medrick', ubicomp: 'ubicomp', oasis: 'oasis', arvo: 'arvo' }
+const STYLES: Record<string, PortalStyle> = { medrick: 'medrick', ubicomp: 'ubicomp', oasis: 'oasis', arvo: 'arvo', 'sämmi studios': 'sammi' }
 
 function startMonth(dates: string): number {
   const m = /(\d{1,2})\/(\d{4})/.exec(dates)

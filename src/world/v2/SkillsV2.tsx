@@ -15,7 +15,7 @@ import { BlockShadows } from './BlockShadows'
 import { fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { skillDistricts, splitLanguage, type District } from './skillDistricts'
-import { deg, PLACES, placeBuildings, PLATE, plateWidth, SIGN, SIGN_R, TABLET, type Building, type Spot } from './skillsCity'
+import { deg, PLACES, placeBuildings, PLATE, plateWidth, SIGN, signLayout, signSpot, TABLET, tabletSpot, type Building, type Spot } from './skillsCity'
 
 // Skills: the Data City. A miniature brutalist skyline around an open plaza, one district per CV skill
 // group and one building per skill, each labelled on its plaza-facing side with the skill's exact
@@ -153,19 +153,19 @@ function buildDistrict(dist: District, index: number, lights: Light[]): Built {
     }
   })
   // The district's name stone, in front of it, facing the plaza; a floor line leads to it from the centre.
-  const sr = SIGN_R
+  const { r: sr, w: sw } = signLayout(dist.style)
   const st = deg(place.centre)
-  const sign = { x: sr * Math.cos(st), z: sr * Math.sin(st), theta: st }
+  const sign = signSpot(dist.style)
   const placeAt = (g: BufferGeometry, at: Spot) => {
     g.rotateY(-(at.theta + Math.PI)).translate(at.x, 0, at.z)
     g.deleteAttribute('uv')
     parts.push(g.toNonIndexed())
   }
   // Name plaque: low and slanted toward the plaza, on a short stand.
-  placeAt(new RoundedBoxGeometry(0.06, SIGN.h, SIGN.w, 1, 0.015).rotateZ(SIGN.tilt).translate(0, SIGN.y, 0), sign)
-  placeAt(new RoundedBoxGeometry(0.2, SIGN.y * 0.5, SIGN.w * 0.8, 1, 0.02).translate(0.02, SIGN.y * 0.25, 0), sign)
+  placeAt(new RoundedBoxGeometry(0.06, SIGN.h, sw, 1, 0.015).rotateZ(SIGN.tilt).translate(0, SIGN.y, 0), sign)
+  placeAt(new RoundedBoxGeometry(0.2, SIGN.y * 0.5, sw * 0.8, 1, 0.02).translate(0.02, SIGN.y * 0.25, 0), sign)
   // Languages: one wide tablet in front of the stones, a cell per language.
-  const tablet = dist.style === 'languages' ? { x: TABLET.r * Math.cos(st), z: TABLET.r * Math.sin(st), theta: st } : null
+  const tablet = dist.style === 'languages' ? tabletSpot() : null
   if (tablet) {
     placeAt(new RoundedBoxGeometry(0.07, TABLET.h, TABLET.w, 1, 0.02).rotateZ(TABLET.tilt).translate(0, TABLET.y, 0), tablet)
     placeAt(new RoundedBoxGeometry(0.26, TABLET.y * 0.5, TABLET.w * 0.8, 1, 0.02).translate(0.03, TABLET.y * 0.25, 0), tablet)
@@ -340,7 +340,7 @@ export function SkillsV2({ island }: { island: IslandDef }) {
                   color="#4b4842"
                   anchorX="center"
                   anchorY="middle"
-                  maxWidth={SIGN.w - 0.1}
+                  maxWidth={signLayout(dist.style).w - 0.1}
                 >
                   {dist.label}
                 </Text>

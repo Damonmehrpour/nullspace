@@ -1,5 +1,5 @@
 import type { SectionId } from '../content/schema'
-import type { WorldLayout } from '../content/world'
+import { PROJECT_SLOTS, type WorldLayout } from '../content/world'
 import { WALK } from './config'
 import { distToSegment, v, type Shape, type Vec2 } from './geometry'
 import { arrivalNodeId, buildRouteGraph, shortestPath } from './routeGraph'
@@ -82,7 +82,7 @@ export function validateWorld(layout: WorldLayout, sectionIds: readonly SectionI
     if (v.dist(island.arrivalPoint, island.centre) + island.arrivalZoneRadius > island.radius) {
       issues.push({ rule: 'zone-outside', detail: island.id })
     }
-    if (island.id === 'projects' && island.artifactSlots.length !== 3) {
+    if (island.id === 'projects' && island.artifactSlots.length !== PROJECT_SLOTS.length) {
       issues.push({ rule: 'artifact-slots', detail: `projects has ${island.artifactSlots.length} slots` })
     }
     for (const slot of island.artifactSlots) {

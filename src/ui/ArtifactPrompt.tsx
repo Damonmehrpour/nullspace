@@ -4,7 +4,7 @@ import type { Project } from '../content/schema'
 import { capabilities } from '../core/capabilities'
 import { useStore } from '../state/store'
 
-const FALLBACK = { featured: 'the featured project', technical: 'the technical project', experimental: 'the experimental project' } as const
+const FALLBACK = { featured: 'the featured project', technical: 'the technical project', experimental: 'the experimental project', wordgame: 'the word game' } as const
 
 function projectLabel(p: Project): string {
   if (p.status === 'placeholder') return `${FALLBACK[p.appearance]} (placeholder)`

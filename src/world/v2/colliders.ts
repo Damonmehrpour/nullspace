@@ -4,7 +4,7 @@
 // low district name plaques in the Data City, which are walk-up markers on the path to the arrival ring.
 
 import { cv } from '../../content/cv'
-import type { IslandDef, WorldLayout } from '../../content/world'
+import { PROJECT_SLOTS, type IslandDef, type WorldLayout } from '../../content/world'
 import { v, type Vec2 } from '../../core/geometry'
 import type { Obstacle } from '../../core/obstacles'
 import { contactStones } from './contactSignal'
@@ -12,6 +12,7 @@ import { STONE, stonePlaces, T } from './contactLayout'
 import { experienceChapters } from './experienceChapters'
 import { SPECS, STELE } from './experienceLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
+import { EXHIBIT } from './sanaSauna'
 import { skillDistricts } from './skillDistricts'
 import { placeBuildings, PLATE, plateWidth, TABLET, tabletSpot } from './skillsCity'
 
@@ -62,6 +63,11 @@ function projects(): Obstacle[] {
     ...ARCS.map(([a0, a1]): Obstacle => ({ kind: 'arc', c: { x: 0, z: 0 }, r0, r1, a0: deg(a0), a1: deg(a1) })),
     // The three plinths; the artifacts are read from beside them.
     ...SLOT_ANGLES.map((a): Obstacle => ({ kind: 'circle', c: { x: SLOT_R * Math.cos(deg(a)), z: SLOT_R * Math.sin(deg(a)) }, r: PLINTH_R })),
+    // The word-game exhibit (cabin and board on their base), turned to face the atrium's centre.
+    ...PROJECT_SLOTS.slice(SLOT_ANGLES.length).map((s): Obstacle => {
+      const c = { x: s.r * Math.cos(deg(s.angle)), z: s.r * Math.sin(deg(s.angle)) }
+      return { kind: 'box', c, hx: EXHIBIT.base.d / 2, hz: EXHIBIT.base.w / 2, yaw: deg(s.angle) + Math.PI }
+    }),
   ]
 }
 

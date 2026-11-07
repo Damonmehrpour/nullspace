@@ -204,7 +204,8 @@ function beam(from: Vector3, to: Vector3, w: number): Matrix4 {
 function plinthsAndLights(): { plinths: BufferGeometry; lights: Light[] } {
   const parts: BufferGeometry[] = []
   const lights: Light[] = []
-  cv.projects.projects.forEach((p, i) => {
+  // The ring's three plinths; the word-game exhibit stands on the floor and brings its own base.
+  cv.projects.projects.slice(0, SLOT_ANGLES.length).forEach((p, i) => {
     const o = deg(SLOT_ANGLES[i])
     const cx = SLOT_R * Math.cos(o)
     const cz = SLOT_R * Math.sin(o)
@@ -267,7 +268,7 @@ export function ProjectsV2({ island }: { island: IslandDef }) {
   const texts = useRef<(Object3D | null)[]>([])
   const col = useMemo(() => new Color(), [])
   const hidden = useMemo(() => new Matrix4().makeScale(1e-4, 1e-4, 1e-4), [])
-  const state = useRef({ discovered: [0, 0, 0], found: [false, false, false], key: '' })
+  const state = useRef({ discovered: island.artifactSlots.map(() => 0), found: island.artifactSlots.map(() => false), key: '' })
 
   // Per-instance colours exist before the precompile runs (creating them later switches the shader variant).
   useLayoutEffect(() => {

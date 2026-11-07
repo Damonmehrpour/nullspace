@@ -15,8 +15,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 /** Full detail of one project. Used inside the Panel for quick nav, artifacts and the portfolio. */
 export function ProjectDetail({ project, showTitle = true }: { project: Project; showTitle?: boolean }) {
-  const images = project.media.filter((m) => m.kind === 'image')
-  const videos = project.media.filter((m) => m.kind !== 'image')
+  const shown = project.media.filter((m) => m.src.state === 'confirmed')
+  const images = shown.filter((m) => m.kind === 'image')
+  const videos = shown.filter((m) => m.kind !== 'image')
+  const release = project.release
   return (
     <article aria-label={project.name.state === 'confirmed' ? project.name.value : project.id}>
       <div className="flex flex-wrap items-center gap-2">
@@ -36,6 +38,22 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
         <Row label="My role">
           <FieldText field={project.role} />
         </Row>
+        {project.dates?.state === 'confirmed' && (
+          <Row label="When">
+            <FieldText field={project.dates} />
+          </Row>
+        )}
+        {release?.status.state === 'confirmed' && (
+          <Row label="Status">
+            <FieldText field={release.status} />
+            {release.publishedOn?.state === 'confirmed' && <> · Published <FieldText field={release.publishedOn} /></>}
+          </Row>
+        )}
+        {project.features?.state === 'confirmed' && (
+          <Row label="Features">
+            <FieldText field={project.features} />
+          </Row>
+        )}
         {project.tech?.state === 'confirmed' && (
           <Row label="Technologies">
             <FieldText field={project.tech} />

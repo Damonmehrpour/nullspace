@@ -10,7 +10,7 @@ export type IslandDef = {
   arrivalPoint: Vec2
   arrivalZoneRadius: number
   titleAnchor: Vec2
-  /** Exactly 3 for projects, empty otherwise. */
+  /** One per project on the Projects island (see PROJECT_SLOTS), empty otherwise. */
   artifactSlots: Vec2[]
 }
 
@@ -49,6 +49,18 @@ export const DEFAULT_LAYOUT_PARAMS: LayoutParams = {
 
 const deg = (d: number) => (d * Math.PI) / 180
 
+/**
+ * The Projects island's artifact slots, in island-local polar terms (angle from outward, metres from
+ * the centre), one per project in CV order: three plinths under the ring, and the SanaSauna word-game
+ * exhibit on the atrium floor opposite the honour wall.
+ */
+export const PROJECT_SLOTS: { angle: number; r: number }[] = [
+  { angle: -40, r: 3 },
+  { angle: 0, r: 3 },
+  { angle: 40, r: 3 },
+  { angle: -90, r: 2.75 },
+]
+
 export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout {
   const p = { ...DEFAULT_LAYOUT_PARAMS, ...overrides }
   const origin = { x: 0, z: 0 }
@@ -58,7 +70,7 @@ export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout 
     const outward = v.fromAngle(deg(90 - i * 72))
     const centre = v.scale(outward, p.ringRadius)
     const artifactSlots =
-      id === 'projects' ? [-40, 0, 40].map((off) => v.add(centre, v.scale(v.fromAngle(v.angleOf(outward) + deg(off)), 3))) : []
+      id === 'projects' ? PROJECT_SLOTS.map((s) => v.add(centre, v.scale(v.fromAngle(v.angleOf(outward) + deg(s.angle)), s.r))) : []
     return {
       id,
       centre,

@@ -25,7 +25,7 @@ describe('validateWorld', () => {
     expect(rules(buildLayout({ arrivalZoneRadius: 7 }))).toContain('zone-outside')
   })
 
-  it('flags Projects without three artifact slots', () => {
+  it('flags Projects without one artifact slot per project', () => {
     const w = clone()
     w.islands.find((i) => i.id === 'projects')!.artifactSlots.pop()
     expect(rules(w)).toContain('artifact-slots')

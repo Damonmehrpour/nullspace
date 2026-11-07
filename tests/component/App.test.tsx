@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../../src/App'
+import { cv } from '../../src/content/cv'
 import { capabilities } from '../../src/core/capabilities'
 import { writeJSON } from '../../src/core/safeStorage'
 import { STORAGE_KEYS } from '../../src/state/settings'
@@ -16,13 +17,13 @@ beforeEach(() => {
 })
 
 describe('App', () => {
-  it('portfolio shows all five sections and three project cards', () => {
+  it('portfolio shows all five sections and a card per project', () => {
     useStore.setState({ phase: 'portfolio' })
     render(<App />)
     for (const title of ['Education & Research', 'Experience', 'Projects', 'Skills', 'Contact']) {
       expect(screen.getByRole('heading', { level: 2, name: title })).toBeInTheDocument()
     }
-    expect(screen.getAllByRole('button', { name: /open project/i })).toHaveLength(3)
+    expect(screen.getAllByRole('button', { name: /open project/i })).toHaveLength(cv.projects.projects.length)
   })
 
   it('a portfolio project card opens its detail in the panel', async () => {

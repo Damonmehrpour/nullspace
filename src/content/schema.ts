@@ -5,7 +5,7 @@ export type ItemStatus = 'real' | 'partial' | 'pending-content' | 'placeholder'
 
 export const SECTION_IDS = ['education', 'experience', 'projects', 'skills', 'contact'] as const
 export type SectionId = (typeof SECTION_IDS)[number]
-export type ProjectId = 'project-01' | 'project-02' | 'project-03'
+export type ProjectId = 'project-01' | 'project-02' | 'project-03' | 'project-04'
 
 /** Prefix required on every confirmed text value of a placeholder item. */
 export const SAMPLE_MARKER = 'Sample — '
@@ -35,9 +35,19 @@ export type Project = {
   role: Field<string>
   /** Omitted when no source states it. */
   tech?: Field<string[]>
+  /** When the author worked on it, e.g. "09/2026 – present". */
+  dates?: Field<string>
+  /** Key features, one per line. */
+  features?: Field<string[]>
+  /**
+   * Where a product stands. Only what is known is filled in: each optional fact stays absent until it is
+   * real, so nothing pending or invented is ever shown (store links and trailers go in `links`/`media`).
+   */
+  release?: { status: Field<string>; publishedOn?: Field<string> }
   media: Media[]
   links: Link[]
-  appearance: 'featured' | 'technical' | 'experimental'
+  /** How the 3D world presents it: three plinth artifacts in the atrium, plus the word-game exhibit. */
+  appearance: 'featured' | 'technical' | 'experimental' | 'wordgame'
   areas: Area[]
 }
 
@@ -79,7 +89,7 @@ export type EducationSection = {
   research?: { interests: Field<string[]>; publications: Publication[] }
 }
 export type ExperienceSection = { id: 'experience'; status: ItemStatus; title: string; entries: ExperienceEntry[] }
-export type ProjectsSection = { id: 'projects'; status: ItemStatus; title: string; projects: [Project, Project, Project]; honors: Honor[] }
+export type ProjectsSection = { id: 'projects'; status: ItemStatus; title: string; projects: Project[]; honors: Honor[] }
 export type SkillsSection = { id: 'skills'; status: ItemStatus; title: string; groups: SkillGroup[] }
 export type ContactSection = {
   id: 'contact'

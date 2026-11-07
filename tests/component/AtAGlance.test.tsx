@@ -7,9 +7,9 @@ describe('portfolio at a glance (for a recruiter in a hurry)', () => {
   it('summarises the most recent role, the degree, location and availability from the CV', () => {
     render(<AtAGlance cv={cv} />)
     const card = screen.getByRole('region', { name: 'At a glance' })
-    expect(within(card).getByText('Lead XR Engineer')).toBeInTheDocument()
-    expect(within(card).getByText(/ARVO/)).toBeInTheDocument()
-    expect(within(card).getByText(/08\/2025 – 11\/2025/)).toBeInTheDocument()
+    expect(within(card).getByText('Founder & Indie Game Developer')).toBeInTheDocument()
+    expect(within(card).getByText(/Sämmi Studios/)).toBeInTheDocument()
+    expect(within(card).getByText(/05\/2026 – Present/)).toBeInTheDocument()
     expect(within(card).getByText('MSc in Computer Science and Engineering')).toBeInTheDocument()
     expect(within(card).getByText(/University of Oulu/)).toBeInTheDocument()
     expect(within(card).getByText('Oulu, Finland')).toBeInTheDocument()
@@ -34,7 +34,7 @@ describe('portfolio at a glance (for a recruiter in a hurry)', () => {
     delete (Array.prototype as { at?: unknown }).at
     try {
       render(<AtAGlance cv={cv} />)
-      expect(screen.getByText('Lead XR Engineer')).toBeInTheDocument()
+      expect(screen.getByText('Founder & Indie Game Developer')).toBeInTheDocument()
     } finally {
       Array.prototype.at = at
     }

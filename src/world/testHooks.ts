@@ -29,7 +29,7 @@ export type NullspaceHooks = {
   isTourComplete(): boolean
   isRevealing(): boolean
   say(text: string): void
-  interactArtifact(i: 0 | 1 | 2): void
+  interactArtifact(i: 0 | 1 | 2 | 3): void
   /** Places player and camera for screenshots: player at pos, camera looking along yaw. */
   setView(pos: Vec2, yaw: number): void
   markAllRevealed(): void

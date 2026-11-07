@@ -8,7 +8,7 @@ import { useStore } from '../../state/store'
 import { BADGE_COPY } from '../../ui/StatusBadge'
 import { DRAG_THRESHOLD } from '../CameraControls'
 import { sim } from '../sim'
-import { at, TITLE_FONT } from '../space'
+import { at, TITLE_FONT, yawFor } from '../space'
 import { ContactShadow } from '../v2/ContactShadow'
 import { V2 } from '../visual'
 import { Concrete } from '../v2/Surface'
@@ -22,8 +22,11 @@ function label(p: Project): { main: string; sub: string | null } {
   return { main, sub }
 }
 
-/** Common frame for a project artifact: plinth, label, in-range ring, click/tap to open. */
-export function ArtifactShell({ project, slot, children }: { project: Project; slot: Vec2; children: ReactNode }) {
+/**
+ * Common frame for a project artifact: plinth, label, in-range ring, click/tap to open. A grounded
+ * exhibit stands on the floor (turned to face `facing`, a ground angle) instead of floating over a plinth.
+ */
+export function ArtifactShell({ project, slot, children, grounded = false, facing = 0 }: { project: Project; slot: Vec2; children: ReactNode; grounded?: boolean; facing?: number }) {
   const ring = useRef<Mesh>(null)
   const openProject = useStore((s) => s.openProject)
   const { main, sub } = label(project)
@@ -34,16 +37,17 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
 
   return (
     <group position={at(slot)}>
-      {V2 && <ContactShadow position={[0, 0, 0]} size={[2.1, 2.1]} shape="round" opacity={0.5} />}
+      {V2 && <ContactShadow position={[0, 0, 0]} size={grounded ? [2.4, 2.4] : [2.1, 2.1]} shape="round" opacity={0.5} />}
       {/* v2: the Projects atrium builds its own plinths, one per project kind. */}
-      {!V2 && (
+      {!V2 && !grounded && (
         <mesh position={[0, 0.3, 0]}>
           <cylinderGeometry args={[0.55, 0.65, 0.6, 24]} />
           <Concrete color="#ecebe6" roughness={0.9} />
         </mesh>
       )}
       <group
-        position={[0, 1.6, 0]}
+        position={[0, grounded ? 0 : 1.6, 0]}
+        rotation={[0, grounded ? yawFor(facing) : 0, 0]}
         onClick={(e) => {
           e.stopPropagation()
           if (e.delta > DRAG_THRESHOLD) return // the end of a camera drag, not a click
@@ -54,11 +58,11 @@ export function ArtifactShell({ project, slot, children }: { project: Project; s
       >
         {children}
       </group>
-      <mesh ref={ring} position={[0, V2 ? 0.74 : 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
-        <ringGeometry args={[0.7, 0.78, 48]} />
+      <mesh ref={ring} position={[0, grounded ? 0.02 : V2 ? 0.74 : 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+        <ringGeometry args={grounded ? [1.16, 1.24, 64] : [0.7, 0.78, 48]} />
         <meshBasicMaterial color="#6fae3c" fog={false} />
       </mesh>
-      <Billboard position={[0, 2.45, 0]}>
+      <Billboard position={[0, grounded ? 1.95 : 2.45, 0]}>
         <Text font={TITLE_FONT} fontSize={0.2} color="#ecebe6" anchorX="center" anchorY="bottom" maxWidth={1.7} textAlign="center" lineHeight={1.1}>
           {main}
         </Text>

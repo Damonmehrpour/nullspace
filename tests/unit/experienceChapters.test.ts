@@ -5,14 +5,15 @@ import { experienceChapters } from '../../src/world/v2/experienceChapters'
 describe('experience chapters (portal data)', () => {
   const chapters = experienceChapters(cv.experience.entries)
 
-  it('orders the four career chapters oldest to newest, one portal each', () => {
+  it('orders the five career chapters oldest to newest, one portal each', () => {
     const portals = chapters.filter((c) => !c.minor)
-    expect(portals.map((c) => c.name)).toEqual(['Medrick', 'Ubicomp', 'OASIS', 'ARVO'])
-    expect(portals.map((c) => c.style)).toEqual(['medrick', 'ubicomp', 'oasis', 'arvo'])
+    expect(portals.map((c) => c.name)).toEqual(['Medrick', 'Ubicomp', 'OASIS', 'ARVO', 'Sämmi Studios'])
+    expect(portals.map((c) => c.style)).toEqual(['medrick', 'ubicomp', 'oasis', 'arvo', 'sammi'])
   })
 
   it('engraves roles and dates exactly as the CV states them', () => {
     const byName = Object.fromEntries(chapters.map((c) => [c.name, c]))
+    expect(byName['Sämmi Studios']).toMatchObject({ role: 'Founder & Indie Game Developer', dates: '05/2026 – Present' })
     expect(byName.ARVO).toMatchObject({ role: 'Lead XR Engineer', dates: '08/2025 – 11/2025' })
     expect(byName.OASIS).toMatchObject({ role: 'Project Worker / Unreal Developer', dates: '11/2024 – 03/2025' })
     expect(byName.Ubicomp).toMatchObject({ role: 'Research Assistant / Unreal Developer', dates: '05/2024 – 08/2024' })

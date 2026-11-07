@@ -63,11 +63,24 @@ test('island views', async ({ page }, info) => {
     }
   }
   if (island === 'skills') {
-    // Standing in the plaza facing each district (game −58°, XR 0°, AI +58°, tools 157°, languages 190°).
-    for (const [name, deg] of [['district-game', -58], ['district-xr', 0], ['district-ai', 58], ['district-tools', 157], ['district-languages', 190]] as const) {
+    // Standing in the plaza facing each district (game −58°, XR 0°, AI +58°, tools 155°, languages 195°).
+    for (const [name, deg] of [['district-game', -58], ['district-xr', 0], ['district-ai', 58], ['district-tools', 155], ['district-languages', 195]] as const) {
       const o = (deg * Math.PI) / 180
       await play(name, 1.1 * Math.cos(o), 1.1 * Math.sin(o), o)
     }
+  }
+  if (island === 'skills') {
+    // The supporting districts behind the arrival ring, from where a player actually stands.
+    await play('support-from-plaza', 0.6, 0, Math.PI)
+    await play('support-from-arrival', -1.2, 0.4, Math.PI - 0.15)
+    await play('support-from-walkway-a', -2.9, 3.4, Math.PI + 0.9)
+    await play('support-from-walkway-b', -2.9, -3.4, Math.PI - 0.9)
+  }
+  if (island === 'projects') {
+    // The SanaSauna exhibit on the atrium floor (slot at -90°, 2.75 m), from the plaza and up close.
+    await play('wordgame', 0.3, -0.6, -Math.PI / 2)
+    await play('wordgame-close', 0.1, -1.55, -Math.PI / 2)
+    await play('wordgame-from-arrival', -2, 0, -0.9)
   }
   if (island === 'contact') {
     // In front of each channel stone (fanned around the tower toward the plaza), facing it.

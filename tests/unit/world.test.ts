@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { cv } from '../../src/content/cv'
 import { SECTION_IDS } from '../../src/content/schema'
 import { buildLayout, WORLD } from '../../src/content/world'
 import { distToSegment, v } from '../../src/core/geometry'
@@ -15,8 +16,8 @@ describe('world layout', () => {
     for (const i of WORLD.islands) expect(v.len(i.centre)).toBeCloseTo(22, 5)
   })
 
-  it('gives Projects three artifact slots and the others none', () => {
-    for (const i of WORLD.islands) expect(i.artifactSlots).toHaveLength(i.id === 'projects' ? 3 : 0)
+  it('gives Projects one artifact slot per project and the others none', () => {
+    for (const i of WORLD.islands) expect(i.artifactSlots).toHaveLength(i.id === 'projects' ? cv.projects.projects.length : 0)
   })
 
   it('connects consecutive islands in a closed loop of five walkways', () => {

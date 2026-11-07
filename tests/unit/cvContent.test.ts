@@ -105,6 +105,6 @@ describe('finished content', () => {
 
   it('marks every section and project complete', () => {
     expect([cv.education, cv.experience, cv.projects, cv.skills, cv.contact].map((s) => s.status)).toEqual(['real', 'real', 'real', 'real', 'real'])
-    expect(cv.projects.projects.map((p) => p.status)).toEqual(['real', 'real', 'real'])
+    for (const p of cv.projects.projects) expect(p.status, p.id).toBe('real')
   })
 })
