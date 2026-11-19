@@ -1,95 +1,97 @@
-import { DEFAULT_LAYOUT_PARAMS } from '../../content/world'
 import type { Vec2 } from '../../core/geometry'
-import type { Chapter, PortalStyle } from './experienceChapters'
+import type { Chapter } from './experienceChapters'
 
-// The Experience island: one long concrete wall between the arrival ring and the void, curved around
-// the ring, pierced by one opening per career chapter in date order (left to right as you arrive).
-// Minor chapters are a shallow niche instead of an opening. Shared by the meshes (ExperienceV2), the
-// colliders and the tests. Island-local space: +x points outward, z across (+z is the arrival's right).
+// The Experience island as the Memory Foundry: one workstation per career chapter around an open floor,
+// Sämmi Studios (the newest) as the anchor at the back, the others in date order left to right as you
+// arrive. Each station is discovered by walking up to it (no gates). Shared by the meshes
+// (ExperienceV2), the colliders and the tests.
+// Island-local space: +x points outward (toward the void), z across (+z is the arrival's right).
+// Station-local space: u points out of the station's front, v across it (+v is a viewer's left as they
+// face the station), y up. In three.js terms: x = u, z = v after a rotateY(-facing).
 
-/** The wall: an arc of radius R around the arrival point, T thick, H high, with piers between bays. */
-export const WALL = { R: 6.0, T: 0.6, H: 3.4, pier: { w: 0.4, h: 3.65 } }
-/** Where the arc is centred: the arrival point. */
-export const ARC_CENTRE: Vec2 = { x: -DEFAULT_LAYOUT_PARAMS.arrivalOffset, z: 0 }
+export type StationKind = 'medrick' | 'tutor' | 'ubicomp' | 'oasis' | 'arvo' | 'sammi'
 
-/** Each bay's width along the wall, and the half-width a body can pass through (openings only). */
-export type BayKind = Exclude<PortalStyle, 'generic'> | 'generic' | 'niche'
-export const BAY: Record<BayKind, { w: number; gap: number }> = {
-  medrick: { w: 1.6, gap: 0.55 },
-  ubicomp: { w: 1.6, gap: 0.5 },
-  oasis: { w: 2.6, gap: 0.75 },
-  arvo: { w: 1.6, gap: 0.6 },
-  sammi: { w: 2.0, gap: 0.55 },
-  generic: { w: 1.6, gap: 0.55 },
-  niche: { w: 1.2, gap: 0 },
+/** Every station faces the open floor's centre. */
+export const FLOOR_CENTRE: Vec2 = { x: 1.0, z: 0 }
+/** The inlaid ring on the open floor: the foundry's shared floor, every station's inlay leaves from it. */
+export const FLOOR_RING = { r: 2.0, w: 0.06 }
+/** How close the player must come to a station's front to discover it (m). */
+export const FIND_RANGE = 2.0
+
+export type StationSpec = {
+  /** Centre of the footprint (island-local). */
+  x: number
+  z: number
+  /** Footprint half-extents: hu along the facing direction, hv across it. */
+  hu: number
+  hv: number
 }
-/** The niche: a recess in the arrival face (not a way through). */
-export const NICHE = { w: 0.9, h: 1.8, depth: 0.22 }
-/** The bay the composition is centred on, straight ahead of the arrival ring. */
-const ANCHOR: BayKind = 'oasis'
 
-export type Bay = { chapter: Chapter; kind: BayKind; w: number; gap: number; angle: number; opening: boolean }
+export const STATIONS: Record<StationKind, StationSpec> = {
+  medrick: { x: -0.9, z: -4.1, hu: 0.6, hv: 0.8 },
+  tutor: { x: 1.4, z: -4.2, hu: 0.55, hv: 0.7 },
+  ubicomp: { x: 3.4, z: -3.0, hu: 0.5, hv: 0.85 },
+  // Set back and kept below 4.4 m so it anchors the floor without hiding the stations either side.
+  sammi: { x: 5.3, z: 0, hu: 1.1, hv: 1.25 },
+  oasis: { x: 3.0, z: 3.4, hu: 1.0, hv: 1.0 },
+  arvo: { x: 0.4, z: 4.2, hu: 0.55, hv: 0.85 },
+}
 
-const kindOf = (c: Chapter): BayKind => (c.minor ? 'niche' : c.style)
+export type Station = { chapter: Chapter; kind: StationKind; spec: StationSpec; facing: number }
 
-/** The bays in date order, each with its angle around the arc (radians, 0 = straight out). */
-export function wallBays(chapters: Chapter[]): Bay[] {
-  const { R, pier } = WALL
-  let s = pier.w
-  const placed = chapters.map((chapter) => {
+const kindOf = (c: Chapter): StationKind | null => (c.minor ? 'tutor' : c.style === 'generic' ? null : c.style)
+
+/** The direction (island-local angle) a station at (x, z) faces: toward the floor's centre. */
+export function facingOf(spec: StationSpec): number {
+  return Math.atan2(FLOOR_CENTRE.z - spec.z, FLOOR_CENTRE.x - spec.x)
+}
+
+/** The stations for the CV's chapters, in date order (chapters without a station are left out). */
+export function stations(chapters: Chapter[]): Station[] {
+  return chapters.flatMap((chapter) => {
     const kind = kindOf(chapter)
-    const { w, gap } = BAY[kind]
-    const mid = s + w / 2
-    s += w + pier.w
-    return { chapter, kind, w, gap, mid, opening: kind !== 'niche' }
+    if (!kind) return []
+    const spec = STATIONS[kind]
+    return [{ chapter, kind, spec, facing: facingOf(spec) }]
   })
-  const anchor = placed.find((b) => b.kind === ANCHOR)?.mid ?? s / 2
-  return placed.map(({ mid, ...b }) => ({ ...b, angle: (mid - anchor) / R }))
 }
 
-/** Angles of the piers: one before the first bay, one after each. */
-export function pierAngles(bays: Bay[]): number[] {
-  const { R, pier } = WALL
-  if (bays.length === 0) return []
-  const first = bays[0].angle - (bays[0].w / 2 + pier.w / 2) / R
-  return [first, ...bays.map((b) => b.angle + (b.w / 2 + pier.w / 2) / R)]
+/** A station-local point (u out of the front, v across) in island-local space. */
+export function stationPoint(s: Pick<Station, 'spec' | 'facing'>, u: number, v: number): Vec2 {
+  const c = Math.cos(s.facing)
+  const n = Math.sin(s.facing)
+  return { x: s.spec.x + u * c - v * n, z: s.spec.z + u * n + v * c }
 }
 
-/** A point at distance r from the arc's centre, at angle a (island-local). */
-export function arcPoint(a: number, r: number): Vec2 {
-  return { x: ARC_CENTRE.x + r * Math.cos(a), z: ARC_CENTRE.z + r * Math.sin(a) }
+/** Where the player stands to discover a station: just in front of it (OASIS: on its pad, before the seat). */
+export function findPoint(s: Station): Vec2 {
+  return s.kind === 'oasis' ? stationPoint(s, 0.35, 0) : stationPoint(s, s.spec.hu + 0.5, 0)
 }
 
-/**
- * The line a player crosses to discover a chapter: through `o`, across the direction `yaw`, within
- * `half` of `o`. For the wall, the middle of each opening, crossing outward.
- */
-export type Threshold = { o: Vec2; yaw: number; half: number }
-export function threshold(bay: Bay): Threshold {
-  return { o: arcPoint(bay.angle, WALL.R + WALL.T / 2), yaw: bay.angle, half: bay.gap }
+/** OASIS's plate stands on a pedestal at the pad's edge, beside the way in (station-local u, v). */
+export const OASIS_PLATE = { u: 0.55, v: 0.75 }
+
+/** A floor inlay: from the ring's edge out to a station (or the studio's door). */
+export function spoke(to: Vec2): { from: Vec2; to: Vec2 } {
+  const dx = to.x - FLOOR_CENTRE.x
+  const dz = to.z - FLOOR_CENTRE.z
+  const l = Math.hypot(dx, dz)
+  return { from: { x: FLOOR_CENTRE.x + (dx / l) * FLOOR_RING.r, z: FLOOR_CENTRE.z + (dz / l) * FLOOR_RING.r }, to }
 }
 
-/** A wall segment as a box in island-local space: centre, half-length along the wall, half-depth, yaw. */
-export type WallBox = { c: Vec2; hx: number; hz: number; yaw: number }
-
-/** A bay-local span (x0..x1 along the wall, z0..z1 out of the back face) as an island-local box. */
-function bayBox(angle: number, x0: number, x1: number, z0: number, z1: number): WallBox {
-  const back = arcPoint(angle, WALL.R + WALL.T)
-  const t = { x: -Math.sin(angle), z: Math.cos(angle) } // along the wall
-  const n = { x: -Math.cos(angle), z: -Math.sin(angle) } // out of the back face, toward the arrival
-  const mx = (x0 + x1) / 2
-  const mz = (z0 + z1) / 2
-  return { c: { x: back.x + t.x * mx + n.x * mz, z: back.z + t.z * mx + n.z * mz }, hx: (x1 - x0) / 2, hz: (z1 - z0) / 2, yaw: angle + Math.PI / 2 }
+/** Sämmi Studios' doorway, where its inlay ends. */
+export function studioDoor(): Vec2 {
+  const spec = STATIONS.sammi
+  return stationPoint({ spec, facing: facingOf(spec) }, spec.hu + 0.05, 0)
 }
 
-/** The wall's solid parts: each bay beside its opening (the whole bay for a niche), and the piers. */
-export function wallSolids(bays: Bay[]): WallBox[] {
-  const { T, pier } = WALL
-  const out: WallBox[] = []
-  for (const b of bays) {
-    if (b.opening) out.push(bayBox(b.angle, -b.w / 2, -b.gap, 0, T), bayBox(b.angle, b.gap, b.w / 2, 0, T))
-    else out.push(bayBox(b.angle, -b.w / 2, b.w / 2, 0, T))
-  }
-  for (const a of pierAngles(bays)) out.push(bayBox(a, -pier.w / 2, pier.w / 2, -0.07, T + 0.07))
-  return out
+/** A station's solid footprint as island-local boxes (OASIS: only its seat; the pad is walkable). */
+export type FootBox = { c: Vec2; hx: number; hz: number; yaw: number }
+export function stationSolids(s: Station): FootBox[] {
+  if (s.kind === 'oasis')
+    return [
+      { c: stationPoint(s, -0.45, 0), hx: 0.25, hz: 0.3, yaw: s.facing }, // the seat
+      { c: stationPoint(s, OASIS_PLATE.u, OASIS_PLATE.v), hx: 0.18, hz: 0.25, yaw: s.facing }, // the plate's pedestal
+    ]
+  return [{ c: stationPoint(s, 0, 0), hx: s.spec.hu, hz: s.spec.hv, yaw: s.facing }]
 }

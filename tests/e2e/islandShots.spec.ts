@@ -110,13 +110,15 @@ test('island views', async ({ page }, info) => {
     // The Sämmi Studios workshop beside the corridor: from the other walkway, the arrival ring, between
     // the gates, and at its door.
     await play('approach-other', -5.2, 3.6, -0.55)
-    // The wall of openings from the arrival ring, each end, through the moon gate, and from the terrace.
-    await play('wall-left', -2.4, 0, -0.55)
-    await play('wall-right', -2.4, 0, 0.55)
-    await play('wall-near', 1.0, 0)
-    await play('wall-oblique-left', -0.5, -2.8, -0.4)
-    await play('wall-oblique-right', -0.5, 2.8, 0.4)
-    await play('terrace-back', 5.6, 0, Math.PI)
+    // The Memory Foundry from the arrival ring, both walkway mouths, the open floor and each station.
+    await play('foundry-arrival-wide', -2.4, 0)
+    await play('foundry-from-education-walkway', -4.0, 4.4, -0.75)
+    await play('foundry-from-projects-walkway', -4.0, -4.4, 0.75)
+    await play('foundry-floor', 1.0, 0)
+    await play('foundry-left-arm', -1.0, -1.2, -0.95)
+    await play('foundry-right-arm', -1.0, 1.2, 0.95)
+    await play('foundry-at-sammi', 2.4, 0.6)
+    await play('foundry-back-terrace', 6.2, -2.4, Math.PI + 0.5)
   }
   if (island === 'education') {
     // The academy from the arrival ring's sides, and close to its portico.

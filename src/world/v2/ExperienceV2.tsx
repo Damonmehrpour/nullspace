@@ -1,7 +1,7 @@
 import { Text } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { BoxGeometry, Color, ExtrudeGeometry, IcosahedronGeometry, Matrix4, MeshBasicMaterial, MeshLambertMaterial, Object3D, Path, Shape, Vector3, type BufferGeometry, type InstancedMesh } from 'three'
+import { BoxGeometry, Color, CylinderGeometry, ExtrudeGeometry, IcosahedronGeometry, Matrix4, MeshBasicMaterial, MeshLambertMaterial, Object3D, RingGeometry, Shape, TorusGeometry, Vector3, type BufferGeometry, type InstancedMesh } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { cv } from '../../content/cv'
@@ -12,237 +12,326 @@ import { useReveal } from '../reveals/useReveal'
 import { sim } from '../sim'
 import { TITLE_FONT } from '../space'
 import { BlockShadows, SHADOW_SPREAD } from './BlockShadows'
-import { fadingConcreteMaterial, syncFadeTransparency } from './concrete'
+import { concreteMaterial, fadingConcreteMaterial, syncFadeTransparency } from './concrete'
 import { guideCue } from './cues'
 import { experienceChapters } from './experienceChapters'
-import { arcPoint, NICHE, pierAngles, threshold, WALL, wallBays, type Bay } from './experienceLayout'
+import { findPoint, FIND_RANGE, FLOOR_CENTRE, FLOOR_RING, OASIS_PLATE, spoke, stationPoint, stations, studioDoor, type Station } from './experienceLayout'
 
-// Experience: one long concrete wall between the arrival ring and the void, curved around the ring and
-// pierced by one opening per career chapter, oldest on the left. Each opening has its own outline
-// (Medrick's pixel steps, Ubicomp's lab lattice, OASIS's moon, ARVO's shifted overlay, Sämmi's sauna
-// gable); the minor tutoring chapter is a lit niche. Walking through an opening discovers that chapter.
+// Experience as the Memory Foundry: one workstation per career chapter around a shared open floor, with
+// Sämmi Studios, the newest, as the warm anchor at the back. Every station is built from one kit:
+// an ivory plinth with a charcoal edge band, a charcoal bench under an ivory worktop, a tilted plate with
+// the chapter's name, role and dates, and a pilot light. Only the machine on it differs. An inlaid ring
+// on the floor ties the stations together; walking up to a station discovers it, and its inlay from
+// the ring lights. Warm light belongs to the studio alone.
 //
-// Bay-local space: x runs along the wall (+x is the arrival's right), y up, z out of the front face
-// toward the arrival; the back face is at z = 0, the front at z = T.
+// Station-local space: x = u (out of the station's front), y up, z = v (across).
 
 const DIM = new Color('#34383d')
 const LIT = new Color('#eef6e4')
-const WARM = new Color('#ffd9a0') // Sämmi's threshold: the same löyly light as the SanaSauna exhibit
-const TEXT_RANGE = 18 // engravings render only when the player is near (they're unreadable from afar)
-const { T, H } = WALL
-const NICHE_Y = 0.6
-/** The moon gate's circle (OASIS). */
-const MOON = { r: 1.2, cy: 1.25 }
+const WARM = new Color('#ffd9a0')
+const TEXT_RANGE = 18
+const PLINTH = 0.12
+const BENCH_H = 0.9
+const PLATE = { tilt: (35 * Math.PI) / 180, h: 0.46 }
 
-/** Light elements are unit boxes in one instanced draw: lit by the reveal, by discovery, or warm. */
-export type Light = { pos: [number, number, number]; size: [number, number, number]; portal: number; kind: 'reveal' | 'discover' | 'warm'; base: number; yaw?: number; roll?: number }
-
-/** The wall's local frame for a bay at `angle`: back face on the arc at R + T, front toward the arrival. */
-export function bayYaw(angle: number): number {
-  return -(angle + Math.PI / 2)
+export type Light = {
+  pos: [number, number, number]
+  size: [number, number, number]
+  portal: number
+  kind: 'reveal' | 'discover' | 'warm'
+  base: number
+  yaw?: number
+  roll?: number
+  /** Shown only once its station is discovered (the floor inlays' light). */
+  untilFound?: boolean
 }
-function bayMatrix(angle: number): Matrix4 {
-  const p = arcPoint(angle, WALL.R + T)
-  return new Matrix4().makeRotationY(bayYaw(angle)).setPosition(p.x, 0, p.z)
-}
+type LocalLight = Omit<Light, 'portal' | 'yaw'>
+/** Where a station's plate stands (station-local), and how wide it is. */
+type PlateSpec = { u: number; v: number; y: number; w: number }
 
-/** The opening's outline, from the bottom-left corner over the top to the bottom-right (bay-local x, y). */
-function openingPath(kind: Bay['kind'], gap: number): [number, number][] {
-  const a = gap
-  switch (kind) {
-    case 'medrick': {
-      // A phone-shaped opening whose top corners step in like pixels.
-      const h = 2.45
-      const s = 0.13
-      return [[-a, 0], [-a, h - 3 * s], [-a + s, h - 3 * s], [-a + s, h - 2 * s], [-a + 2 * s, h - 2 * s], [-a + 2 * s, h - s], [-a + 3 * s, h - s], [-a + 3 * s, h], [a - 3 * s, h], [a - 3 * s, h - s], [a - 2 * s, h - s], [a - 2 * s, h - 2 * s], [a - s, h - 2 * s], [a - s, h - 3 * s], [a, h - 3 * s], [a, 0]]
-    }
-    case 'oasis': {
-      // The moon gate: a circle reaching down to the floor, its foot opened to the walking width.
-      // Straight sides up to where the circle is as wide as the walking gap, then the circle over the top.
-      const { r, cy } = MOON
-      const k = Math.sqrt(r * r - a * a)
-      const tL = Math.PI + Math.atan2(k, a)
-      const tR = -Math.atan2(k, a)
-      const out: [number, number][] = [[-a, 0]]
-      const n = 48
-      for (let i = 0; i <= n; i++) {
-        const t = tL - (i / n) * (tL - tR)
-        out.push([r * Math.cos(t), cy + r * Math.sin(t)])
-      }
-      out.push([a, 0])
-      return out
-    }
-    case 'arvo': {
-      // A clean rounded opening; its augmented twin is a line of light, shifted (see the lights).
-      const h = 2.5
-      const r = 0.3
-      const out: [number, number][] = [[-a, 0], [-a, h - r]]
-      for (let i = 1; i < 8; i++) out.push([-a + r - r * Math.cos((i / 8) * (Math.PI / 2)), h - r + r * Math.sin((i / 8) * (Math.PI / 2))])
-      out.push([-a + r, h], [a - r, h])
-      for (let i = 1; i < 8; i++) out.push([a - r + r * Math.sin((i / 8) * (Math.PI / 2)), h - r + r * Math.cos((i / 8) * (Math.PI / 2))])
-      out.push([a, h - r], [a, 0])
-      return out
-    }
-    case 'sammi':
-      // A sauna's gable: the house every child draws, and the newest door.
-      return [[-a, 0], [-a, 1.9], [0, 2.6], [a, 1.9], [a, 0]]
-    case 'ubicomp':
-      return [[-a, 0], [-a, 2.5], [a, 2.5], [a, 0]]
-    default:
-      return [[-a, 0], [-a, 2.4], [a, 2.4], [a, 0]]
-  }
+function stationMatrix(s: Pick<Station, 'spec' | 'facing'>): Matrix4 {
+  return new Matrix4().makeRotationY(-s.facing).setPosition(s.spec.x, 0, s.spec.z)
 }
 
-function extrude(shape: Shape, z0: number, depth: number): BufferGeometry {
-  const g = new ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 1, curveSegments: 24 })
-  g.deleteAttribute('uv')
-  return g.translate(0, 0, z0 + 0.02).toNonIndexed()
-}
-
-const rect = (target: Shape | Path, x0: number, y0: number, x1: number, y1: number) => target.moveTo(x0, y0).lineTo(x1, y0).lineTo(x1, y1).lineTo(x0, y1).lineTo(x0, y0)
-
-/** One bay's concrete in bay-local space: a panel around its opening, or a solid panel with a niche. */
-function bayGeometry(bay: Bay): BufferGeometry[] {
-  const hw = bay.w / 2
-  if (!bay.opening) {
-    const back = new Shape()
-    rect(back, -hw, 0, hw, H)
-    const front = new Shape()
-    rect(front, -hw, 0, hw, H)
-    const hole = new Path()
-    rect(hole, -NICHE.w / 2, NICHE_Y, NICHE.w / 2, NICHE_Y + NICHE.h)
-    front.holes.push(hole)
-    return [extrude(back, 0, T - NICHE.depth - 0.04), extrude(front, T - NICHE.depth, NICHE.depth - 0.04)]
-  }
-  // A U-shaped outline around the opening (it meets the floor, so it can't be a hole).
-  const s = new Shape()
-  s.moveTo(-hw, 0)
-  for (const [x, y] of openingPath(bay.kind, bay.gap)) s.lineTo(x, y)
-  s.lineTo(hw, 0).lineTo(hw, H).lineTo(-hw, H).lineTo(-hw, 0)
-  return [extrude(s, 0, T - 0.04)]
-}
-
-/** The bay's light elements, in bay-local space (converted to island space by the caller). */
-function bayLights(bay: Bay, i: number): Light[] {
-  const out: Light[] = []
-  const at = (x: number, y: number, z: number, sx: number, sy: number, sz: number, kind: Light['kind'], base: number, roll = 0) =>
-    out.push({ pos: [x, y, z], size: [sx, sy, sz], portal: i, kind, base, roll })
-  const face = T + 0.012
-  // Between each name and its role, a hairline that lights as the island is revealed.
-  at(0, 2.955, face, Math.min(1.0, bay.w - 0.5), 0.018, 0.01, 'reveal', 1)
-  if (bay.opening) at(0, 0.012, T / 2, bay.gap * 2 - 0.2, 0.02, 0.12, bay.kind === 'sammi' ? 'warm' : 'discover', bay.kind === 'sammi' ? 0.7 : 0.12)
-  switch (bay.kind) {
-    case 'medrick':
-      // Four inset tiles beside the opening, one per released title.
-      for (let k = 0; k < 4; k++) at(-bay.gap - 0.13, 0.8 + k * 0.38, face, 0.12, 0.12, 0.01, 'discover', 0.12)
-      break
-    case 'ubicomp':
-      // The lab lattice: three fine grooves of light on either side.
-      for (const side of [-1, 1]) for (let k = 0; k < 3; k++) at(side * (bay.gap + 0.07 + k * 0.07), 1.3, face, 0.016, 2.2, 0.01, 'discover', 0.12)
-      break
-    case 'oasis': {
-      const r = MOON.r + 0.14
-      for (let k = 0; k < 26; k++) {
-        const t = (k / 26) * Math.PI * 2
-        const y = MOON.cy + r * Math.sin(t)
-        if (y > 0.18) at(r * Math.cos(t), y, face, 0.045, 0.045, 0.01, 'discover', 0.12)
-      }
-      break
-    }
-    case 'arvo': {
-      // The augmented twin: the opening's outline in light, shifted up and to the right.
-      const d = 0.1
-      const a = bay.gap
-      const side = 2.5 - 0.3
-      at(-a + d, d + side / 2, face, 0.025, side, 0.01, 'discover', 0.4)
-      at(a + d, d + side / 2, face, 0.025, side, 0.01, 'discover', 0.4)
-      at(d, 2.5 + d, face, 2 * (a - 0.3), 0.025, 0.01, 'discover', 0.4)
-      break
-    }
-    case 'sammi': {
-      // Warm light along the gable's edges, just inside the opening.
-      const a = bay.gap - 0.05
-      const len = Math.hypot(a, 0.7)
-      const roll = Math.atan2(0.7, a)
-      at(-a / 2, 1.9 + 0.35 - 0.04, face, len, 0.03, 0.01, 'warm', 0.85, roll)
-      at(a / 2, 1.9 + 0.35 - 0.04, face, len, 0.03, 0.01, 'warm', 0.85, -roll)
-      break
-    }
-    case 'niche':
-      // A soft light at the top of the niche, over its lettering.
-      at(0, NICHE_Y + NICHE.h - 0.06, T - NICHE.depth + 0.02, NICHE.w - 0.12, 0.025, 0.02, 'discover', 0.45)
-      break
-  }
+function ready(g: BufferGeometry): BufferGeometry {
+  const out = g.index ? g.toNonIndexed() : g
+  if (out.getAttribute('uv')) out.deleteAttribute('uv')
   return out
 }
 
-/** A few soft moss cushions at the moon gate's foot, on the arrival side. */
-function mossGeometry(bay: Bay): BufferGeometry {
-  const parts = [
-    [-0.95, 0.35, 0.16],
-    [-1.12, 0.55, 0.11],
-    [-0.8, 0.62, 0.09],
-    [0.98, 0.42, 0.07],
-  ].map(([x, dz, r]) => new IcosahedronGeometry(r, 1).scale(1, 0.55, 1).translate(x, r * 0.25, T + dz).toNonIndexed())
-  return mergeGeometries(parts, false)!.applyMatrix4(bayMatrix(bay.angle))
+/** A softly chamfered box from station-local extents. */
+function box(u0: number, u1: number, y0: number, y1: number, v0: number, v1: number, r = 0.025): BufferGeometry {
+  const g = new RoundedBoxGeometry(u1 - u0, y1 - y0, v1 - v0, 1, Math.min(r, (u1 - u0) / 2.2, (y1 - y0) / 2.2, (v1 - v0) / 2.2))
+  return ready(g.translate((u0 + u1) / 2, (y0 + y1) / 2, (v0 + v1) / 2))
 }
 
-/**
- * Engraving size: as large as the bay allows, never above 0.26 m. A minor chapter's niche is titled by
- * its role ("Tutor"), its organisation going on the line below with the dates.
- */
-function nameSize(bay: Bay): number {
-  const title = bay.opening ? bay.chapter.name : bay.chapter.role
-  return Math.min(bay.opening ? 0.26 : 0.2, (bay.w - 0.3) / (title.length * 0.58))
+/** A profile in the (u, y) plane extruded across v0..v1. */
+function prism(points: [number, number][], v0: number, v1: number): BufferGeometry {
+  const s = new Shape()
+  points.forEach(([u, y], i) => (i === 0 ? s.moveTo(u, y) : s.lineTo(u, y)))
+  s.closePath()
+  const g = new ExtrudeGeometry(s, { depth: v1 - v0, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 1 })
+  return ready(g.translate(0, 0, v0))
+}
+
+/** A shape in the (v, y) plane extruded along u, from u0 back to u0 - depth (for arches facing the front). */
+function facade(shape: Shape, u0: number, depth: number): BufferGeometry {
+  const g = new ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 1, curveSegments: 24 })
+  g.rotateY(-Math.PI / 2) // shape x → v (z), extrusion → -u
+  return ready(g.translate(u0, 0, 0))
+}
+
+type Parts = { ivory: BufferGeometry[]; charcoal: BufferGeometry[]; lights: LocalLight[]; plate: PlateSpec | null; hull: number }
+
+/** One station, in station-local space, built from the shared kit plus its own machine. */
+function stationParts(s: Station): Parts {
+  const { hu, hv } = s.spec
+  const ivory: BufferGeometry[] = []
+  const charcoal: BufferGeometry[] = []
+  const lights: LocalLight[] = []
+  const light = (u: number, y: number, vv: number, su: number, sy: number, sv: number, kind: Light['kind'], base: number, roll = 0) =>
+    lights.push({ pos: [u, y, vv], size: [su, sy, sv], kind, base, roll })
+
+  // The kit. A plinth with a charcoal band along its front edge.
+  const plinth = () => {
+    ivory.push(box(-hu, hu, 0, PLINTH, -hv, hv, 0.03))
+    charcoal.push(box(hu - 0.012, hu + 0.012, 0.035, 0.085, -hv + 0.06, hv - 0.06, 0.005))
+  }
+  // A bench: charcoal body under an ivory worktop that overhangs it a little.
+  const bench = (u0: number, u1: number, v0: number, v1: number) => {
+    charcoal.push(box(u0 + 0.03, u1 - 0.03, PLINTH, BENCH_H - 0.05, v0 + 0.03, v1 - 0.03))
+    ivory.push(box(u0, u1, BENCH_H - 0.05, BENCH_H, v0, v1, 0.015))
+    // Its pilot light, along the worktop's front edge: dim until the station is discovered.
+    light(u1 + 0.004, BENCH_H - 0.025, (v0 + v1) / 2, 0.008, 0.012, Math.max(0.2, v1 - v0 - 0.3), 'discover', 0.12)
+  }
+  // The plate on a bench's front edge, tilted up toward the trailing camera.
+  const plateOn = (uFront: number, vc: number, w: number): PlateSpec => {
+    const u = uFront - 0.2
+    const y = BENCH_H + 0.03 + (PLATE.h / 2) * Math.cos(PLATE.tilt)
+    ivory.push(ready(new BoxGeometry(0.03, PLATE.h, w).rotateZ(PLATE.tilt).translate(u, y, vc)))
+    return { u, v: vc, y, w }
+  }
+
+  switch (s.kind) {
+    case 'medrick': {
+      // Game development: an arcade cabinet (control deck, slanted screen, marquee) beside a bench
+      // carrying four cartridges, one per released title.
+      plinth()
+      const v0 = -hv + 0.05
+      const v1 = -0.02
+      ivory.push(
+        prism(
+          [
+            [-hu + 0.05, PLINTH],
+            [0.05, PLINTH],
+            [0.05, 0.95],
+            [0.28, 1.04],
+            [0.28, 1.12],
+            [0.05, 1.18],
+            [-0.08, 1.86],
+            [0.08, 1.95],
+            [0.08, 2.18],
+            [-hu + 0.05, 2.18],
+          ],
+          v0,
+          v1,
+        ),
+      )
+      const screen = new BoxGeometry(0.03, 0.6, v1 - v0 - 0.12).rotateZ(Math.atan2(0.13, 0.68)).translate(-0.005, 1.52, (v0 + v1) / 2)
+      charcoal.push(ready(screen))
+      light(0.1, 1.97, (v0 + v1) / 2, 0.01, 0.12, v1 - v0 - 0.2, 'discover', 0.15) // the marquee
+      bench(-0.2, hu - 0.02, 0.05, hv - 0.05)
+      for (let k = 0; k < 4; k++) charcoal.push(box(-0.12, 0.08, BENCH_H, BENCH_H + 0.2, 0.12 + k * 0.15, 0.22 + k * 0.15, 0.01))
+      for (let k = 0; k < 4; k++) light(0.085, BENCH_H + 0.15, 0.17 + k * 0.15, 0.008, 0.05, 0.06, 'discover', 0.12)
+      return { ivory, charcoal, lights, plate: plateOn(hu - 0.02, (0.05 + hv - 0.05) / 2, 0.66), hull: 2.2 }
+    }
+    case 'tutor': {
+      // Teaching: a small barrel-vaulted alcove with a dark board on its back wall and a lectern.
+      plinth()
+      const half = hv
+      const spring = 1.7
+      const back = new Shape()
+      back.moveTo(-half, PLINTH).lineTo(half, PLINTH).lineTo(half, spring).absarc(0, spring, half, 0, Math.PI, false).lineTo(-half, PLINTH)
+      ivory.push(facade(back, -hu + 0.14, 0.14))
+      const vault = new Shape()
+      vault.moveTo(half, spring).absarc(0, spring, half, 0, Math.PI, false).lineTo(-half + 0.12, spring)
+      vault.absarc(0, spring, half - 0.12, Math.PI, 0, true) // the vault's underside, back across
+      vault.lineTo(half, spring)
+      ivory.push(facade(vault, 0.3, 0.3 + hu - 0.14))
+      for (const side of [-1, 1]) ivory.push(box(-hu, 0.3, PLINTH, spring, side < 0 ? -half : half - 0.12, side < 0 ? -half + 0.12 : half))
+      charcoal.push(box(-hu + 0.14, -hu + 0.17, 0.95, 1.6, -0.42, 0.42, 0.005)) // the board
+      light(-hu + 0.175, 1.62, 0, 0.006, 0.012, 0.7, 'discover', 0.15)
+      bench(0.0, hu - 0.02, -0.4, 0.4) // the lectern
+      return { ivory, charcoal, lights, plate: plateOn(hu - 0.02, 0, 0.74), hull: spring + half }
+    }
+    case 'ubicomp': {
+      // Research: a long console with a monitor, and behind it an array of sensor masts on a rail.
+      plinth()
+      bench(-0.05, hu - 0.02, -hv + 0.08, hv - 0.08)
+      charcoal.push(ready(new BoxGeometry(0.03, 0.34, 0.85).rotateZ(-0.2).translate(0.02, BENCH_H + 0.2, -0.2)))
+      const masts = 5
+      ivory.push(box(-0.42, -0.36, 1.15, 1.21, -hv + 0.12, hv - 0.12, 0.01)) // the rail
+      for (let k = 0; k < masts; k++) {
+        const vv = -hv + 0.15 + (k * (hv * 2 - 0.3)) / (masts - 1)
+        const h = 1.55 + ((k * 37) % 5) * 0.12
+        ivory.push(box(-0.43, -0.35, PLINTH, h, vv - 0.04, vv + 0.04, 0.01))
+        charcoal.push(box(-0.46, -0.32, h, h + 0.12, vv - 0.07, vv + 0.07, 0.015))
+        light(-0.315, h + 0.06, vv, 0.006, 0.03, 0.05, 'discover', 0.12)
+      }
+      return { ivory, charcoal, lights, plate: plateOn(hu - 0.02, 0.0, 0.9), hull: 2.3 }
+    }
+    case 'oasis': {
+      // Immersive technology: a round pad with a seat, facing a ring of light floating in front of a
+      // second, finer ring (a lens over a lens). Its plate stands on a pedestal beside the way in.
+      ivory.push(ready(new CylinderGeometry(hu, hu, 0.06, 48).translate(0, 0.03, 0)))
+      charcoal.push(ready(new CylinderGeometry(hu + 0.03, hu + 0.03, 0.025, 48).translate(0, 0.0125, 0))) // edge band
+      charcoal.push(box(-0.7, -0.2, 0.06, 0.45, -0.28, 0.28))
+      ivory.push(ready(new TorusGeometry(0.85, 0.07, 10, 48).rotateY(Math.PI / 2).translate(0.15, 2.0, 0)))
+      ivory.push(ready(new TorusGeometry(0.98, 0.025, 6, 48).rotateY(Math.PI / 2).translate(-0.05, 2.0, 0)))
+      for (let k = 0; k < 18; k++) {
+        const t = (k / 18) * Math.PI * 2
+        light(0.23, 2.0 + 0.85 * Math.sin(t), 0.85 * Math.cos(t), 0.03, 0.04, 0.04, 'discover', 0.12)
+      }
+      const p = OASIS_PLATE
+      charcoal.push(box(p.u - 0.2, p.u + 0.2, 0.06, BENCH_H - 0.05, p.v - 0.33, p.v + 0.33))
+      ivory.push(box(p.u - 0.24, p.u + 0.24, BENCH_H - 0.05, BENCH_H, p.v - 0.37, p.v + 0.37, 0.015))
+      return { ivory, charcoal, lights, plate: plateOn(p.u + 0.24, p.v, 0.7), hull: 2.95 }
+    }
+    case 'arvo': {
+      // Robotics: an articulated arm on a turntable reaching over its bench, a gripper closing on a part.
+      plinth()
+      bench(0.0, hu - 0.02, -hv + 0.08, 0.25)
+      const base = { u: -0.25, v: 0.5 }
+      ivory.push(ready(new CylinderGeometry(0.28, 0.32, 0.22, 24).translate(base.u, PLINTH + 0.11, base.v)))
+      charcoal.push(ready(new CylinderGeometry(0.14, 0.16, 0.5, 16).translate(base.u, PLINTH + 0.47, base.v)))
+      const shoulder = new Vector3(base.u, PLINTH + 0.75, base.v)
+      const elbow = new Vector3(base.u + 0.2, 2.25, base.v - 0.2)
+      const wrist = new Vector3(0.22, 1.4, -0.6) // over the far end of the bench, clear of the plate
+      const limb = (a: Vector3, b: Vector3, t: number) => {
+        const d = new Vector3().subVectors(b, a)
+        const g = new BoxGeometry(t, d.length(), t * 0.85)
+        const m = new Matrix4().lookAt(a, b, new Vector3(0, 1, 0))
+        g.rotateX(Math.PI / 2).applyMatrix4(m).translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
+        return ready(g)
+      }
+      charcoal.push(limb(shoulder, elbow, 0.17), limb(elbow, wrist, 0.13))
+      ivory.push(ready(new CylinderGeometry(0.13, 0.13, 0.22, 16).rotateX(Math.PI / 2).translate(elbow.x, elbow.y, elbow.z)))
+      ivory.push(ready(new CylinderGeometry(0.1, 0.1, 0.16, 16).translate(wrist.x, wrist.y + 0.02, wrist.z)))
+      for (const side of [-1, 1]) charcoal.push(box(wrist.x - 0.03, wrist.x + 0.03, wrist.y - 0.32, wrist.y - 0.06, wrist.z + side * 0.07 - 0.02, wrist.z + side * 0.07 + 0.02, 0.008))
+      ivory.push(box(wrist.x - 0.09, wrist.x + 0.09, BENCH_H, BENCH_H + 0.14, wrist.z - 0.09, wrist.z + 0.09, 0.015)) // the part
+      light(elbow.x, elbow.y, elbow.z + 0.115, 0.06, 0.06, 0.008, 'discover', 0.2)
+      return { ivory, charcoal, lights, plate: plateOn(hu - 0.02, -0.05, 0.56), hull: 2.45 }
+    }
+    case 'sammi': {
+      // The indie studio: a hall under a sawtooth roof whose glazing faces the floor, a loft with a
+      // forward-pitched roof, a canopied door, warm windows front and back.
+      plinth()
+      const hallV0 = -hv
+      const hallV1 = 0.35
+      const H = 2.9
+      ivory.push(box(-hu, hu, PLINTH, H, hallV0, hallV1, 0.03))
+      const d = hu
+      for (let k = 0; k < 2; k++) {
+        const a = -hu + k * d
+        const b = a + d
+        ivory.push(prism([[a, H], [b, H], [b, H + 0.55]], hallV0, hallV1))
+        light(b + 0.012, H + 0.27, (hallV0 + hallV1) / 2, 0.01, 0.38, hallV1 - hallV0 - 0.3, 'warm', 0.8)
+      }
+      ivory.push(box(-hu, 0.7, PLINTH, 3.55, hallV1, hv, 0.03)) // the loft
+      ivory.push(prism([[-hu - 0.05, 3.55], [0.85, 3.55], [0.85, 4.15], [-hu - 0.05, 3.8]], hallV1 - 0.05, hv + 0.05))
+      light(0.712, 2.2, (hallV1 + hv) / 2, 0.01, 2.0, 0.12, 'warm', 0.85) // the loft's slit window
+      charcoal.push(box(hu - 0.01, hu + 0.015, PLINTH, 2.1, -0.75, 0.05, 0.005)) // the door
+      light(hu + 0.02, 1.1, -0.35, 0.006, 1.85, 0.7, 'warm', 0.6)
+      ivory.push(box(hu - 0.05, hu + 0.45, 2.16, 2.26, -0.95, 0.25, 0.02)) // the canopy
+      light(hu + 0.012, 1.4, -1.0, 0.01, 1.0, 0.36, 'warm', 0.85) // the workshop window
+      for (const vv of [-0.85, -0.15]) light(-hu - 0.012, 1.6, vv, 0.01, 1.2, 0.3, 'warm', 0.75) // back windows
+      return { ivory, charcoal, lights, plate: null, hull: 4.2 }
+    }
+  }
+}
+
+/** Moss at the OASIS pad's edge, the kokedama's kind at home. */
+function mossGeometry(s: Station): BufferGeometry {
+  const parts = [
+    [0.55, -0.6, 0.15],
+    [0.68, -0.45, 0.1],
+    [0.4, -0.75, 0.08],
+  ].map(([u, vv, r]) => new IcosahedronGeometry(r, 1).scale(1, 0.55, 1).translate(u, 0.06 + r * 0.25, vv).toNonIndexed())
+  return mergeGeometries(parts, false)!.applyMatrix4(stationMatrix(s))
+}
+
+/** A flush floor strip from a to b (island-local), as a box geometry and its matching light. */
+function strip(a: { x: number; z: number }, b: { x: number; z: number }, w: number) {
+  const dx = b.x - a.x
+  const dz = b.z - a.z
+  const len = Math.hypot(dx, dz)
+  const yaw = -Math.atan2(dz, dx)
+  const g = new BoxGeometry(len, 0.006, w).rotateY(yaw).translate((a.x + b.x) / 2, 0.004, (a.z + b.z) / 2)
+  g.deleteAttribute('uv')
+  return { geo: g.toNonIndexed(), pos: [(a.x + b.x) / 2, 0.009, (a.z + b.z) / 2] as [number, number, number], len, yaw }
 }
 
 export function ExperienceV2({ island }: { island: IslandDef }) {
   const progress = useReveal(island.id)
-  const bays = useMemo(() => wallBays(experienceChapters(cv.experience.entries)), [])
+  const list = useMemo(() => stations(experienceChapters(cv.experience.entries)), [])
   const built = useMemo(() => {
-    const concrete: BufferGeometry[] = []
-    const proxy: BufferGeometry[] = []
+    const charcoal: BufferGeometry[] = []
+    const inlay: BufferGeometry[] = []
     const lights: Light[] = []
-    bays.forEach((bay, i) => {
-      const m = bayMatrix(bay.angle)
-      for (const g of bayGeometry(bay)) concrete.push(g.applyMatrix4(m))
-      const box = new BoxGeometry(bay.w, H, T).translate(0, H / 2, T / 2)
-      box.deleteAttribute('uv')
-      proxy.push(box.toNonIndexed().applyMatrix4(m))
-      for (const l of bayLights(bay, i)) {
-        const p = new Vector3(...l.pos).applyMatrix4(m)
-        lights.push({ ...l, pos: [p.x, p.y, p.z], yaw: bayYaw(bay.angle) })
+    const plates: (PlateSpec | null)[] = []
+    const ivory = list.map((s, i) => {
+      const m = stationMatrix(s)
+      const p = stationParts(s)
+      plates.push(p.plate)
+      for (const g of p.charcoal) charcoal.push(g.applyMatrix4(m))
+      for (const l of p.lights) {
+        const at = new Vector3(...l.pos).applyMatrix4(m)
+        lights.push({ ...l, pos: [at.x, at.y, at.z], yaw: -s.facing, portal: i })
       }
+      const hull = new BoxGeometry(s.spec.hu * 2, p.hull, s.spec.hv * 2).translate(0, p.hull / 2, 0)
+      hull.deleteAttribute('uv')
+      return { geo: mergeGeometries(p.ivory.map((g) => g.applyMatrix4(m)), false)!, proxy: hull.toNonIndexed().applyMatrix4(m), mat: fadingConcreteMaterial('#ebe7df') }
     })
-    // Piers between the bays, a little taller than the wall: the rhythm of the façade.
-    for (const a of pierAngles(bays)) {
-      const g = new RoundedBoxGeometry(WALL.pier.w, WALL.pier.h, T + 0.14, 1, 0.04).translate(0, WALL.pier.h / 2, T / 2)
-      g.deleteAttribute('uv')
-      concrete.push(g.toNonIndexed().applyMatrix4(bayMatrix(a)))
-    }
-    const oasis = bays.find((b) => b.kind === 'oasis')
+    // The shared floor: an inlaid ring on the open floor, and an inlay from it to every station. A
+    // station's inlay lights once it is discovered; the studio's is always warm.
+    const ring = new RingGeometry(FLOOR_RING.r - FLOOR_RING.w / 2, FLOOR_RING.r + FLOOR_RING.w / 2, 96).rotateX(-Math.PI / 2).translate(FLOOR_CENTRE.x, 0.005, FLOOR_CENTRE.z)
+    ring.deleteAttribute('uv')
+    inlay.push(ring.toNonIndexed())
+    list.forEach((s, i) => {
+      const target = s.kind === 'sammi' ? studioDoor() : findPoint(s)
+      const sp = spoke(target)
+      const st = strip(sp.from, sp.to, 0.05)
+      inlay.push(st.geo)
+      lights.push(
+        s.kind === 'sammi'
+          ? { pos: st.pos, size: [st.len, 0.004, 0.022], portal: i, kind: 'warm', base: 0.55, yaw: st.yaw }
+          : { pos: st.pos, size: [st.len, 0.004, 0.022], portal: i, kind: 'discover', base: 0.55, yaw: st.yaw, untilFound: true },
+      )
+    })
+    const oasis = list.find((s) => s.kind === 'oasis')
     return {
-      wall: mergeGeometries(concrete, false)!,
-      proxy: mergeGeometries(proxy, false)!,
+      ivory,
+      charcoal: mergeGeometries(charcoal, false)!,
+      inlay: mergeGeometries(inlay, false)!,
       lights,
+      plates,
       moss: oasis ? mossGeometry(oasis) : null,
-      thresholds: bays.map((b) => (b.opening ? threshold(b) : null)),
-      mat: fadingConcreteMaterial('#ebe7df'),
+      finds: list.map(findPoint),
     }
-  }, [bays])
+  }, [list])
+  const charcoalMat = useMemo(() => concreteMaterial('#3e4045'), [])
+  const inlayMat = useMemo(() => concreteMaterial('#bdb7ac'), [])
   const mossMat = useMemo(() => new MeshLambertMaterial({ color: '#5f9a34', emissive: new Color('#1e3d0d'), emissiveIntensity: 0.5 }), [])
   const lightGeo = useMemo(() => new BoxGeometry(1, 1, 1), [])
   const lightMat = useMemo(() => new MeshBasicMaterial({ color: '#ffffff', toneMapped: false }), [])
   const lightsRef = useRef<InstancedMesh>(null)
   const pads = useRef<InstancedMesh>(null)
   const texts = useRef<(Object3D | null)[]>([])
-  const state = useRef({ discovered: bays.map(() => 0), passed: bays.map(() => false), last: bays.map(() => null as number | null), near: false, lightKey: '' })
+  const state = useRef({ discovered: list.map(() => 0), found: list.map(() => false), near: false, lightKey: '' })
   const tmp = useMemo(() => new Object3D(), [])
   const col = useMemo(() => new Color(), [])
   const outward = v.angleOf(island.centre)
 
-  // Give the lights their per-instance colours at mount, before the precompile runs: creating the
-  // colour buffer later switches the shader variant and compiled it when the island first came into view.
   useLayoutEffect(() => {
     const m = lightsRef.current
     if (!m) return
@@ -253,59 +342,48 @@ export function ExperienceV2({ island }: { island: IslandDef }) {
   useLayoutEffect(() => {
     const p = pads.current
     if (!p) return
-    bays.forEach((bay, i) => {
-      const c = arcPoint(bay.angle, WALL.R + T / 2)
-      tmp.position.set(c.x, 0.012, c.z)
-      tmp.rotation.set(0, bayYaw(bay.angle), 0)
-      tmp.scale.set(bay.w + SHADOW_SPREAD * 2, 1, T + SHADOW_SPREAD * 2)
+    list.forEach((s, i) => {
+      tmp.position.set(s.spec.x, 0.012, s.spec.z)
+      tmp.rotation.set(0, -s.facing, 0)
+      tmp.scale.set(s.spec.hu * 2 + SHADOW_SPREAD * 2, 1, s.spec.hv * 2 + SHADOW_SPREAD * 2)
       tmp.updateMatrix()
       p.setMatrixAt(i, tmp.matrix)
     })
     p.instanceMatrix.needsUpdate = true
-  }, [bays, tmp])
+  }, [list, tmp])
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1)
     const st = state.current
-    syncFadeTransparency([built.mat])
-    // The player in island-local space (+x outward, z across).
+    syncFadeTransparency(built.ivory.map((b) => b.mat))
     const dx = sim.player.pos.x - island.centre.x
     const dz = sim.player.pos.z - island.centre.z
     const lx = dx * Math.cos(outward) + dz * Math.sin(outward)
     const lz = -dx * Math.sin(outward) + dz * Math.cos(outward)
-    // Walking through an opening for the first time per visit discovers that chapter.
-    bays.forEach((_, i) => {
-      const t = built.thresholds[i]
-      if (t) {
-        const rx = lx - t.o.x
-        const rz = lz - t.o.z
-        const along = rx * Math.cos(t.yaw) + rz * Math.sin(t.yaw)
-        const across = -rx * Math.sin(t.yaw) + rz * Math.cos(t.yaw)
-        const last = st.last[i]
-        if (!st.passed[i] && last !== null && Math.abs(across) < t.half && Math.sign(last) !== Math.sign(along) && Math.abs(along - last) < 1) {
-          st.passed[i] = true
-          guideCue.seq++
-        }
-        st.last[i] = along
+    // Walking up to a station for the first time per visit discovers that chapter.
+    list.forEach((_, i) => {
+      const f = built.finds[i]
+      if (!st.found[i] && Math.hypot(lx - f.x, lz - f.z) < FIND_RANGE) {
+        st.found[i] = true
+        guideCue.seq++
       }
-      st.discovered[i] += ((st.passed[i] ? 1 : 0) - st.discovered[i]) * (1 - Math.exp(-dt * 3))
+      st.discovered[i] += ((st.found[i] ? 1 : 0) - st.discovered[i]) * (1 - Math.exp(-dt * 3))
     })
     st.near = Math.hypot(dx, dz) < TEXT_RANGE
 
     const m = lightsRef.current
     const p = progress.current
-    const shown = built.mat.opacity > 0.5 // lights vanish with the wall when it fades for the camera
-    // Rewrite and re-upload the light instances only when something visible changed.
-    const key = `${Math.floor(p * bays.length * 1.1 - 0.5)}|${shown ? 1 : 0}|${st.discovered.map((d) => d.toFixed(3)).join(',')}`
+    const shown = built.ivory.map((b) => b.mat.opacity > 0.5)
+    const key = `${Math.floor(p * list.length * 1.1 - 0.5)}|${shown.map(Number).join('')}|${st.discovered.map((d) => d.toFixed(3)).join(',')}`
     if (m && key !== st.lightKey) {
       st.lightKey = key
       built.lights.forEach((l, i) => {
         tmp.position.set(...l.pos)
         tmp.rotation.set(0, l.yaw ?? 0, l.roll ?? 0)
-        // Reveal (and warm) lights ignite bay after bay; discovery lights brighten when you pass.
-        const on = l.kind === 'reveal' || l.kind === 'warm' ? p * bays.length * 1.1 > l.portal + 0.5 : true
-        // Collapse on every axis when hidden (a box flattened in one axis still shows a face).
-        if (on && shown) tmp.scale.set(...l.size)
+        const on = l.kind === 'reveal' || l.kind === 'warm' ? p * list.length * 1.1 > l.portal + 0.5 : true
+        const found = !l.untilFound || st.discovered[l.portal] > 0.03
+        // Floor inlays stay lit even when their station fades for the camera (they lie on the floor).
+        if (on && found && (shown[l.portal] || l.pos[1] < 0.02)) tmp.scale.set(...l.size)
         else tmp.scale.setScalar(1e-4)
         tmp.updateMatrix()
         m.setMatrixAt(i, tmp.matrix)
@@ -314,62 +392,67 @@ export function ExperienceV2({ island }: { island: IslandDef }) {
       m.instanceMatrix.needsUpdate = true
       if (m.instanceColor) m.instanceColor.needsUpdate = true
     }
-    // Engravings fade with the wall when it turns translucent for the camera.
-    const o = built.mat.opacity
-    for (const t of texts.current) {
-      if (!t) continue
-      t.visible = st.near && o > 0.25 // no ghost lettering over a faded wall
+    texts.current.forEach((t, i) => {
+      if (!t) return
+      const o = built.ivory[Math.floor(i / 2)]?.mat.opacity ?? 1
+      t.visible = st.near && o > 0.25
       ;(t as unknown as { fillOpacity: number }).fillOpacity = o
-    }
+    })
   })
 
+  const lift = 0.017 // lettering just proud of the plate
   return (
     <IslandBase island={island}>
-      <mesh name="v2-portal" geometry={built.wall} material={built.mat} />
-      {/* Invisible stand-in, solid across every opening, so the wall fades whenever it hides the player. */}
-      <mesh geometry={built.proxy} material={built.mat} visible={false} userData={{ blocksCamera: true, fadeOnBlock: true }} />
-      {bays.map((bay, i) => {
-        const p = arcPoint(bay.angle, WALL.R + T)
+      {built.ivory.map((b, i) => (
+        <group key={list[i].kind}>
+          <mesh name="v2-portal" geometry={b.geo} material={b.mat} />
+          <mesh geometry={b.proxy} material={b.mat} visible={false} userData={{ blocksCamera: true, fadeOnBlock: true }} />
+        </group>
+      ))}
+      <mesh name="v2-foundry-machines" geometry={built.charcoal} material={charcoalMat} />
+      <mesh name="v2-foundry-floor" geometry={built.inlay} material={inlayMat} />
+      {list.map((s, i) => {
+        const plate = built.plates[i]
+        if (!plate) {
+          // The studio's name over its door, on the hall's front.
+          const at = stationPoint(s, s.spec.hu + 0.016, -0.45)
+          return (
+            <group key={s.kind} position={[at.x, 0, at.z]} rotation={[0, -s.facing + Math.PI / 2, 0]}>
+              <Text name="v2-engraving" ref={(t) => void (texts.current[i * 2] = t)} font={TITLE_FONT} position={[0, 2.52, 0]} fontSize={0.18} color="#2f2d29" anchorX="center" anchorY="bottom" maxWidth={1.7} textAlign="center">
+                {s.chapter.name}
+              </Text>
+              <Text name="v2-engraving" ref={(t) => void (texts.current[i * 2 + 1] = t)} font={TITLE_FONT} position={[0, 2.49, 0]} fontSize={0.075} lineHeight={1.25} color="#3a3733" anchorX="center" anchorY="top" maxWidth={1.55} textAlign="center">
+                {`${s.chapter.role}\n${s.chapter.dates}`}
+              </Text>
+            </group>
+          )
+        }
+        // The plate's lettering: tilted with the plate, facing up toward the camera.
+        const at = stationPoint(s, plate.u, plate.v)
+        const n = { y: Math.sin(PLATE.tilt) * lift, z: Math.cos(PLATE.tilt) * lift }
         return (
-          <group key={`${bay.chapter.name}-${bay.chapter.dates}`} position={[p.x, 0, p.z]} rotation={[0, bayYaw(bay.angle), 0]}>
-            {/* Career information is engraved above each opening (above the niche for a minor chapter). */}
-            <Text
-              name="v2-engraving"
-              ref={(t) => void (texts.current[i * 2] = t)}
-              font={TITLE_FONT}
-              position={[0, 2.98, T + 0.012]}
-              fontSize={nameSize(bay)}
-              color="#2f2d29"
-              anchorX="center"
-              anchorY="bottom"
-              maxWidth={bay.w - 0.2}
-              textAlign="center"
-            >
-              {bay.opening ? bay.chapter.name : bay.chapter.role}
-            </Text>
-            <Text
-              name="v2-engraving"
-              ref={(t) => void (texts.current[i * 2 + 1] = t)}
-              font={TITLE_FONT}
-              position={[0, 2.925, T + 0.012]}
-              fontSize={0.085}
-              lineHeight={1.25}
-              color="#3a3733"
-              anchorX="center"
-              anchorY="top"
-              textAlign="center"
-              maxWidth={bay.w - 0.2}
-            >
-              {bay.opening ? `${bay.chapter.role}\n${bay.chapter.dates}` : `${bay.chapter.name}\n${bay.chapter.dates}`}
-            </Text>
+          <group key={s.kind} position={[at.x, plate.y, at.z]} rotation={[0, -s.facing + Math.PI / 2, 0]}>
+            <group position={[0, n.y, n.z]} rotation={[-PLATE.tilt, 0, 0]}>
+              <Text name="v2-engraving" ref={(t) => void (texts.current[i * 2] = t)} font={TITLE_FONT} position={[0, 0.025, 0]} fontSize={plateNameSize(s.kind === 'tutor' ? s.chapter.role : s.chapter.name, plate.w)} color="#2f2d29" anchorX="center" anchorY="bottom" maxWidth={plate.w - 0.06} textAlign="center">
+                {s.kind === 'tutor' ? s.chapter.role : s.chapter.name}
+              </Text>
+              <Text name="v2-engraving" ref={(t) => void (texts.current[i * 2 + 1] = t)} font={TITLE_FONT} position={[0, -0.005, 0]} fontSize={0.058} lineHeight={1.2} color="#3a3733" anchorX="center" anchorY="top" maxWidth={plate.w - 0.06} textAlign="center">
+                {s.kind === 'tutor' ? `${s.chapter.name}\n${s.chapter.dates}` : `${s.chapter.role}\n${s.chapter.dates}`}
+              </Text>
+            </group>
           </group>
         )
       })}
       {built.moss && <mesh name="v2-moss" geometry={built.moss} material={mossMat} />}
       <instancedMesh name="v2-portal-lights" ref={lightsRef} args={[lightGeo, lightMat, built.lights.length]} />
-      <BlockShadows ref={pads} count={bays.length} />
+      <BlockShadows ref={pads} count={list.length} />
     </IslandBase>
   )
+}
+
+/** A plate's name: as large as the plate allows, at most 0.15 m. */
+function plateNameSize(name: string, w: number): number {
+  return Math.min(0.15, (w - 0.08) / (name.length * 0.58))
 }
 
 function lightColour(l: Light, discovered: number, col: Color): Color {

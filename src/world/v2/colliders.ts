@@ -10,7 +10,7 @@ import type { Obstacle } from '../../core/obstacles'
 import { contactStones } from './contactSignal'
 import { STONE, stonePlaces, T } from './contactLayout'
 import { experienceChapters } from './experienceChapters'
-import { wallBays, wallSolids } from './experienceLayout'
+import { stations, stationSolids } from './experienceLayout'
 import { ACADEMY } from './educationLayout'
 import { portalPoint, portalSolids, PORTAL } from './portalLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
@@ -39,8 +39,8 @@ function education(): Obstacle[] {
 }
 
 function experience(): Obstacle[] {
-  // The wall of openings: solid beside each opening, across each niche bay, and at every pier.
-  return wallSolids(wallBays(experienceChapters(cv.experience.entries))).map((w): Obstacle => ({ kind: 'box', ...w }))
+  // The Memory Foundry: each workstation's footprint (OASIS: only its seat; its pad is walkable).
+  return stations(experienceChapters(cv.experience.entries)).flatMap((st) => stationSolids(st).map((b): Obstacle => ({ kind: 'box', ...b })))
 }
 
 function projects(): Obstacle[] {

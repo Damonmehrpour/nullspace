@@ -4,6 +4,7 @@ import { WORLD } from '../../src/content/world'
 import { skillDistricts } from '../../src/world/v2/skillDistricts'
 import { placeBuildings } from '../../src/world/v2/skillsCity'
 import { gotoEntry, isTouchProject } from './helpers'
+import { STATIONS } from '../../src/world/v2/experienceLayout'
 
 // Solid structures in the real app: the player stops at walls, slides along them, and still walks
 // through the Experience gates. (Reachability of every path and interaction is covered by unit tests.)
@@ -72,7 +73,7 @@ test('walking into a Data City tower stops at its face; walking past it at an an
   }
 })
 
-test('the monolith and the archive are solid; the Experience gates stay open', async ({ page }, info) => {
+test('the monolith, the archive and the Memory Foundry studio are solid; the open floor is walkable', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'walking needs a keyboard')
   test.setTimeout(90_000)
   const ns = await enter(page)
@@ -88,10 +89,12 @@ test('the monolith and the archive are solid; the Experience gates stay open', a
   // The academy's podium starts 1.1 m out (it moved out with the larger island); the body stops 0.3 m short.
   expect(local(atArchive)).toBeGreaterThan(0.3) // walked all the way up to it
   expect(local(atArchive)).toBeLessThan(1.0) // and no further
-  // Experience: from the arrival ring outward through all four gates to the far edge.
+  // Experience: straight out from the arrival ring across the open floor, up to Sämmi Studios, which is solid.
   const exp = island('experience')
   const expOut = Math.atan2(exp.centre.z, exp.centre.x)
   const through = await walk(page, ns, toWorld('experience', { x: -3.6, z: 0 }), expOut, 3)
   const along = (through.x - exp.centre.x) * Math.cos(expOut) + (through.z - exp.centre.z) * Math.sin(expOut)
-  expect(along).toBeGreaterThan(5.4)
+  const studioFront = STATIONS.sammi.x - STATIONS.sammi.hu
+  expect(along).toBeGreaterThan(studioFront - 0.5) // crossed the whole floor
+  expect(along).toBeLessThan(studioFront) // and stopped at the studio's front
 })
