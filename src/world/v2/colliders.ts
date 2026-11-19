@@ -10,17 +10,14 @@ import type { Obstacle } from '../../core/obstacles'
 import { contactStones } from './contactSignal'
 import { STONE, stonePlaces, T } from './contactLayout'
 import { experienceChapters } from './experienceChapters'
-import { arvoPosts, SPECS, STELE, STUDIO, studioPoint } from './experienceLayout'
+import { wallBays, wallSolids } from './experienceLayout'
 import { ACADEMY } from './educationLayout'
 import { portalPoint, portalSolids, PORTAL } from './portalLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
-import { studioSolids } from './sammiStudio'
 import { EXHIBIT } from './sanaSauna'
 import { skillDistricts } from './skillDistricts'
 import { placeBuildings, PLATE, plateWidth, TABLET, tabletSpot } from './skillsCity'
 
-/** The moon gate's round opening, at walking height: free across |z| below this. */
-const MOON_OPENING = 0.9
 const PLINTH_R = 0.62
 
 type Local = (o: Obstacle) => Obstacle
@@ -42,31 +39,8 @@ function education(): Obstacle[] {
 }
 
 function experience(): Obstacle[] {
-  const out: Obstacle[] = []
-  const chapters = experienceChapters(cv.experience.entries)
-  for (const c of chapters) {
-    if (c.minor || c.style === 'generic') continue
-    if (c.style === 'sammi') {
-      // The studio: its walls around the open doorway, and the loft with its crate terrace.
-      for (const [u0, u1, v0, v1] of studioSolids()) {
-        const centre = studioPoint((u0 + u1) / 2, (v0 + v1) / 2)
-        out.push({ kind: 'box', c: centre, hx: (u1 - u0) / 2, hz: (v1 - v0) / 2, yaw: STUDIO.facing })
-      }
-      continue
-    }
-    const s = SPECS[c.style]
-    const half = s.W / 2 + s.jw
-    const open = c.style === 'oasis' ? MOON_OPENING : s.W / 2
-    // The two jambs (or the moon gate's sides); the opening between them stays clear.
-    out.push(span(s.x - s.D / 2, s.x + s.D / 2, open, half), span(s.x - s.D / 2, s.x + s.D / 2, -half, -open))
-    if (c.style === 'arvo') {
-      // The inner frame's two posts behind the opening.
-      const p = arvoPosts()
-      for (const z of [-p.z, p.z]) out.push(span(p.x - 0.06, p.x + 0.06, z - 0.06, z + 0.06))
-    }
-  }
-  if (chapters.some((c) => c.minor)) out.push(span(STELE.x - 0.13, STELE.x + 0.13, STELE.z - 0.45, STELE.z + 0.45))
-  return out
+  // The wall of openings: solid beside each opening, across each niche bay, and at every pier.
+  return wallSolids(wallBays(experienceChapters(cv.experience.entries))).map((w): Obstacle => ({ kind: 'box', ...w }))
 }
 
 function projects(): Obstacle[] {

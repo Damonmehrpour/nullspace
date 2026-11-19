@@ -10,7 +10,7 @@ Damon Mehrpour's portfolio as a surreal 3D journey: a hooded wanderer crosses fi
 |---|---|
 | Centre (spawn) | The portfolio portal: a twelve-sided gateway between two pylons; E, Enter, a click or a tap goes through to the 2D Portfolio with a short transition (instant with reduced motion) |
 | Education & Research | An observatory academy: a stepped portico under a pediment, an arched doorway, a domed observatory with a telescope, and book-spine stacks that slide out |
-| Experience | A corridor of monumental gates, one per career chapter in time order, engraved with role and dates; the newest chapter, Sämmi Studios, is a small game workshop beside it with its sign facing the arrival ring |
+| Experience | The wall of openings: one long concrete wall curved around the arrival ring, pierced by one opening per career chapter in date order (left to right), each with its own outline and its name, role and dates engraved above; the moon gate (OASIS) is straight ahead, the tutoring chapter is a niche, and Sämmi Studios, the newest, is a sauna-gable opening with warm light. Walking through an opening discovers that chapter |
 | Projects | A sunken atrium under a floating ring, with threads of light to three projects, the SanaSauna word-game exhibit and an honours wall |
 | Skills | The Data City: one district per skill group, one building per skill, each labelled with the skill |
 | Contact | The Signal Tower: one transmitter stone per contact channel, wired to a beaconed dish |

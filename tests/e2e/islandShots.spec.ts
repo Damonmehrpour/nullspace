@@ -110,14 +110,13 @@ test('island views', async ({ page }, info) => {
     // The Sämmi Studios workshop beside the corridor: from the other walkway, the arrival ring, between
     // the gates, and at its door.
     await play('approach-other', -5.2, 3.6, -0.55)
-    await play('studio-from-arrival', -2.4, 0, -0.4)
-    await play('studio-approach', -1.9, -1.9, -0.73)
-    await play('studio-from-walkway', -3.8, -4.7, 0.15)
-    await play('studio-close', 0.17, -3.3, -1.29)
-    // ARVO: down the corridor past OASIS, beside it, and from the void side.
-    await play('arvo-approach', 4.3, 0)
-    await play('arvo-oblique', 4.4, 1.9, -0.45)
-    await play('arvo-behind', 7.0, -0.4, Math.PI)
+    // The wall of openings from the arrival ring, each end, through the moon gate, and from the terrace.
+    await play('wall-left', -2.4, 0, -0.55)
+    await play('wall-right', -2.4, 0, 0.55)
+    await play('wall-near', 1.0, 0)
+    await play('wall-oblique-left', -0.5, -2.8, -0.4)
+    await play('wall-oblique-right', -0.5, 2.8, 0.4)
+    await play('terrace-back', 5.6, 0, Math.PI)
   }
   if (island === 'education') {
     // The academy from the arrival ring's sides, and close to its portico.

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { cv } from '../../src/content/cv'
 import { DEFAULT_LAYOUT_PARAMS, PROJECT_SLOTS, SPREAD } from '../../src/content/world'
 import { experienceChapters } from '../../src/world/v2/experienceChapters'
-import { STUDIO, studioPoint } from '../../src/world/v2/experienceLayout'
+import { arcPoint, WALL, wallBays } from '../../src/world/v2/experienceLayout'
 import { gotoEntry, isTouchProject } from './helpers'
 
 const RING = DEFAULT_LAYOUT_PARAMS.ringRadius
@@ -124,7 +124,7 @@ test('v2: the wanderer has no visible facial features', async ({ page }, info) =
 
 // Experience portals: walking the corridor discovers each career chapter once per visit, and each
 // discovery cues the kokedama (walking back through adds nothing).
-test('v2: walking the Experience corridor discovers each portal once', async ({ page }, info) => {
+test('v2: walking through the Experience wall discovers each chapter once', async ({ page }, info) => {
   test.skip(isTouchProject(info.project.name), 'desktop only')
   test.setTimeout(90_000) // many small steps on the software renderer
   await gotoEntry(page)
@@ -135,41 +135,27 @@ test('v2: walking the Experience corridor discovers each portal once', async ({ 
     page.evaluate(([f, a]) => (window as unknown as { __nullspace: Record<string, (...x: unknown[]) => unknown> }).__nullspace[f as string](...(a as unknown[])), [fn, args] as const)
   await ns('freezeClock')
   const a = ((90 - 72) * Math.PI) / 180
-  const at = (lx: number) => ({ x: (RING + lx) * Math.cos(a), z: (RING + lx) * Math.sin(a) })
-  const walk = async (from: number, to: number) => {
-    const step = from < to ? 0.35 : -0.35
-    for (let lx = from; step > 0 ? lx <= to : lx >= to; lx += step) {
-      await ns('setView', at(lx), a)
+  const toWorld = (p: { x: number; z: number }) => ({ x: RING * Math.cos(a) + p.x * Math.cos(a) - p.z * Math.sin(a), z: RING * Math.sin(a) + p.x * Math.sin(a) + p.z * Math.cos(a) })
+  const bays = wallBays(experienceChapters(cv.experience.entries))
+  // Through one opening along its radial line, from in front of the wall to the terrace behind (or back).
+  const through = async (angle: number, out: boolean) => {
+    const steps = [WALL.R - 1.0, WALL.R - 0.6, WALL.R - 0.2, WALL.R + 0.15, WALL.R + 0.45, WALL.R + WALL.T + 0.2, WALL.R + WALL.T + 0.6]
+    for (const r of out ? steps : [...steps].reverse()) {
+      await ns('setView', toWorld(arcPoint(angle, r)), a + angle)
       await page.waitForTimeout(40)
     }
   }
-  await walk(-1.6, -1.5)
+  await ns('setView', toWorld({ x: -2.0, z: 0 }), a)
+  await page.waitForTimeout(100)
   const before = (await ns('getGuideCue')) as number
   const programs = ((await ns('listPrograms')) as string[]).length
-  // One discovery per corridor gate, then one for stepping into the Sämmi Studios doorway beside it.
-  const gates = experienceChapters(cv.experience.entries).filter((c) => !c.minor && c.style !== 'sammi').length
-  expect(gates).toBe(4)
-  await walk(-1.5, 6.6)
-  expect((await ns('getGuideCue')) as number).toBe(before + gates)
-  await walk(6.6, -1.5)
-  expect((await ns('getGuideCue')) as number).toBe(before + gates)
-  const { hall, door } = STUDIO
-  const dv = (door.v0 + door.v1) / 2
-  const studio = (u: number) => {
-    const p = studioPoint(u, dv)
-    return { x: RING * Math.cos(a) + p.x * Math.cos(a) - p.z * Math.sin(a), z: RING * Math.sin(a) + p.x * Math.sin(a) + p.z * Math.cos(a) }
-  }
-  const face = a + STUDIO.facing + Math.PI
-  for (const u of [1.6, 1.3, 1.0, 0.85, hall.u1 - 0.1, hall.u1 - 0.15]) {
-    await ns('setView', studio(u), face)
-    await page.waitForTimeout(60)
-  }
-  expect((await ns('getGuideCue')) as number).toBe(before + gates + 1)
-  for (const u of [1.0, 1.6, hall.u1 - 0.15, 1.6]) {
-    await ns('setView', studio(u), face)
-    await page.waitForTimeout(60)
-  }
-  expect((await ns('getGuideCue')) as number).toBe(before + gates + 1)
+  // One discovery per opening: every chapter but the minor one (a niche, not a way through).
+  const openings = bays.filter((b) => b.opening)
+  expect(openings).toHaveLength(5)
+  for (const b of openings) await through(b.angle, true)
+  expect((await ns('getGuideCue')) as number).toBe(before + openings.length)
+  for (const b of openings) await through(b.angle, false)
+  expect((await ns('getGuideCue')) as number).toBe(before + openings.length)
   // Portals fading for the camera along the way switch to an already-compiled variant.
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })

@@ -8,7 +8,7 @@ import { worldColliders } from '../../src/world/v2/colliders'
 import { contactStones } from '../../src/world/v2/contactSignal'
 import { stonePlaces } from '../../src/world/v2/contactLayout'
 import { experienceChapters } from '../../src/world/v2/experienceChapters'
-import { STUDIO, studioPoint, studioSpan, threshold } from '../../src/world/v2/experienceLayout'
+import { arcPoint, pierAngles, threshold, WALL, wallBays } from '../../src/world/v2/experienceLayout'
 import { ACADEMY } from '../../src/world/v2/educationLayout'
 import { skillDistricts } from '../../src/world/v2/skillDistricts'
 import { signSpot } from '../../src/world/v2/skillsCity'
@@ -81,35 +81,45 @@ describe('world colliders', () => {
     stonePlaces(contactStones(cv.contact.channels).length).forEach((s, k) => expect(reachableNear(toWorld('contact', s), 1.8), `stone ${k}`).toBe(true))
   })
 
-  it('let the player walk through every Experience gate, from the arrival ring to the far edge', () => {
-    for (let x = -2.4; x <= 6.7; x += 0.05) expect(walk.free(toWorld('experience', { x, z: 0 })), `x = ${x.toFixed(2)}`).toBe(true)
-    for (const c of experienceChapters(cv.experience.entries)) if (!c.minor && c.style !== 'generic') expect(reachableNear(toWorld('experience', threshold(c.style).o), 0.1), c.style).toBe(true)
+  const bays = wallBays(experienceChapters(cv.experience.entries))
+  const exp = (p: { x: number; z: number }) => toWorld('experience', p)
+
+  it('lay the Experience wall out in date order, one bay per chapter, the moon gate straight ahead', () => {
+    expect(bays.map((b) => b.kind)).toEqual(['medrick', 'niche', 'ubicomp', 'oasis', 'arvo', 'sammi'])
+    for (let k = 1; k < bays.length; k++) expect(bays[k].angle).toBeGreaterThan(bays[k - 1].angle)
+    expect(bays.find((b) => b.kind === 'oasis')!.angle).toBeCloseTo(0)
   })
 
-  it('let the player step into the Sämmi Studios doorway, past its threshold, but not through its walls', () => {
-    const { hall, door } = STUDIO
-    const dv = (door.v0 + door.v1) / 2
-    // From well in front of the studio up to the back of the doorway recess, less the body's radius.
-    for (let u = 1.9; u >= hall.u1 - door.depth + 0.32; u -= 0.05) expect(walk.free(toWorld('experience', studioPoint(u, dv))), `u = ${u.toFixed(2)}`).toBe(true)
-    expect(reachableNear(toWorld('experience', studioPoint(hall.u1 - 0.2, dv)), 0.1)).toBe(true)
-    expect(walk.free(toWorld('experience', studioPoint(-0.4, STUDIO.loft.slit)))).toBe(false) // the loft
-    expect(walk.free(toWorld('experience', studioPoint(0, STUDIO.window.v0)))).toBe(false) // the hall
-  })
-
-  it('keep the studio clear of the corridor gates and inside the island', () => {
-    const { hall, plinth } = STUDIO
-    const [lo, hi] = studioSpan()
-    const corners = [
-      [hall.u0 - plinth, lo - plinth],
-      [hall.u1 + plinth, lo - plinth],
-      [hall.u1 + plinth, hi + plinth],
-      [hall.u0 - plinth, hi + plinth],
-    ].map(([u, vv]) => studioPoint(u, vv))
-    for (const c of corners) {
-      expect(Math.hypot(c.x, c.z), 'inside the island').toBeLessThan(island('experience').radius - 0.4)
-      // Every gate stands within |z| ≤ 1.85 of the corridor's axis: keep a walkable gap beside them.
-      expect(c.z, 'beside the corridor').toBeLessThan(-1.85 - 0.9)
+  it('let the player walk through every opening of the Experience wall, from the arrival ring to the terrace', () => {
+    for (const b of bays.filter((x) => x.opening)) {
+      // A radial line through the middle of the opening, from in front of the wall to behind it.
+      for (let r = WALL.R - 1.5; r <= WALL.R + WALL.T + 1.2; r += 0.05) expect(walk.free(exp(arcPoint(b.angle, r))), `${b.kind} at r = ${r.toFixed(2)}`).toBe(true)
+      expect(reachableNear(exp(threshold(b).o), 0.1), b.kind).toBe(true)
     }
+    // Straight out from the arrival ring, through the moon gate, to near the island's edge.
+    for (let x = -2.4; x <= 6.7; x += 0.05) expect(walk.free(exp({ x, z: 0 })), `x = ${x.toFixed(2)}`).toBe(true)
+  })
+
+  it('make the wall solid beside every opening, across the niche, and at every pier', () => {
+    const mid = WALL.R + WALL.T / 2
+    for (const b of bays) {
+      const off = ((b.opening ? (b.gap + b.w / 2) / 2 : 0) + 0) / WALL.R
+      if (b.opening) {
+        expect(walk.free(exp(arcPoint(b.angle - (b.gap + 0.35) / WALL.R, mid))), `${b.kind} left jamb`).toBe(false)
+        expect(walk.free(exp(arcPoint(b.angle + (b.gap + 0.35) / WALL.R, mid))), `${b.kind} right jamb`).toBe(false)
+      } else expect(walk.free(exp(arcPoint(b.angle + off, mid))), 'niche').toBe(false)
+    }
+    for (const a of pierAngles(bays)) expect(walk.free(exp(arcPoint(a, mid))), `pier at ${a.toFixed(2)}`).toBe(false)
+  })
+
+  it('keep the wall inside the island, clear of the arrival ring and of both walkways', () => {
+    const ends = pierAngles(bays)
+    for (const a of [ends[0], ends[ends.length - 1]]) {
+      const outer = arcPoint(a, WALL.R + WALL.T + 0.1)
+      expect(Math.hypot(outer.x, outer.z)).toBeLessThan(island('experience').radius - 0.6)
+    }
+    // The arrival ring (r 1.25 around the arc's centre) is well inside the wall's inner face.
+    expect(WALL.R - 1.25).toBeGreaterThan(4)
   })
 
   it('keep the academy on its podium, clear of the arrival ring and inside the island', () => {
