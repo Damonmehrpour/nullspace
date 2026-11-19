@@ -124,8 +124,16 @@ export function simulate(dt: number): void {
   if (store.teleportRequest) {
     const to = store.teleportRequest
     teleportPlayer(to)
-    // Touch travel: bring the guide along so it waits at the island instead of beckoning from afar.
-    if (store.tourTarget) sim.guide = { ...sim.guide, name: 'present', pos: to, target: store.tourTarget, path: [to], pathIndex: 1, timer: 0, met: true }
+    const island = WORLD.islands.find((i) => i.id === store.tourTarget)
+    if (island) {
+      // Touch travel: bring the guide along so it waits at the island instead of beckoning from afar.
+      sim.guide = { ...sim.guide, name: 'present', pos: to, target: island.id, path: [to], pathIndex: 1, timer: 0, met: true }
+      // Face the island, as if the player had walked in, with the camera settled behind them (it kept
+      // the old heading before, which left it looking back up the walkway).
+      const outward = v.angleOf(island.centre)
+      sim.player = { ...sim.player, facing: outward }
+      sim.rig = { ...sim.rig, yaw: outward, aim: to, recenterYaw: null, extraDistance: 0 }
+    }
     store.clearTeleport()
   }
   const paused = isGameplayPaused(store)
