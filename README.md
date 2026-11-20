@@ -11,7 +11,7 @@ Damon Mehrpour's portfolio as a surreal 3D journey: a hooded wanderer crosses fi
 | Centre (spawn) | The portfolio portal: a twelve-sided gateway between two pylons; E, Enter, a click or a tap goes through to the 2D Portfolio with a short transition (instant with reduced motion) |
 | Education & Research | An observatory academy: a stepped portico under a pediment, an arched doorway, a domed observatory with a telescope, and book-spine stacks that slide out |
 | Experience | The Memory Foundry: one workstation per career chapter around a shared open floor, built from one kit (plinth, bench, plate): Medrick's arcade cabinet, the Tutor alcove, UbiComp's sensor console, OASIS's floating rings, ARVO's robot arm, and Sämmi Studios as the warm anchor at the back. Walking up to a station discovers it, and its floor inlay lights |
-| Projects | A sunken atrium under a floating ring, with threads of light to three projects, the SanaSauna word-game exhibit and an honours wall |
+| Projects | A sunken atrium under a floating ring, with threads of light to three projects, the SanastoSauna word-game exhibit and an honours wall |
 | Skills | The Data City: one district per skill group, one building per skill, each labelled with the skill |
 | Contact | The Signal Tower: one transmitter stone per contact channel, wired to a beaconed dish |
 

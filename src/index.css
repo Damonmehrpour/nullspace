@@ -262,3 +262,16 @@ html.in-world body {
     max-height: calc(100vh - 13rem);
   }
 }
+
+/* Project screenshots: the featured one shown whole (portrait phone shots stay uncropped), at most
+   about two thirds of the screen tall. */
+.gallery-feature {
+  max-height: min(70vh, 40rem);
+  max-width: 100%;
+  height: min(70vh, 40rem);
+  background: var(--color-void);
+}
+.gallery-viewer {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

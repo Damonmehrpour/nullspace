@@ -207,7 +207,7 @@ test('v2: approaching each project in the atrium discovers it once', async ({ pa
       await ns('setView', c, a)
       await page.waitForTimeout(100)
     }
-    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + PROJECT_SLOTS.length) // the three plinths and the SanaSauna exhibit
+    expect((await ns('getGuideCue')) as number, `pass ${pass}`).toBe(before + PROJECT_SLOTS.length) // the three plinths and the SanastoSauna exhibit
   }
   expect(((await ns('listPrograms')) as string[]).length).toBe(programs)
 })

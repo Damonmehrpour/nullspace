@@ -200,7 +200,7 @@ export const cv: CV = {
       {
         id: 'project-04',
         status: 'real',
-        name: c('SanaSauna'),
+        name: c('SanastoSauna'),
         context: c('Finnish word puzzle game · Sämmi Studios'),
         summary: c('A Finnish-language word puzzle game combining vocabulary challenges, progressive difficulty and Finnish cultural themes, designed for Finnish speakers and language learners.'),
         role: c('Game developer and designer.'),
@@ -208,7 +208,8 @@ export const cv: CV = {
         release: { status: c('In development: Android release in preparation for Google Play') },
         // To add as they become real: release.publishedOn: c('<date>'); a store link in `links`
         // ({ kind: 'store', label: 'Get it on Google Play', url: c('https://play.google.com/…') });
-        // cover art and screenshots as image `media`, and the trailer as `youtube` media.
+        // and the trailer as `youtube` media. The screenshots are the author's own, from the game.
+        // (Renamed from SanaSauna to SanastoSauna by the author; Sämmi Studios is the studio.)
         features: c([
           'Grid-based word puzzles in multiple sizes, with progressive difficulty.',
           '20 Finnish-inspired themed worlds, custom illustrations and a folk-art visual identity.',
@@ -218,7 +219,57 @@ export const cv: CV = {
           'In-app purchases and Google AdMob are planned, not live.',
         ]),
         tech: c(['Flutter', 'Dart', 'Android', 'Git', 'GitHub', 'Gradle', 'PowerShell']),
-        media: [],
+        // Real screenshots from the game; the first is featured.
+        media: [
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/gameplay.webp'),
+            thumb: '/media/sanastosauna/gameplay-thumb.webp',
+            size: { w: 388, h: 829 },
+            caption: 'Gameplay',
+            alt: 'A SanastoSauna puzzle in the world Metsän sydän: a three-by-three grid of letter tiles under the prompt “Valitse kirjaimet” (choose letters), with hints, a timer and a balance of 150 vihtas at the top, and the lengths of the words still to find below.',
+          },
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/home.webp'),
+            thumb: '/media/sanastosauna/home-thumb.webp',
+            size: { w: 385, h: 835 },
+            caption: 'Home screen',
+            alt: 'The SanastoSauna home screen: a warm sauna interior with a wood stove, a water bucket and a hanging vihta, the title written in steam, and the menu buttons Maailmat (worlds), Onnenpyörä (wheel of fortune) and Kauppa (shop).',
+          },
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/worlds.webp'),
+            thumb: '/media/sanastosauna/worlds-thumb.webp',
+            size: { w: 386, h: 831 },
+            caption: 'Worlds',
+            alt: 'The Maailmat (worlds) list: illustrated cards for Metsän sydän, Talven taika, Löylyn lämpö, Järven kutsu, Kahvipöytä and Leipurin paja; the first shows 0 of 15 levels, the others cost 300 vihtas to unlock.',
+          },
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/world.webp'),
+            thumb: '/media/sanastosauna/world-thumb.webp',
+            size: { w: 384, h: 822 },
+            caption: 'A world',
+            alt: 'The world Metsän sydän (heart of the forest): a black-and-white illustration of a mossy forest path with a squirrel and a hedgehog, a progress bar at 0 of 15 levels, and the buttons Avaa maailma (open world) and Jatka peliä (continue).',
+          },
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/wheel.webp'),
+            thumb: '/media/sanastosauna/wheel-thumb.webp',
+            size: { w: 385, h: 832 },
+            caption: 'Wheel of fortune',
+            alt: 'The Onnenpyörä (wheel of fortune) reward screen: a carved wooden wheel of vihta prizes from 20 to 200 and a lantern, with the Pyöräytä (spin) button.',
+          },
+          {
+            kind: 'image',
+            src: c('/media/sanastosauna/profile.webp'),
+            thumb: '/media/sanastosauna/profile-thumb.webp',
+            size: { w: 387, h: 831 },
+            caption: 'Profile',
+            alt: 'The player profile: a choice of illustrated characters, 1 of 300 levels and 1 of 33 achievements, and the achievements list starting with Ensimmäinen sana (first word), completed.',
+          },
+        ],
         links: [],
         appearance: 'wordgame',
         areas: ['game'],

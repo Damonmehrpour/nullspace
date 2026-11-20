@@ -126,3 +126,28 @@ describe('MediaItem', () => {
     expect(container.textContent).toBe('')
   })
 })
+
+describe('SanastoSauna screenshots', () => {
+  it('feature the gameplay screenshot, let visitors switch and enlarge, with real alt text', async () => {
+    const { fireEvent } = await import('@testing-library/react')
+    const p = cv.projects.projects.find((x) => x.name.state === 'confirmed' && x.name.value === 'SanastoSauna')!
+    render(<ProjectDetail project={p} />)
+    const region = screen.getByRole('region', { name: 'SanastoSauna screenshots' })
+    const featured = within(region).getByRole('button', { name: /Open screenshot 1 of 6 larger: Gameplay/ })
+    expect(within(featured).getByRole('img').getAttribute('alt')).toMatch(/letter tiles/)
+    const strip = within(region).getByRole('list', { name: 'Choose a screenshot' })
+    expect(within(strip).getAllByRole('button')).toHaveLength(6)
+    fireEvent.click(within(strip).getByRole('button', { name: /screenshot 5: Wheel of fortune/ }))
+    expect(within(region).getByRole('button', { name: /Open screenshot 5 of 6 larger/ })).toBeInTheDocument()
+    fireEvent.click(within(region).getByRole('button', { name: /Open screenshot 5 of 6 larger/ }))
+    const viewer = screen.getByRole('dialog', { name: 'Screenshot 5 of 6' })
+    fireEvent.keyDown(viewer, { key: 'ArrowRight' })
+    expect(screen.getByRole('dialog', { name: 'Screenshot 6 of 6' })).toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Screenshot 6 of 6' }), { key: 'Escape' })
+    expect(screen.queryByTestId('gallery-viewer')).toBeNull()
+    // Every screenshot is a real file with a description; no store link or published claim.
+    for (const m of p.media) expect(m.alt.length).toBeGreaterThan(40)
+    expect(p.links).toEqual([])
+    expect(p.release?.publishedOn).toBeUndefined()
+  })
+})

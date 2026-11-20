@@ -23,7 +23,16 @@ export const AREAS = ['game', 'xr', 'ai-hci'] as const
 export type Area = (typeof AREAS)[number]
 export const AREA_LABEL: Record<Area, string> = { game: 'Game Development', xr: 'XR / Immersive', 'ai-hci': 'AI / HCI Research' }
 
-export type Media = { kind: 'image' | 'video' | 'youtube'; src: Field<string>; alt: string; caption?: string }
+export type Media = {
+  kind: 'image' | 'video' | 'youtube'
+  src: Field<string>
+  alt: string
+  caption?: string
+  /** A small version of an image, for gallery strips and the 3D world (never the full-resolution file). */
+  thumb?: string
+  /** The image's pixel size, so its space is reserved before it loads (no layout shift, no cropping). */
+  size?: { w: number; h: number }
+}
 export type Link = { kind: 'github' | 'demo' | 'store' | 'external'; label: string; url: Field<string> }
 
 export type Project = {

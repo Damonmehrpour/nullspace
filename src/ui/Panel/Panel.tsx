@@ -106,7 +106,7 @@ export function Panel({ title, onClose, children, fallbackFocus, badge, variant 
           <article className="mx-auto max-w-[52rem] px-5 pt-10 pb-24 md:px-8 md:pt-14">
             <header className="mb-10 max-w-[68ch] border-b-4 border-concrete pb-6">
               {badge}
-              <h2 id={headingId} ref={headingRef} tabIndex={-1} className="display mt-3 text-[clamp(2.25rem,8vw,4.5rem)] leading-[0.95] outline-none">
+              <h2 id={headingId} ref={headingRef} tabIndex={-1} className="display mt-3 text-[clamp(2rem,7vw,3.75rem)] leading-[0.95] outline-none">
                 {title}
               </h2>
             </header>

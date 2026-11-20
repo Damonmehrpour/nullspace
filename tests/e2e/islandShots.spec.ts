@@ -101,7 +101,7 @@ test('island views', async ({ page }, info) => {
     await play('support-from-walkway-b', -2.9, -3.4, Math.PI - 0.9)
   }
   if (island === 'projects') {
-    // The SanaSauna exhibit on the atrium floor (slot at -90°, 2.75 m), from the plaza and up close.
+    // The SanastoSauna exhibit on the atrium floor (slot at -90°, 2.75 m), from the plaza and up close.
     await play('wordgame', 0.3, -0.6, -Math.PI / 2)
     await play('wordgame-close', 0.1, -1.55, -Math.PI / 2)
     await play('wordgame-from-arrival', -2, 0, -0.9)

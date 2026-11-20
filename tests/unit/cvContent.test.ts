@@ -108,3 +108,21 @@ describe('finished content', () => {
     for (const p of cv.projects.projects) expect(p.status, p.id).toBe('real')
   })
 })
+
+describe('SanastoSauna screenshots', () => {
+  it('are real files in public/, each with a small thumbnail for the 3D world', async () => {
+    // node:fs, imported by name so the browser-typed test config needn't know Node's types.
+    const fsName = 'node:fs'
+    const { existsSync, statSync } = (await import(/* @vite-ignore */ fsName)) as { existsSync(p: string): boolean; statSync(p: string): { size: number } }
+    const p = cv.projects.projects.find((x) => x.appearance === 'wordgame')!
+    expect(p.name).toEqual({ state: 'confirmed', value: 'SanastoSauna' })
+    expect(p.media).toHaveLength(6)
+    for (const m of p.media) {
+      expect(m.src.state).toBe('confirmed')
+      const file = `public${m.src.state === 'confirmed' ? m.src.value : ''}`
+      expect(existsSync(file), file).toBe(true)
+      expect(statSync(file).size).toBeLessThan(150_000)
+      expect(statSync(`public${m.thumb}`).size).toBeLessThan(30_000)
+    }
+  })
+})

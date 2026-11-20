@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { BoxGeometry, CanvasTexture, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, type BufferGeometry } from 'three'
+import { BoxGeometry, CanvasTexture, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, TextureLoader, type BufferGeometry } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { concreteMaterial } from '../v2/concrete'
-import { CROSSWORD, EXHIBIT } from '../v2/sanaSauna'
+import { cv } from '../../content/cv'
+import { CROSSWORD, EXHIBIT, PHONE } from '../v2/sanastoSauna'
 
 const TILE = '#e6e1d6'
 const INK = '#3d3a35'
@@ -120,7 +121,7 @@ function bodyGeometry(): BufferGeometry {
   return mergeGeometries(parts, false)!
 }
 
-/** SanaSauna: a small sauna cabin and a crossword board of its words, in folk-art red and concrete. */
+/** SanastoSauna: a small sauna cabin, a crossword board of its words, and the game on a phone beside it. */
 export function WordGame() {
   const { board, cabin, base } = EXHIBIT
   const body = useMemo(() => bodyGeometry(), [])
@@ -138,10 +139,26 @@ export function WordGame() {
     return new MeshBasicMaterial({ map, color: map ? '#ffffff' : BOARD })
   }, [])
   const glowMat = useMemo(() => new MeshBasicMaterial({ color: '#ffd9a0', toneMapped: false }), [])
+  // The game itself, on a phone beside the board: its real gameplay screenshot, from the small
+  // thumbnail (the full-size images load only in the project's gallery).
+  const screenMat = useMemo(() => {
+    const shot = cv.projects.projects.find((p) => p.appearance === 'wordgame')?.media.find((m) => m.kind === 'image' && m.thumb)
+    const map = typeof document !== 'undefined' && shot?.thumb ? new TextureLoader().load(shot.thumb) : null
+    if (map) map.colorSpace = SRGBColorSpace
+    return new MeshBasicMaterial({ map, color: map ? '#ffffff' : BOARD })
+  }, [])
+  const phone = useMemo(() => {
+    const body = new BoxGeometry(0.03, PHONE.h + 0.04, PHONE.w + 0.04).rotateZ(PHONE.tilt).translate(PHONE.x, PHONE.y, PHONE.z)
+    const stand = new BoxGeometry(0.14, PHONE.y - PHONE.h / 2 - base.h + 0.04, 0.1).translate(PHONE.x - 0.05, (PHONE.y - PHONE.h / 2 + base.h) / 2, PHONE.z)
+    const screen = new PlaneGeometry(PHONE.w, PHONE.h).rotateY(Math.PI / 2).translate(0.017, 0, 0).rotateZ(PHONE.tilt).translate(PHONE.x, PHONE.y, PHONE.z)
+    return { body: mergeGeometries([body.toNonIndexed(), stand.toNonIndexed()], false)!, screen }
+  }, [base])
   return (
     <group>
       <mesh name="v2-wordgame" geometry={body} material={concreteMaterial('#e8e3d8')} />
       <mesh name="v2-wordgame-board" geometry={face} material={faceMat} />
+      <mesh name="v2-wordgame-phone" geometry={phone.body} material={concreteMaterial('#3e4045')} />
+      <mesh name="v2-wordgame-screen" geometry={phone.screen} material={screenMat} />
       {/* Löyly light: a warm doorway glow and a spark at the chimney's top. */}
       <mesh position={[cabin.x1 + 0.006, base.h + 0.3, -0.22]} material={glowMat}>
         <boxGeometry args={[0.01, 0.42, 0.22]} />

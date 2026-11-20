@@ -63,7 +63,7 @@ const deg = (d: number) => (d * Math.PI) / 180
 
 /**
  * The Projects island's artifact slots, in island-local polar terms (angle from outward, metres from
- * the centre), one per project in CV order: three plinths under the ring, and the SanaSauna word-game
+ * the centre), one per project in CV order: three plinths under the ring, and the SanastoSauna word-game
  * exhibit on the atrium floor opposite the honour wall.
  */
 export const PROJECT_SLOTS: { angle: number; r: number }[] = [

@@ -2,6 +2,7 @@ import type { Project } from '../../content/schema'
 import { AreaTags } from '../AreaTags'
 import { FieldText } from '../FieldText'
 import { StatusBadge } from '../StatusBadge'
+import { Gallery } from './Gallery'
 import { MediaItem } from './MediaItem'
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -18,6 +19,9 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
   const shown = project.media.filter((m) => m.src.state === 'confirmed')
   const images = shown.filter((m) => m.kind === 'image')
   const videos = shown.filter((m) => m.kind !== 'image')
+  // A set of sized screenshots of one game gets the showcase gallery; other images (such as one
+  // captioned picture per game) keep the simple grid.
+  const showcase = images.length > 0 && images.every((m) => m.size)
   const release = project.release
   return (
     <article aria-label={project.name.state === 'confirmed' ? project.name.value : project.id}>
@@ -31,6 +35,8 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
         </h3>
       )}
       {project.context && <FieldText field={project.context} as="p" className="mt-2 text-lg" />}
+      {/* Screenshots lead: the game is shown before it is described. */}
+      {showcase && <Gallery images={images} name={project.name.state === 'confirmed' ? project.name.value : 'Project'} />}
       <dl className="mt-4 mb-0">
         <Row label="Summary">
           <FieldText field={project.summary} />
@@ -86,7 +92,7 @@ export function ProjectDetail({ project, showTitle = true }: { project: Project;
           ))}
         </div>
       )}
-      {images.length > 0 && (
+      {!showcase && images.length > 0 && (
         <ul aria-label="Gallery" className="mt-4 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2">
           {images.map((m, i) => (
             <li key={i}>

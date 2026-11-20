@@ -14,7 +14,7 @@ import { stations, stationSolids } from './experienceLayout'
 import { ACADEMY } from './educationLayout'
 import { portalPoint, portalSolids, PORTAL } from './portalLayout'
 import { ARCS, deg, SLOT_R, SLOT_ANGLES, TIERS } from './projectsAtrium'
-import { EXHIBIT } from './sanaSauna'
+import { EXHIBIT } from './sanastoSauna'
 import { skillDistricts } from './skillDistricts'
 import { placeBuildings, PLATE, plateWidth, TABLET, tabletSpot } from './skillsCity'
 

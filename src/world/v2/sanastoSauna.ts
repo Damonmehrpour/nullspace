@@ -1,4 +1,4 @@
-// The SanaSauna exhibit on the Projects atrium floor: a small sauna cabin under a pitched roof and a
+// The SanastoSauna exhibit on the Projects atrium floor: a small sauna cabin under a pitched roof and a
 // tilted word-puzzle board in front of it. Shared by its meshes (WordGame) and its collider.
 // Exhibit-local space: +x faces the atrium's centre, z runs across the exhibit, y is up.
 
@@ -15,6 +15,9 @@ export const EXHIBIT = {
  * whisk) down into it. Rows top to bottom; '.' is an empty square.
  */
 export const CROSSWORD = ['....V', '.S..I', '.A..H', '.N..T', 'SAUNA']
+
+/** A phone on a small stand beside the board, facing the atrium, showing the game's gameplay screen. */
+export const PHONE = { x: 0.34, y: 0.58, z: 0.66, w: 0.26, h: 0.56, tilt: (14 * Math.PI) / 180 }
 
 /** Ridge height of the cabin's roof above the floor. */
 export function ridgeHeight(): number {
