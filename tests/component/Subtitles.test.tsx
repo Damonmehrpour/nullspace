@@ -126,12 +126,13 @@ describe('ControlsHint (controls card)', () => {
     expect(screen.getByRole('region', { name: 'Controls' })).toBeInTheDocument()
   })
 
-  it('tells touch visitors how to look around and travel', () => {
+  it('tells touch visitors how to walk, look around, interact and travel', () => {
     vi.mocked(capabilities.isTouchFirst).mockReturnValue(true)
     render(<ControlsHint />)
     const card = screen.getByRole('region', { name: 'Controls' })
-    expect(within(card).getByText(/Drag to look around/)).toBeInTheDocument()
-    expect(within(card).getByText(/Pinch to zoom/)).toBeInTheDocument()
+    expect(within(card).getByText(/stick, lower left/)).toBeInTheDocument()
+    expect(within(card).getByText(/pinch to zoom/)).toBeInTheDocument()
+    expect(within(card).getByText(/button lower right/)).toBeInTheDocument()
     expect(within(card).getByText(/Sections/)).toBeInTheDocument()
   })
 })

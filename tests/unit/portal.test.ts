@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { WORLD } from '../../src/content/world'
 import { v } from '../../src/core/geometry'
 import { createWalkable } from '../../src/core/walkable'
-import { initialState, isGameplayPaused, useStore } from '../../src/state/store'
+import { initialState, isGameplayPaused, PORTAL_GRACE_MS, useStore } from '../../src/state/store'
 import { worldColliders } from '../../src/world/v2/colliders'
 import { PORTAL, portalInRange, portalPoint, portalSolids } from '../../src/world/v2/portalLayout'
 
@@ -15,10 +15,21 @@ beforeEach(() => {
 })
 
 describe('portfolio portal', () => {
-  it('faces the spawn and the bridge, and the spawn starts clear of it and within its reach', () => {
+  it('faces the spawn and the bridge; the player starts clear of it and well out of its reach', () => {
     expect(PORTAL.facing).toBeCloseTo(WORLD.spawn.facing)
     expect(walk.free(WORLD.spawn.pos)).toBe(true)
-    expect(portalInRange(WORLD.spawn.pos)).toBe(true)
+    expect(portalInRange(WORLD.spawn.pos)).toBe(false)
+    expect(v.dist(WORLD.spawn.pos, WORLD.monolith.centre) - PORTAL.range).toBeGreaterThan(1.5)
+  })
+
+  it('ignores activation for a moment after the world opens (a stale key or tap from entering)', () => {
+    s().setPhase('world')
+    s().updateSettings({ reducedMotion: 'on' })
+    s().enterPortal()
+    expect(s().phase).toBe('world')
+    useStore.setState({ worldEnteredAt: performance.now() - PORTAL_GRACE_MS - 1 })
+    s().enterPortal()
+    expect(s().phase).toBe('portfolio')
   })
 
   it('is solid: the rings, the sill and the pylons cannot be walked through', () => {
@@ -55,6 +66,7 @@ describe('portfolio portal', () => {
 
   it('enterPortal plays the transition, pausing the world, then switches to the Portfolio', () => {
     s().setPhase('world')
+    useStore.setState({ worldEnteredAt: -1e9 })
     s().updateSettings({ reducedMotion: 'off' })
     s().enterPortal()
     expect(s().portalTransit).toBe(true)
@@ -69,6 +81,7 @@ describe('portfolio portal', () => {
 
   it('with reduced motion, enterPortal switches straight to the Portfolio', () => {
     s().setPhase('world')
+    useStore.setState({ worldEnteredAt: -1e9 })
     s().updateSettings({ reducedMotion: 'on' })
     s().enterPortal()
     expect(s().portalTransit).toBe(false)

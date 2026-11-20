@@ -136,3 +136,24 @@ describe('keyboard input', () => {
     input.dispose()
   })
 })
+
+describe('analog stick input', () => {
+  it('moves along the stick, relative to the camera, scaled by how far it is pushed', async () => {
+    const { inputDirection } = await import('../../src/core/playerMotion')
+    const idle = { up: false, down: false, left: false, right: false, interact: false }
+    // Full forward with the camera facing +x.
+    const f = inputDirection({ ...idle, stick: { x: 0, y: 1 } }, 0)
+    expect(f.x).toBeCloseTo(1)
+    expect(f.z).toBeCloseTo(0)
+    // Half right: half the magnitude, along the camera's right.
+    const r = inputDirection({ ...idle, stick: { x: 0.5, y: 0 } }, 0)
+    expect(Math.hypot(r.x, r.z)).toBeCloseTo(0.5)
+    expect(r.z).toBeCloseTo(0.5)
+    // Released: no movement at all.
+    const z = inputDirection({ ...idle, stick: { x: 0, y: 0 } }, 0)
+    expect(Math.hypot(z.x, z.z)).toBe(0)
+    // Keys win over the stick.
+    const k = inputDirection({ ...idle, up: true, stick: { x: 1, y: 0 } }, 0)
+    expect(k.x).toBeCloseTo(1)
+  })
+})

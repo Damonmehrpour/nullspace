@@ -8,6 +8,7 @@ import { createCameraRig, stepCameraRig, type CameraRigState } from '../core/cam
 import { v, type Vec2 } from '../core/geometry'
 import { createGuide, stepGuide, type GuidePose, type GuideState } from '../core/guideBrain'
 import type { InputState } from '../core/input'
+import { releaseTouchStick, touchStick } from '../core/touchStick'
 import { createPlayer, stepPlayer, type PlayerState } from '../core/playerMotion'
 import { buildRouteGraph } from '../core/routeGraph'
 import { createQuality, type QualityState } from '../core/quality'
@@ -97,6 +98,7 @@ export function resetSim(): void {
   sim.zones = createZoneTracker(WORLD.tourOrder)
   sim.autopilot = null
   sim.interactHeld = false
+  releaseTouchStick()
 }
 
 export const reducedMotion = () => isReducedMotion(useStore.getState().settings)
@@ -141,7 +143,11 @@ export function simulate(dt: number): void {
   const events: SimEvent[] = []
 
   const auto = paused ? null : autopilotInput()
-  const p = stepPlayer(sim.player, auto?.input ?? sim.input?.state ?? NO_INPUT, auto?.yaw ?? sim.rig.yaw, dt, walk, paused)
+  if (paused) releaseTouchStick()
+  const keys = sim.input?.state ?? NO_INPUT
+  // The touch joystick feeds the same movement as the keys (keys win while held).
+  const live = touchStick.active ? { ...keys, stick: { x: touchStick.x, y: touchStick.y } } : keys
+  const p = stepPlayer(sim.player, auto?.input ?? live, auto?.yaw ?? sim.rig.yaw, dt, walk, paused)
   sim.player = p.state
   events.push(...p.events)
 

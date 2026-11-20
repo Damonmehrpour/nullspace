@@ -47,7 +47,8 @@ describe('world layout', () => {
   })
 
   it('spawns the player on the plinth facing the ring entry', () => {
-    expect(v.len(WORLD.spawn.pos)).toBeCloseTo(2)
+    expect(v.len(WORLD.spawn.pos)).toBeCloseTo(4.3)
+    expect(v.len(WORLD.spawn.pos)).toBeLessThan(WORLD.monolith.plinthRadius - 0.5)
     expect(WORLD.spawn.facing).toBeCloseTo(v.angleOf(WORLD.ringEntry))
   })
 

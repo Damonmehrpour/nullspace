@@ -30,7 +30,7 @@ export function ControlsHint() {
 
   if (!open) return null
   return (
-    <section aria-label="Controls" className="fixed bottom-24 left-4 z-10 max-w-[min(26rem,calc(100vw-2rem))] border-2 border-graphite bg-void/85 p-4 text-sm backdrop-blur-sm md:left-6">
+    <section aria-label="Controls" className={`fixed ${touch ? 'controls-touch' : 'bottom-24 left-4 md:left-6'} z-10 max-w-[min(26rem,calc(100vw-2rem))] border-2 border-graphite bg-void/85 p-4 text-sm backdrop-blur-sm`}>
       <div className="mb-2 flex items-center justify-between gap-4">
         <h2 className="m-0 text-base font-bold text-concrete">Controls</h2>
         <button type="button" onClick={() => setOpen(false)} className="px-2 py-1 font-semibold text-concrete underline-offset-4 hover:underline">
@@ -39,9 +39,10 @@ export function ControlsHint() {
       </div>
       {touch ? (
         <dl className="m-0">
-          <Row label="Look around">Drag to look around</Row>
-          <Row label="Zoom">Pinch to zoom</Row>
-          <Row label="Travel">Walking needs a keyboard. Open Sections and choose Guide me there.</Row>
+          <Row label="Move">Thumb on the stick, lower left</Row>
+          <Row label="Look around">Drag anywhere else; pinch to zoom</Row>
+          <Row label="Interact">The button lower right, when near something</Row>
+          <Row label="Travel">Or open Sections and choose Guide me there</Row>
         </dl>
       ) : (
         <dl className="m-0">

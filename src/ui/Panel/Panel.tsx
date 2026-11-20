@@ -30,9 +30,27 @@ type PanelProps = {
   /** Focus target when the opener no longer exists (e.g. the canvas after an in-world arrival). */
   fallbackFocus?: () => HTMLElement | null
   badge?: ReactNode
+  /**
+   * 'compact' is the 3D world's side panel. 'page' is the 2D Portfolio's full-viewport reading view: a
+   * sticky bar with the way back, the title, and a centred reading column; the page behind stays put.
+   */
+  variant?: 'compact' | 'page'
 }
 
-export function Panel({ title, onClose, children, fallbackFocus, badge }: PanelProps) {
+/** Keeps the page behind a full-viewport view from scrolling (its scroll position is kept). */
+function useScrollLock(active: boolean): void {
+  useEffect(() => {
+    if (!active) return
+    const html = document.documentElement
+    const prev = html.style.overflow
+    html.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prev
+    }
+  }, [active])
+}
+
+export function Panel({ title, onClose, children, fallbackFocus, badge, variant = 'compact' }: PanelProps) {
   const headingId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -40,6 +58,7 @@ export function Panel({ title, onClose, children, fallbackFocus, badge }: PanelP
   fallbackRef.current = fallbackFocus
 
   useBackgroundInert()
+  useScrollLock(variant === 'page')
 
   useEffect(() => {
     headingRef.current?.focus()
@@ -69,6 +88,34 @@ export function Panel({ title, onClose, children, fallbackFocus, badge }: PanelP
       first.focus()
     }
   }
+
+  if (variant === 'page')
+    return createPortal(
+      <div className="panel-layer" onKeyDown={onKeyDown}>
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={headingId} data-variant="page" className="detail-page fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-void text-concrete">
+          <div className="detail-bar sticky top-0 z-10 border-b border-graphite/70 bg-void/95 backdrop-blur-sm">
+            <div className="mx-auto flex max-w-[52rem] items-center justify-between gap-4 px-5 py-3 md:px-8">
+              <button type="button" onClick={onClose} className="-ml-2 px-2 py-2 font-semibold text-concrete underline-offset-4 hover:underline">
+                <span aria-hidden>← </span>Back to portfolio
+              </button>
+              <span aria-hidden className="display truncate text-base tracking-tight">
+                NULLSPACE
+              </span>
+            </div>
+          </div>
+          <article className="mx-auto max-w-[52rem] px-5 pt-10 pb-24 md:px-8 md:pt-14">
+            <header className="mb-10 max-w-[68ch] border-b-4 border-concrete pb-6">
+              {badge}
+              <h2 id={headingId} ref={headingRef} tabIndex={-1} className="display mt-3 text-[clamp(2.25rem,8vw,4.5rem)] leading-[0.95] outline-none">
+                {title}
+              </h2>
+            </header>
+            <div className="cv-body max-w-[68ch]">{children}</div>
+          </article>
+        </div>
+      </div>,
+      document.body,
+    )
 
   // Portal to <body>: a dialog must never sit inside #app-background, which it marks inert.
   return createPortal(

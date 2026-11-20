@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { capabilities } from '../core/capabilities'
 import { DIALOGUE } from '../core/config'
 import { isTypingTarget } from '../core/input'
 import { isReducedMotion } from '../state/reducedMotion'
@@ -10,6 +11,7 @@ const NARROW = 768
 export function Subtitles() {
   const subtitle = useStore((s) => s.subtitle)
   const settings = useStore((s) => s.settings)
+  const touch = useMemo(() => capabilities.isTouchFirst(), [])
   const panelOpen = useStore((s) => s.panel !== null)
   const clearSubtitle = useStore((s) => s.clearSubtitle)
   const [shown, setShown] = useState(0)
@@ -57,7 +59,7 @@ export function Subtitles() {
           tabIndex={-1}
           aria-hidden
           onClick={() => setShown(text.length)}
-          className="fixed bottom-8 z-20 max-w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 border-2 border-graphite bg-void/85 px-4 py-2 text-left font-mono text-base text-concrete"
+          className={`fixed bottom-8 z-20 max-w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 border-2 border-graphite bg-void/85 px-4 py-2 text-left font-mono text-base text-concrete ${touch ? 'subtitle-touch' : ''}`}
           style={{ left: panelOpen ? 'calc((100vw - min(40rem, 100vw)) / 2)' : '50%' }}
         >
           <span className="mr-2 text-moss">KOKEDAMA ›</span>

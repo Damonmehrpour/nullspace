@@ -188,3 +188,77 @@ body {
     animation-duration: 1ms;
   }
 }
+
+/* Touch controls over the 3D world: the joystick corner and the action button, clear of the phone's
+   safe areas. Gestures there (and on the world canvas) never scroll or zoom the page. */
+.touch-zone {
+  left: max(1rem, env(safe-area-inset-left));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  width: min(46vw, 15rem);
+  height: min(42vh, 17rem);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.touch-act {
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1rem));
+  min-height: 4rem;
+  min-width: 9rem;
+  max-width: min(46vw, 16rem);
+  font-size: 1rem;
+  line-height: 1.2;
+  touch-action: manipulation;
+}
+#world-canvas,
+#world-canvas canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+html.in-world,
+html.in-world body {
+  overscroll-behavior: none;
+}
+/* On touch, captions sit above the joystick and the action button. */
+.subtitle-touch {
+  bottom: max(11rem, calc(env(safe-area-inset-bottom) + 10rem)) !important;
+}
+
+/* The 2D Portfolio's full-viewport detail view: clear of the notch and home indicator. */
+.detail-page {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-overflow-scrolling: touch;
+}
+.detail-bar {
+  padding-top: env(safe-area-inset-top);
+}
+/* The touch controls card sits under the top bar, clear of the joystick; on short (landscape) screens
+   it moves to the upper right, above the action button. */
+.controls-touch {
+  top: 9rem;
+  left: 1rem;
+}
+@media (max-height: 520px) {
+  .controls-touch {
+    top: 4.75rem;
+    left: auto;
+    right: max(1rem, env(safe-area-inset-right));
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+  }
+}
+@media (max-height: 520px) {
+  /* Landscape phones: the caption sits low, between the joystick and the action button. */
+  .subtitle-touch {
+    bottom: max(1.25rem, env(safe-area-inset-bottom)) !important;
+    max-width: max(14rem, calc(100vw - 32rem)) !important;
+    font-size: 0.875rem;
+  }
+  .controls-touch {
+    max-height: calc(100vh - 13rem);
+  }
+}

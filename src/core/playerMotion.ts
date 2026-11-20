@@ -10,14 +10,24 @@ export function createPlayer(layout: WorldLayout): PlayerState {
   return { pos: layout.spawn.pos, vel: { x: 0, z: 0 }, facing: layout.spawn.facing, edgePushTime: 0, boundaryFired: false }
 }
 
-/** Desired ground direction from held keys, relative to the camera's ground yaw. Zero when idle. */
+/**
+ * Desired ground direction relative to the camera's ground yaw: unit length from held keys, or the
+ * analog stick's own length (up to 1) when no key is held, so a half-pushed stick walks at half speed.
+ * Zero when idle.
+ */
 export function inputDirection(input: InputState, cameraYaw: number): Vec2 {
-  const fwd = Number(input.up) - Number(input.down)
-  const side = Number(input.right) - Number(input.left)
+  let fwd = Number(input.up) - Number(input.down)
+  let side = Number(input.right) - Number(input.left)
+  let scale = 1
+  if (fwd === 0 && side === 0 && input.stick) {
+    fwd = input.stick.y
+    side = input.stick.x
+    scale = Math.min(1, Math.hypot(fwd, side))
+  }
   if (fwd === 0 && side === 0) return { x: 0, z: 0 }
   const forward = v.fromAngle(cameraYaw)
   const right = v.fromAngle(cameraYaw + Math.PI / 2)
-  return v.normalize(v.add(v.scale(forward, fwd), v.scale(right, side)))
+  return v.scale(v.normalize(v.add(v.scale(forward, fwd), v.scale(right, side))), scale)
 }
 
 /**
@@ -55,6 +65,6 @@ export function stepPlayer(
     boundaryFired = true
   }
 
-  const facing = v.len(dir) > 0 ? v.angleOf(dir) : s.facing
+  const facing = v.len(dir) > 0.05 ? v.angleOf(dir) : s.facing
   return { state: { pos, vel: pushing ? actualVel : vel, facing, edgePushTime, boundaryFired }, events }
 }

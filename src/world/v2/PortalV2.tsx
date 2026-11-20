@@ -212,6 +212,9 @@ export function PortalV2({ layout }: { layout: WorldLayout }) {
   const activate = (e: { stopPropagation(): void; delta: number }) => {
     e.stopPropagation()
     if (e.delta > DRAG_THRESHOLD) return // the end of a camera drag, not a click
+    // Only from within reach: a tap on the portal from across the plinth (or through its faded
+    // body behind the player) never opens the Portfolio.
+    if (!useStore.getState().nearPortal) return
     enterPortal()
   }
 

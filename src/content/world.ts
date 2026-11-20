@@ -37,6 +37,8 @@ export type LayoutParams = {
   joinInset: number
   /** How far each arrival point sits from its island's centre, toward the monolith. */
   arrivalOffset: number
+  /** How far from the central plinth's centre the player starts, toward the bridge (clear of the portal). */
+  spawnOffset: number
 }
 
 export const DEFAULT_LAYOUT_PARAMS: LayoutParams = {
@@ -48,6 +50,7 @@ export const DEFAULT_LAYOUT_PARAMS: LayoutParams = {
   arrivalZoneRadius: 1.25,
   joinInset: 0.5,
   arrivalOffset: 2.4,
+  spawnOffset: 4.3,
 }
 
 /**
@@ -110,7 +113,7 @@ export function buildLayout(overrides: Partial<LayoutParams> = {}): WorldLayout 
   const towardEntry = v.normalize(ringEntry)
 
   return {
-    spawn: { pos: v.scale(towardEntry, 2), facing: v.angleOf(towardEntry) },
+    spawn: { pos: v.scale(towardEntry, p.spawnOffset), facing: v.angleOf(towardEntry) },
     monolith: { centre: origin, plinthRadius: p.plinthRadius, slit: origin },
     islands,
     walkways,

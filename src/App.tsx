@@ -11,6 +11,7 @@ import { PanelHost } from './ui/Panel/PanelHost'
 import { TopBar } from './ui/TopBar'
 import { A11yStatus } from './ui/A11yStatus'
 import { ArtifactPrompt } from './ui/ArtifactPrompt'
+import { TouchControls } from './ui/TouchControls'
 import { PortalPrompt, PortalTransition } from './ui/Portal'
 import { ControlsHint } from './ui/ControlsHint'
 import { Subtitles } from './ui/Subtitles'
@@ -30,10 +31,18 @@ export default function App() {
     else if (readJSON(STORAGE_KEYS.booted, false)) setPhase('entry')
   }, [setPhase])
 
+  // While in the world, the page never bounces or pulls to refresh under touch gestures.
+  useEffect(() => {
+    const on = phase === 'world' || phase === 'loading3d'
+    document.documentElement.classList.toggle('in-world', on)
+    return () => document.documentElement.classList.remove('in-world')
+  }, [phase])
+
   const booted = phase !== 'boot' || readJSON(STORAGE_KEYS.booted, false)
   if (!booted) return <Boot onDone={() => setPhase('entry')} />
 
   const inWorld = phase === 'loading3d' || phase === 'world'
+  const touch = capabilities.isTouchFirst()
   return (
     <>
       <div id="app-background">
@@ -43,8 +52,12 @@ export default function App() {
             <Subtitles />
             <A11yStatus />
             <ControlsHint />
-            <ArtifactPrompt />
-            <PortalPrompt />
+            {touch ? <TouchControls /> : (
+              <>
+                <ArtifactPrompt />
+                <PortalPrompt />
+              </>
+            )}
           </>
         )}
         <TopBar

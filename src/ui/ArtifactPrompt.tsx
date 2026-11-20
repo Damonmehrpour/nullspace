@@ -6,7 +6,7 @@ import { useStore } from '../state/store'
 
 const FALLBACK = { featured: 'the featured project', technical: 'the technical project', experimental: 'the experimental project', wordgame: 'the word game' } as const
 
-function projectLabel(p: Project): string {
+export function projectLabel(p: Project): string {
   if (p.status === 'placeholder') return `${FALLBACK[p.appearance]} (placeholder)`
   return p.name.state === 'confirmed' ? p.name.value : FALLBACK[p.appearance]
 }

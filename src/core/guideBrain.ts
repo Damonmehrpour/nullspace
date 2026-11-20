@@ -51,7 +51,8 @@ const DESIRED_AHEAD = (GUIDE.leadAheadMin + GUIDE.leadAheadMax) / 2
 export function createGuide(layout: WorldLayout): GuideState {
   return {
     name: 'greet',
-    pos: layout.monolith.slit,
+    // It waits just ahead of the player, toward the bridge, so it leads from the first step.
+    pos: v.add(layout.spawn.pos, v.scale(v.fromAngle(layout.spawn.facing), 1.4)),
     path: [],
     pathIndex: 0,
     target: null,

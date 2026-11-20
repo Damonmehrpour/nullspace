@@ -6,9 +6,19 @@ export function isTypingTarget(t: EventTarget | null): boolean {
   return editable !== null && editable.getAttribute('contenteditable') !== 'false'
 }
 
-export type InputState = { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean }
+export type InputState = {
+  up: boolean
+  down: boolean
+  left: boolean
+  right: boolean
+  interact: boolean
+  /** Analog stick (touch joystick): x right, y forward, each in [-1, 1], already past the dead zone. */
+  stick?: { x: number; y: number }
+}
 
-const KEYMAP: Record<string, keyof InputState> = {
+type KeyName = 'up' | 'down' | 'left' | 'right' | 'interact'
+
+const KEYMAP: Record<string, KeyName> = {
   KeyW: 'up',
   ArrowUp: 'up',
   KeyS: 'down',
@@ -34,7 +44,7 @@ export function createKeyboardInput(target: Window): KeyboardInput {
   const state: InputState = { up: false, down: false, left: false, right: false, interact: false }
   let pressed = false
   const clear = () => {
-    for (const k of Object.keys(state) as (keyof InputState)[]) state[k] = false
+    for (const k of ['up', 'down', 'left', 'right', 'interact'] as const) state[k] = false
     pressed = false
   }
   const set = (e: KeyboardEvent, down: boolean) => {

@@ -35,6 +35,8 @@ type Data = {
   nearPortal: boolean
   /** The portal's short transition into the 2D Portfolio is playing. */
   portalTransit: boolean
+  /** When (performance.now) the world last opened: the portal ignores input for a moment after. */
+  worldEnteredAt: number
   /** A non-section dialog (Settings) is open; pauses the world like a panel. */
   overlay: 'settings' | null
   /** The controls card (shown on entering the world; reopened from the top bar). */
@@ -98,6 +100,7 @@ export function initialState(): Data {
     nearArtifact: null,
     nearPortal: false,
     portalTransit: false,
+    worldEnteredAt: 0,
     settings: { ...DEFAULT_SETTINGS },
     modePreference: null,
   }
@@ -116,11 +119,15 @@ function cancelReveal(s: Data): Partial<Data> {
   return { revealing: null, revealElapsed: 0, revealPlayed: withAdded(s.revealPlayed, s.revealing) }
 }
 
+/** How long after the world opens the portal ignores activation. */
+export const PORTAL_GRACE_MS = 1200
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+
 export const useStore = create<StoreState>()((set, get) => ({
   ...loadInitialState(),
   setPhase: (phase) => {
     if (phase !== 'world' && phase !== 'loading3d') get().leaveWorld()
-    set({ phase })
+    set(phase === 'world' && get().phase !== 'world' ? { phase, worldEnteredAt: now() } : { phase })
   },
   setOverlay: (overlay) => set({ overlay }),
   setControlsOpen: (controlsOpen) => set({ controlsOpen }),
@@ -184,6 +191,8 @@ export const useStore = create<StoreState>()((set, get) => ({
   enterPortal: () => {
     const s = get()
     if (s.phase !== 'world' || s.portalTransit) return
+    // A key, click or tap still in flight from entering (or returning to) the world never goes through.
+    if (now() - s.worldEnteredAt < PORTAL_GRACE_MS) return
     // Reduced motion: straight to the Portfolio. Otherwise PortalTransition covers the swap.
     if (isReducedMotion(s.settings)) get().setPhase('portfolio')
     else set({ portalTransit: true })
